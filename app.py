@@ -88,9 +88,9 @@ with st.sidebar:
 
     viz_engine = st.radio(
         "可視化エンジン",
-        ["Streamlit-Agraph (推奨)", "Pyvis (詳細)"],
+        ["Pyvis (推奨)", "Streamlit-Agraph"],
         index=0,
-        help="Agraphは軽量でインタラクティブ、Pyvisはより詳細な設定が可能"
+        help="Pyvisは高度な物理演算とリッチなビジュアル、Agraphは軽量でシンプル"
     )
 
     show_graph = st.checkbox("ナレッジグラフを表示", value=True)
@@ -116,6 +116,8 @@ if "uploaded_files" not in st.session_state:
     st.session_state.uploaded_files = []
 if "existing_graph_loaded" not in st.session_state:
     st.session_state.existing_graph_loaded = False
+if "graph_data_cache" not in st.session_state:
+    st.session_state.graph_data_cache = None
 
 # Neo4j既存データチェック関数
 def check_existing_graph(graph) -> dict:
@@ -172,23 +174,181 @@ def restore_from_existing_graph():
         else:
             vector_retriever = vector_store.as_retriever(search_kwargs={"k": 4})
 
-        # グラフ検索関数
-        def get_graph_context(question: str) -> list:
-            query = """
-            MATCH (n)-[r]->(m)
-            RETURN n.id AS start, type(r) AS type, m.id AS end
-            LIMIT 10
-            """
+        # エンティティ抽出関数
+        def extract_entities_from_question(question: str) -> List[str]:
+            """LLMを使って質問からエンティティを抽出"""
+            extraction_prompt = f"""以下の質問文から、固有名詞や重要なエンティティ（人物、場所、物）を抽出してください。
+エンティティのみをカンマ区切りで出力してください。説明は不要です。
+
+質問: {question}
+
+エンティティ:"""
             try:
-                result = graph.query(query)
-                return result if result else []
+                llm = AzureChatOpenAI(
+                    azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
+                    openai_api_version=AZURE_OPENAI_API_VERSION,
+                    azure_endpoint=AZURE_OPENAI_ENDPOINT,
+                    api_key=AZURE_OPENAI_API_KEY,
+                    temperature=0
+                )
+                response = llm.invoke(extraction_prompt)
+                entities = [e.strip() for e in response.content.split(',') if e.strip()]
+                return entities
             except Exception:
+                # フォールバック: 簡易的なキーワード抽出
+                return [w for w in question.split() if len(w) > 1]
+
+        def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
+            """LLMを使って関係性の質問への関連度をスコアリング"""
+            if not relations:
                 return []
 
-        # チェイン構築
+            # 関係性リストをテキスト化
+            relations_text = "\n".join([
+                f"{i+1}. {r['start']} -[{r['type']}]-> {r['end']}"
+                for i, r in enumerate(relations)
+            ])
+
+            ranking_prompt = f"""以下の質問に対して、各グラフ関係性の関連度を0-10でスコアリングしてください。
+
+【質問】
+{question}
+
+【グラフ関係性】
+{relations_text}
+
+【指示】
+- 各行の番号と関連度スコア（0-10）を「番号:スコア」形式で出力
+- 質問に直接関連する関係性は高スコア（8-10）
+- 間接的に関連する関係性は中スコア（4-7）
+- 無関係な関係性は低スコア（0-3）
+- 説明不要、スコアのみ出力
+
+【出力例】
+1:9
+2:3
+3:7
+
+【出力】"""
+
+            try:
+                llm = AzureChatOpenAI(
+                    azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
+                    openai_api_version=AZURE_OPENAI_API_VERSION,
+                    azure_endpoint=AZURE_OPENAI_ENDPOINT,
+                    api_key=AZURE_OPENAI_API_KEY,
+                    temperature=0
+                )
+                response = llm.invoke(ranking_prompt)
+
+                # スコアをパース
+                scores = {}
+                for line in response.content.strip().split('\n'):
+                    if ':' in line:
+                        try:
+                            idx, score = line.split(':')
+                            scores[int(idx.strip())] = float(score.strip())
+                        except:
+                            continue
+
+                # スコアでソートして上位top_k件を返す
+                ranked_relations = []
+                for i, relation in enumerate(relations, 1):
+                    score = scores.get(i, 0)
+                    ranked_relations.append((score, relation))
+
+                ranked_relations.sort(reverse=True, key=lambda x: x[0])
+                return [rel for score, rel in ranked_relations[:top_k]]
+
+            except Exception as e:
+                # LLMリランキング失敗時は元のリストをそのまま返す
+                return relations[:top_k]
+
+        # グラフ検索関数（N-hopトラバーサル対応）
+        def get_graph_context(question: str) -> list:
+            """質問からエンティティを抽出し、N-hopトラバーサルでサブグラフを取得"""
+            # 1. エンティティ抽出
+            entities = extract_entities_from_question(question)
+            if not entities:
+                return []
+
+            # 2. 双方向1-hop直接関係のみ取得
+            query = """
+            UNWIND $entities AS entity
+            MATCH (n)
+            WHERE n.id CONTAINS entity
+            AND NOT n.id =~ '[0-9a-f]{32}'
+            WITH collect(DISTINCT n) AS matched_nodes
+
+            UNWIND matched_nodes AS start_node
+            MATCH (start_node)-[r]-(connected_node)
+            WHERE type(r) <> 'MENTIONS'
+            AND NOT connected_node.id =~ '[0-9a-f]{32}'
+
+            WITH r, startNode(r) AS actual_start, endNode(r) AS actual_end
+            RETURN DISTINCT actual_start.id AS start, type(r) AS type, actual_end.id AS end
+            LIMIT 30
+            """
+            try:
+                result = graph.query(query, params={"entities": entities})
+                if result:
+                    # 3. LLMリランキングで関連度の高い関係性のみに絞る
+                    result = rank_relations_by_relevance(question, result, top_k=15)
+                return result if result else []
+            except Exception as e:
+                # フォールバック: 単純な1-hopマッチング
+                fallback_query = """
+                MATCH (n)-[r]->(m)
+                WHERE (
+                    ANY(entity IN $entities WHERE n.id CONTAINS entity OR m.id CONTAINS entity)
+                )
+                AND type(r) <> 'MENTIONS'
+                AND NOT n.id =~ '[0-9a-f]{32}'
+                AND NOT m.id =~ '[0-9a-f]{32}'
+                RETURN DISTINCT n.id AS start, type(r) AS type, m.id AS end
+                LIMIT 20
+                """
+                try:
+                    result = graph.query(fallback_query, params={"entities": entities})
+                    if result:
+                        result = rank_relations_by_relevance(question, result, top_k=15)
+                    return result if result else []
+                except Exception:
+                    return []
+
+        # チェイン構築（Graph-First Retrieval）
         def retriever_and_merge(question: str):
-            docs = vector_retriever.invoke(question)
+            # 1. 質問からグラフ検索を優先実行
             triples = get_graph_context(question)
+
+            # 2. グラフ検索結果があればそれを使用、なければベクトル検索を補助的に使用
+            docs = []
+            if triples:
+                # グラフから関連エンティティを取得し、それに関連するドキュメントチャンクを取得
+                entity_names = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
+
+                # エンティティに関連するチャンクを取得
+                if entity_names:
+                    chunk_query = """
+                    UNWIND $entity_names AS entity_name
+                    MATCH (e {id: entity_name})<-[:MENTIONS]-(chunk)
+                    WHERE chunk.id =~ '[0-9a-f]{32}'
+                    RETURN DISTINCT chunk.id AS chunk_id, chunk.text AS text
+                    LIMIT 5
+                    """
+                    try:
+                        chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
+                        if chunk_results:
+                            # グラフから取得したチャンクをドキュメントとして追加
+                            from langchain.schema import Document
+                            docs = [Document(page_content=r.get('text', ''), metadata={'id': r.get('chunk_id')})
+                                   for r in chunk_results if r.get('text')]
+                    except Exception:
+                        pass
+
+            # 3. グラフからドキュメントが取得できない場合はベクトル検索を使用
+            if not docs:
+                docs = vector_retriever.invoke(question)
 
             graph_lines = [
                 f"{t.get('start')} -[{t.get('type')}]→ {t.get('end')}"
@@ -199,16 +359,20 @@ def restore_from_existing_graph():
                 "<GRAPH_CONTEXT>\n" + "\n".join(graph_lines) + "\n</GRAPH_CONTEXT>\n\n" +
                 "<DOCUMENT_CONTEXT>\n" + "\n---\n".join(d.page_content for d in docs) + "\n</DOCUMENT_CONTEXT>"
             )
-            return {"context": context, "question": question}
+            return {
+                "context": context,
+                "question": question,
+                "vector_sources": docs,
+                "graph_sources": triples
+            }
 
         prompt = PromptTemplate.from_template(
             """あなたはドキュメントの専門家です。\n質問: {question}\n\n{context}\n\n---\n上記情報のみを根拠に、日本語で網羅的かつ正確に回答してください。"""
         )
 
-        chain = (
-            RunnablePassthrough()
-            | RunnableLambda(retriever_and_merge)
-            | prompt
+        # LLM呼び出し部分
+        llm_chain = (
+            prompt
             | AzureChatOpenAI(
                 azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
                 openai_api_version=AZURE_OPENAI_API_VERSION,
@@ -217,6 +381,21 @@ def restore_from_existing_graph():
                 temperature=0
             )
             | StrOutputParser()
+        )
+
+        # ソース情報を保持する関数
+        def generate_with_sources(data):
+            answer = llm_chain.invoke({"question": data["question"], "context": data["context"]})
+            return {
+                "answer": answer,
+                "vector_sources": data["vector_sources"],
+                "graph_sources": data["graph_sources"]
+            }
+
+        chain = (
+            RunnablePassthrough()
+            | RunnableLambda(retriever_and_merge)
+            | RunnableLambda(generate_with_sources)
         )
 
         return chain, graph
@@ -290,28 +469,168 @@ def build_rag_system(text_content: str):
     else:
         vector_retriever = vector_store.as_retriever(search_kwargs={"k": 4})
 
-    # グラフ検索関数（Cypher直接実行）
-    def get_graph_context(question: str) -> list:
-        """Neo4jからグラフコンテキストを取得"""
-        query = """
-        MATCH (n)-[r]->(m)
-        RETURN n.id AS start, type(r) AS type, m.id AS end
-        LIMIT 10
-        """
+    # エンティティ抽出関数
+    def extract_entities_from_question(question: str) -> List[str]:
+        """LLMを使って質問からエンティティを抽出"""
+        extraction_prompt = f"""以下の質問文から、固有名詞や重要なエンティティ（人物、場所、物）を抽出してください。
+エンティティのみをカンマ区切りで出力してください。説明は不要です。
+
+質問: {question}
+
+エンティティ:"""
         try:
-            result = graph.query(query)
-            return result if result else []
+            response = llm.invoke(extraction_prompt)
+            entities = [e.strip() for e in response.content.split(',') if e.strip()]
+            return entities
         except Exception:
+            # フォールバック: 簡易的なキーワード抽出
+            return [w for w in question.split() if len(w) > 1]
+
+    def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
+        """LLMを使って関係性の質問への関連度をスコアリング"""
+        if not relations:
             return []
 
-    # LCELチェイン構築
-    def retriever_and_merge(question: str):
-        """ベクトル検索とグラフ検索を実行してコンテキストをマージ"""
-        # ベクトル検索
-        docs = vector_retriever.invoke(question)
+        # 関係性リストをテキスト化
+        relations_text = "\n".join([
+            f"{i+1}. {r['start']} -[{r['type']}]-> {r['end']}"
+            for i, r in enumerate(relations)
+        ])
 
-        # グラフ検索
+        ranking_prompt = f"""以下の質問に対して、各グラフ関係性の関連度を0-10でスコアリングしてください。
+
+【質問】
+{question}
+
+【グラフ関係性】
+{relations_text}
+
+【指示】
+- 各行の番号と関連度スコア（0-10）を「番号:スコア」形式で出力
+- 質問に直接関連する関係性は高スコア（8-10）
+- 間接的に関連する関係性は中スコア（4-7）
+- 無関係な関係性は低スコア（0-3）
+- 説明不要、スコアのみ出力
+
+【出力例】
+1:9
+2:3
+3:7
+
+【出力】"""
+
+        try:
+            response = llm.invoke(ranking_prompt)
+
+            # スコアをパース
+            scores = {}
+            for line in response.content.strip().split('\n'):
+                if ':' in line:
+                    try:
+                        idx, score = line.split(':')
+                        scores[int(idx.strip())] = float(score.strip())
+                    except:
+                        continue
+
+            # スコアでソートして上位top_k件を返す
+            ranked_relations = []
+            for i, relation in enumerate(relations, 1):
+                score = scores.get(i, 0)
+                ranked_relations.append((score, relation))
+
+            ranked_relations.sort(reverse=True, key=lambda x: x[0])
+            return [rel for score, rel in ranked_relations[:top_k]]
+
+        except Exception as e:
+            # LLMリランキング失敗時は元のリストをそのまま返す
+            return relations[:top_k]
+
+    # グラフ検索関数（N-hopトラバーサル対応）
+    def get_graph_context(question: str) -> list:
+        """質問からエンティティを抽出し、N-hopトラバーサルでサブグラフを取得"""
+        # 1. エンティティ抽出
+        entities = extract_entities_from_question(question)
+        if not entities:
+            return []
+
+        # 2. 双方向1-hop直接関係のみ取得
+        query = """
+        UNWIND $entities AS entity
+        MATCH (n)
+        WHERE n.id CONTAINS entity
+        AND NOT n.id =~ '[0-9a-f]{32}'
+        WITH collect(DISTINCT n) AS matched_nodes
+
+        UNWIND matched_nodes AS start_node
+        MATCH (start_node)-[r]-(connected_node)
+        WHERE type(r) <> 'MENTIONS'
+        AND NOT connected_node.id =~ '[0-9a-f]{32}'
+
+        WITH r, startNode(r) AS actual_start, endNode(r) AS actual_end
+        RETURN DISTINCT actual_start.id AS start, type(r) AS type, actual_end.id AS end
+        LIMIT 30
+        """
+        try:
+            result = graph.query(query, params={"entities": entities})
+            if result:
+                # 3. LLMリランキングで関連度の高い関係性のみに絞る
+                result = rank_relations_by_relevance(question, result, top_k=15)
+            return result if result else []
+        except Exception as e:
+            # フォールバック: 単純な1-hopマッチング
+            fallback_query = """
+            MATCH (n)-[r]->(m)
+            WHERE (
+                ANY(entity IN $entities WHERE n.id CONTAINS entity OR m.id CONTAINS entity)
+            )
+            AND type(r) <> 'MENTIONS'
+            AND NOT n.id =~ '[0-9a-f]{32}'
+            AND NOT m.id =~ '[0-9a-f]{32}'
+            RETURN DISTINCT n.id AS start, type(r) AS type, m.id AS end
+            LIMIT 20
+            """
+            try:
+                result = graph.query(fallback_query, params={"entities": entities})
+                if result:
+                    result = rank_relations_by_relevance(question, result, top_k=15)
+                return result if result else []
+            except Exception:
+                return []
+
+    # LCELチェイン構築（Graph-First Retrieval）
+    def retriever_and_merge(question: str):
+        """グラフ検索を優先し、補助的にベクトル検索を使用"""
+        # 1. 質問からグラフ検索を優先実行
         triples = get_graph_context(question)
+
+        # 2. グラフ検索結果があればそれを使用、なければベクトル検索を補助的に使用
+        docs = []
+        if triples:
+            # グラフから関連エンティティを取得し、それに関連するドキュメントチャンクを取得
+            entity_names = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
+
+            # エンティティに関連するチャンクを取得
+            if entity_names:
+                chunk_query = """
+                UNWIND $entity_names AS entity_name
+                MATCH (e {id: entity_name})<-[:MENTIONS]-(chunk)
+                WHERE chunk.id =~ '[0-9a-f]{32}'
+                RETURN DISTINCT chunk.id AS chunk_id, chunk.text AS text
+                LIMIT 5
+                """
+                try:
+                    chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
+                    if chunk_results:
+                        # グラフから取得したチャンクをドキュメントとして追加
+                        from langchain.schema import Document
+                        docs = [Document(page_content=r.get('text', ''), metadata={'id': r.get('chunk_id')})
+                               for r in chunk_results if r.get('text')]
+                except Exception:
+                    pass
+
+        # 3. グラフからドキュメントが取得できない場合はベクトル検索を使用
+        if not docs:
+            docs = vector_retriever.invoke(question)
 
         graph_lines = [
             f"{t.get('start')} -[{t.get('type')}]→ {t.get('end')}"
@@ -322,16 +641,20 @@ def build_rag_system(text_content: str):
             "<GRAPH_CONTEXT>\n" + "\n".join(graph_lines) + "\n</GRAPH_CONTEXT>\n\n" +
             "<DOCUMENT_CONTEXT>\n" + "\n---\n".join(d.page_content for d in docs) + "\n</DOCUMENT_CONTEXT>"
         )
-        return {"context": context, "question": question}
+        return {
+            "context": context,
+            "question": question,
+            "vector_sources": docs,
+            "graph_sources": triples
+        }
 
     prompt = PromptTemplate.from_template(
         """あなたはドキュメントの専門家です。\n質問: {question}\n\n{context}\n\n---\n上記情報のみを根拠に、日本語で網羅的かつ正確に回答してください。"""
     )
 
-    chain = (
-        RunnablePassthrough()
-        | RunnableLambda(retriever_and_merge)
-        | prompt
+    # LLM呼び出し部分
+    llm_chain = (
+        prompt
         | AzureChatOpenAI(
             azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
             openai_api_version=AZURE_OPENAI_API_VERSION,
@@ -342,13 +665,31 @@ def build_rag_system(text_content: str):
         | StrOutputParser()
     )
 
+    # ソース情報を保持する関数
+    def generate_with_sources(data):
+        answer = llm_chain.invoke({"question": data["question"], "context": data["context"]})
+        return {
+            "answer": answer,
+            "vector_sources": data["vector_sources"],
+            "graph_sources": data["graph_sources"]
+        }
+
+    chain = (
+        RunnablePassthrough()
+        | RunnableLambda(retriever_and_merge)
+        | RunnableLambda(generate_with_sources)
+    )
+
     return chain, graph
 
 # グラフ取得関数（改善版）
 def get_enhanced_graph_data(graph, limit=200):
-    """Neo4jから拡張グラフデータを取得（ノードタイプ、接続数含む）"""
+    """Neo4jから拡張グラフデータを取得（チャンクID除外、MENTIONS関係除外）"""
     query = f"""
     MATCH (n)-[r]->(m)
+    WHERE type(r) <> 'MENTIONS'
+    AND NOT n.id =~ '[0-9a-f]{{32}}'
+    AND NOT m.id =~ '[0-9a-f]{{32}}'
     WITH n, r, m, labels(n) as source_labels, labels(m) as target_labels
     RETURN
       n.id AS source,
@@ -416,12 +757,22 @@ def visualize_graph_agraph(graph_data):
     try:
         from streamlit_agraph import agraph, Node, Edge, Config
 
+        # データ検証
+        if not graph_data:
+            st.warning("⚠️ グラフデータが空です（Agraph）")
+            return None
+
         nodes = []
         edges = []
         node_dict = {}
 
         # ノード収集とタイプ判定
         for item in graph_data:
+            # 必須キーの検証
+            if 'source' not in item or 'target' not in item or 'relation' not in item:
+                st.warning(f"⚠️ 不正なデータ形式をスキップ: {item}")
+                continue
+
             source_type = get_node_type(item['source'], item.get('source_type'))
             target_type = get_node_type(item['target'], item.get('target_type'))
 
@@ -440,9 +791,9 @@ def visualize_graph_agraph(graph_data):
                     'degree': target_degree
                 }
 
-        # ノード作成（サイズを接続数に応じて調整）
+        # ノード作成（サイズを接続数に応じて控えめに調整）
         for node_id, node_info in node_dict.items():
-            size = 10 + min(node_info['degree'] * 3, 50)  # 最小10、最大60
+            size = 8 + min(node_info['degree'] * 1.5, 20)  # 最小8、最大28（控えめ）
             color = get_color_for_type(node_info['type'])
             nodes.append(
                 Node(
@@ -456,14 +807,20 @@ def visualize_graph_agraph(graph_data):
 
         # エッジ作成
         for item in graph_data:
-            edges.append(
-                Edge(
-                    source=item['source'],
-                    target=item['target'],
-                    label=item['relation'],
-                    color="#888888"
+            if 'source' in item and 'target' in item and 'relation' in item:
+                edges.append(
+                    Edge(
+                        source=item['source'],
+                        target=item['target'],
+                        label=item['relation'],
+                        color="#888888"
+                    )
                 )
-            )
+
+        # ノードまたはエッジが空の場合
+        if not nodes or not edges:
+            st.warning(f"⚠️ Agraphデータ不足: ノード{len(nodes)}個、エッジ{len(edges)}本")
+            return None
 
         # 設定
         config = Config(
@@ -477,9 +834,16 @@ def visualize_graph_agraph(graph_data):
             link={'labelProperty': 'label', 'renderLabel': True}
         )
 
-        return agraph(nodes=nodes, edges=edges, config=config)
+        agraph(nodes=nodes, edges=edges, config=config)
+        return True  # 成功時はTrueを返す
 
     except ImportError:
+        st.info("ℹ️ streamlit-agraphがインストールされていません")
+        return None
+    except Exception as e:
+        st.warning(f"⚠️ Agraph可視化エラー: {type(e).__name__}: {e}")
+        import traceback
+        st.code(traceback.format_exc(), language="python")
         return None
 
 # Pyvis強化版可視化関数
@@ -487,6 +851,11 @@ def visualize_graph_pyvis_enhanced(graph_data):
     """Pyvisで強化されたグラフを可視化"""
     try:
         from pyvis.network import Network
+
+        # データ検証
+        if not graph_data:
+            st.warning("⚠️ グラフデータが空です（Pyvis）")
+            return None
 
         net = Network(
             height="700px",
@@ -531,6 +900,11 @@ def visualize_graph_pyvis_enhanced(graph_data):
 
         # ノード情報収集
         for item in graph_data:
+            # 必須キーの検証
+            if 'source' not in item or 'target' not in item or 'relation' not in item:
+                st.warning(f"⚠️ 不正なデータ形式をスキップ: {item}")
+                continue
+
             source_type = get_node_type(item['source'], item.get('source_type'))
             target_type = get_node_type(item['target'], item.get('target_type'))
 
@@ -551,9 +925,9 @@ def visualize_graph_pyvis_enhanced(graph_data):
                     'color': get_color_for_type(target_type)
                 }
 
-        # ノード追加
+        # ノード追加（サイズを控えめに調整）
         for node_id, node_info in node_dict.items():
-            size = 15 + min(node_info['degree'] * 2, 40)
+            size = 12 + min(node_info['degree'] * 1, 18)  # 最小12、最大30（控えめ）
             net.add_node(
                 node_id,
                 label=node_id,
@@ -565,14 +939,20 @@ def visualize_graph_pyvis_enhanced(graph_data):
 
         # エッジ追加
         for item in graph_data:
-            net.add_edge(
-                item['source'],
-                item['target'],
-                label=item['relation'],
-                title=item['relation'],
-                arrows='to',
-                color='#666666'
-            )
+            if 'source' in item and 'target' in item and 'relation' in item:
+                net.add_edge(
+                    item['source'],
+                    item['target'],
+                    label=item['relation'],
+                    title=item['relation'],
+                    arrows='to',
+                    color='#666666'
+                )
+
+        # ノードまたはエッジが空の場合
+        if len(node_dict) == 0:
+            st.warning("⚠️ Pyvisデータ不足: ノードが0個です")
+            return None
 
         net.save_graph("graph_enhanced.html")
         with open("graph_enhanced.html", "r", encoding="utf-8") as f:
@@ -580,12 +960,180 @@ def visualize_graph_pyvis_enhanced(graph_data):
         return html
 
     except ImportError:
+        st.info("ℹ️ pyvisがインストールされていません")
+        return None
+    except Exception as e:
+        st.warning(f"⚠️ Pyvis可視化エラー: {type(e).__name__}: {e}")
+        import traceback
+        st.code(traceback.format_exc(), language="python")
         return None
 
 # 旧グラフ可視化関数（後方互換性）
 def visualize_graph(graph_data):
     """pyvisでグラフを可視化（シンプル版）"""
     return visualize_graph_pyvis_enhanced(graph_data)
+
+# 自然言語→Cypherクエリ変換関数
+def natural_language_to_cypher(query: str) -> str:
+    """自然言語クエリをCypherクエリに変換"""
+    try:
+        llm = AzureChatOpenAI(
+            azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
+            openai_api_version=AZURE_OPENAI_API_VERSION,
+            azure_endpoint=AZURE_OPENAI_ENDPOINT,
+            api_key=AZURE_OPENAI_API_KEY,
+            temperature=0
+        )
+
+        prompt = f"""あなたはNeo4jのCypherクエリエキスパートです。
+以下の自然言語をCypherクエリに変換してください。
+
+【グラフスキーマ情報】
+- ノード: プロパティは `id` (エンティティ名を格納)
+- リレーションシップ: 動的（MENTIONS以外のすべての関係タイプ）
+- 除外条件: チャンクノード（id =~ '[0-9a-f]{{32}}'）は除外すること
+- MENTIONS関係は除外すること
+
+【クエリ作成ルール】
+1. RETURN句で必ず以下を返すこと:
+   - ノード間の関係の場合: n.id AS source, type(r) AS relation, m.id AS target
+   - ノードのみの場合: n.id AS node_id, labels(n) AS labels
+2. チャンクノードを除外: WHERE NOT n.id =~ '[0-9a-f]{{32}}'
+3. MENTIONS関係を除外: WHERE type(r) <> 'MENTIONS'
+4. LIMIT句を必ず付与（デフォルト50）
+
+自然言語クエリ: {query}
+
+Cypherクエリ（クエリのみ出力、説明不要）:"""
+
+        response = llm.invoke(prompt)
+        cypher_query = response.content.strip()
+
+        # コードブロックを除去（```cypher ``` で囲まれている場合）
+        if cypher_query.startswith("```"):
+            lines = cypher_query.split("\n")
+            cypher_query = "\n".join(lines[1:-1]) if len(lines) > 2 else cypher_query
+
+        return cypher_query
+
+    except Exception as e:
+        st.error(f"Cypherクエリ変換エラー: {e}")
+        return ""
+
+# Cypherクエリ実行&可視化関数
+def execute_cypher_and_visualize(cypher_query: str, graph):
+    """Cypherクエリを実行して結果を返す"""
+    try:
+        # 危険なクエリを検出
+        dangerous_keywords = ['DELETE', 'DROP', 'CREATE', 'MERGE', 'SET', 'REMOVE', 'DETACH']
+        upper_query = cypher_query.upper()
+
+        for keyword in dangerous_keywords:
+            if keyword in upper_query:
+                st.error(f"⚠️ 危険なクエリが検出されました: {keyword} は使用できません")
+                return None
+
+        # クエリ実行
+        result = graph.query(cypher_query)
+
+        if not result:
+            st.warning("クエリ結果が空です")
+            return None
+
+        return result
+
+    except Exception as e:
+        st.error(f"クエリ実行エラー: {e}")
+        import traceback
+        st.code(traceback.format_exc(), language="python")
+        return None
+
+# テーブル表示関数
+def display_data_tables(graph_data):
+    """ノードとエッジをテーブル形式で表示"""
+    import pandas as pd
+
+    # ノードデータの集計
+    nodes_dict = {}
+    for item in graph_data:
+        # ソースノード
+        if item['source'] not in nodes_dict:
+            source_type = get_node_type(item['source'], item.get('source_type'))
+            nodes_dict[item['source']] = {
+                'ノードID': item['source'],
+                'タイプ': source_type,
+                '接続数': item.get('source_degree', 0),
+                '色': get_color_for_type(source_type)
+            }
+
+        # ターゲットノード
+        if item['target'] not in nodes_dict:
+            target_type = get_node_type(item['target'], item.get('target_type'))
+            nodes_dict[item['target']] = {
+                'ノードID': item['target'],
+                'タイプ': target_type,
+                '接続数': item.get('target_degree', 0),
+                '色': get_color_for_type(target_type)
+            }
+
+    # エッジデータの作成
+    edges_list = []
+    for item in graph_data:
+        edges_list.append({
+            '始点': item['source'],
+            'リレーション': item['relation'],
+            '終点': item['target']
+        })
+
+    # ノードテーブル
+    st.subheader("📍 ノード一覧")
+    nodes_df = pd.DataFrame(list(nodes_dict.values()))
+    st.dataframe(
+        nodes_df.sort_values('接続数', ascending=False),
+        width='stretch',
+        hide_index=True
+    )
+
+    # CSVダウンロード
+    csv_nodes = nodes_df.to_csv(index=False).encode('utf-8-sig')
+    st.download_button(
+        label="📥 ノードをCSVでダウンロード",
+        data=csv_nodes,
+        file_name="nodes.csv",
+        mime="text/csv"
+    )
+
+    st.markdown("---")
+
+    # エッジテーブル
+    st.subheader("🔗 エッジ一覧")
+    edges_df = pd.DataFrame(edges_list)
+    st.dataframe(
+        edges_df,
+        width='stretch',
+        hide_index=True
+    )
+
+    # CSVダウンロード
+    csv_edges = edges_df.to_csv(index=False).encode('utf-8-sig')
+    st.download_button(
+        label="📥 エッジをCSVでダウンロード",
+        data=csv_edges,
+        file_name="edges.csv",
+        mime="text/csv"
+    )
+
+    # 統計情報
+    st.markdown("---")
+    st.subheader("📊 統計情報")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("総ノード数", len(nodes_dict))
+    with col2:
+        st.metric("総エッジ数", len(edges_list))
+    with col3:
+        avg_degree = sum(n['接続数'] for n in nodes_dict.values()) / len(nodes_dict) if nodes_dict else 0
+        st.metric("平均接続数", f"{avg_degree:.1f}")
 
 # メインUI
 st.header("📁 ドキュメントアップロード")
@@ -666,22 +1214,47 @@ if uploaded_files:
 
 st.markdown("---")
 
-col1, col2 = st.columns([1, 1])
+# タブ形式UI
+tab1, tab2 = st.tabs(["💬 質問応答", "🕸️ グラフ探索"])
 
-with col1:
-    st.header("💬 質問入力")
+with tab1:
+    st.header("💬 質問応答")
 
     # 質問入力
     if st.session_state.initialized:
-        question = st.text_area("質問を入力してください:", height=100)
+        question = st.text_area("質問を入力してください:", height=150, key="question_input")
 
-        if st.button("🔍 質問する"):
+        if st.button("🔍 質問する", type="primary"):
             if question:
                 with st.spinner("回答生成中..."):
                     try:
-                        answer = st.session_state.chain.invoke(question)
+                        result = st.session_state.chain.invoke(question)
+
+                        # 回答表示
                         st.markdown("### 📝 回答")
-                        st.markdown(answer)
+                        st.markdown(result["answer"])
+
+                        # 引用元: Vector RAG
+                        with st.expander("📚 参照ドキュメント (Vector RAG)", expanded=False):
+                            vector_sources = result.get("vector_sources", [])
+                            if vector_sources:
+                                for i, doc in enumerate(vector_sources, 1):
+                                    st.markdown(f"**チャンク {i}:**")
+                                    st.text(doc.page_content)
+                                    if i < len(vector_sources):
+                                        st.divider()
+                            else:
+                                st.info("ベクトル検索結果なし")
+
+                        # 引用元: Graph RAG
+                        with st.expander("🕸️ ナレッジグラフ (Graph RAG)", expanded=False):
+                            graph_sources = result.get("graph_sources", [])
+                            if graph_sources:
+                                for triple in graph_sources:
+                                    st.markdown(f"- `{triple.get('start')}` -[{triple.get('type')}]→ `{triple.get('end')}`")
+                            else:
+                                st.info("グラフ検索結果なし")
+
                     except Exception as e:
                         st.error(f"エラー: {e}")
             else:
@@ -689,17 +1262,40 @@ with col1:
     else:
         st.info("まずRAGシステムを初期化してください")
 
-with col2:
-    st.header("🕸️ ナレッジグラフ")
+with tab2:
+    st.header("🕸️ グラフ探索")
 
-    if st.session_state.initialized and show_graph:
-        if st.button("📊 グラフを表示"):
-            with st.spinner("グラフ取得中..."):
-                try:
-                    # 拡張グラフデータ取得
-                    graph_data = get_enhanced_graph_data(st.session_state.graph, limit=max_nodes)
+    if st.session_state.initialized:
+        # 表示モード選択
+        display_mode = st.radio(
+            "表示モード",
+            ["🕸️ グラフ可視化", "📊 データテーブル", "🔍 Cypherクエリ検索"],
+            horizontal=True
+        )
 
-                    if graph_data:
+        st.markdown("---")
+
+        # モード1: グラフ可視化
+        if display_mode == "🕸️ グラフ可視化":
+            if not show_graph:
+                st.warning("サイドバーで「ナレッジグラフを表示」をONにしてください")
+            else:
+                # 初回グラフ読み込み
+                if st.session_state.graph_data_cache is None:
+                    if st.button("📊 グラフを読み込む", type="primary"):
+                        with st.spinner("グラフデータ取得中..."):
+                            try:
+                                graph_data = get_enhanced_graph_data(st.session_state.graph, limit=max_nodes)
+                                st.session_state.graph_data_cache = graph_data
+                                st.success(f"✅ {len(graph_data)}件のエッジを読み込みました")
+                            except Exception as e:
+                                st.error(f"エラー: {e}")
+
+                # グラフデータがある場合はリアルタイム表示
+                if st.session_state.graph_data_cache:
+                    try:
+                        graph_data = st.session_state.graph_data_cache
+
                         # フィルタリング
                         filtered_data = []
                         for item in graph_data:
@@ -727,14 +1323,15 @@ with col2:
                                 unique_nodes.add(item['source'])
                                 unique_nodes.add(item['target'])
 
-                            st.markdown(f"**統計情報:** ノード {len(unique_nodes)}個 / エッジ {len(filtered_data)}本")
+                            st.info(f"📊 表示中: ノード {len(unique_nodes)}個 / エッジ {len(filtered_data)}本")
 
                             # 可視化エンジン選択
                             if "Agraph" in viz_engine:
                                 # Streamlit-Agraph可視化
                                 result = visualize_graph_agraph(filtered_data)
-                                if result is None:
-                                    st.warning("Streamlit-Agraphが利用できません。Pyvisにフォールバックします。")
+                                if not result:
+                                    # Agraphが失敗した場合のみPyvisにフォールバック
+                                    st.warning("⚠️ Streamlit-Agraphが利用できません。Pyvisにフォールバックします。")
                                     html = visualize_graph_pyvis_enhanced(filtered_data)
                                     if html:
                                         st.components.v1.html(html, height=700)
@@ -744,17 +1341,172 @@ with col2:
                                 if html:
                                     st.components.v1.html(html, height=700)
                                 else:
-                                    st.warning("可視化ライブラリが利用できません。テーブル表示します。")
-                                    st.dataframe(filtered_data)
+                                    st.warning("可視化ライブラリが利用できません。")
+
+                        # グラフをリセットするボタン
+                        if st.button("🔄 グラフを再読み込み"):
+                            st.session_state.graph_data_cache = None
+                            st.rerun()
+
+                    except Exception as e:
+                        st.error(f"エラー: {e}")
+                        import traceback
+                        st.code(traceback.format_exc())
+
+        # モード2: データテーブル
+        elif display_mode == "📊 データテーブル":
+            # グラフデータがない場合は読み込みボタン
+            if st.session_state.graph_data_cache is None:
+                if st.button("📊 データを読み込む", type="primary", key="load_data_table"):
+                    with st.spinner("データ取得中..."):
+                        try:
+                            graph_data = get_enhanced_graph_data(st.session_state.graph, limit=max_nodes)
+                            st.session_state.graph_data_cache = graph_data
+                            st.success(f"✅ {len(graph_data)}件のエッジを読み込みました")
+                        except Exception as e:
+                            st.error(f"エラー: {e}")
+
+            # データがある場合は表示
+            if st.session_state.graph_data_cache:
+                try:
+                    graph_data = st.session_state.graph_data_cache
+
+                    # フィルタリング
+                    filtered_data = []
+                    for item in graph_data:
+                        source_type = get_node_type(item['source'], item.get('source_type'))
+                        target_type = get_node_type(item['target'], item.get('target_type'))
+
+                        # フィルター適用
+                        type_filters = {
+                            'Person': filter_person,
+                            'Place': filter_place,
+                            'Event': filter_event,
+                            'Object': filter_object,
+                            'Other': filter_other
+                        }
+
+                        if type_filters.get(source_type, True) and type_filters.get(target_type, True):
+                            filtered_data.append(item)
+
+                    if filtered_data:
+                        display_data_tables(filtered_data)
                     else:
-                        st.info("グラフデータが見つかりません")
+                        st.warning("フィルター条件に一致するデータがありません")
+
                 except Exception as e:
                     st.error(f"エラー: {e}")
-                    import traceback
-                    st.code(traceback.format_exc())
+
+        # モード3: Cypherクエリ検索
+        elif display_mode == "🔍 Cypherクエリ検索":
+            st.markdown("### 自然言語でグラフを検索")
+            st.info("例: 「桃太郎に関するグラフを見たい」「おじいさんと関係のあるエンティティを表示」")
+
+            # クエリテンプレート選択（オプション）
+            with st.expander("📋 クエリテンプレート"):
+                template = st.selectbox(
+                    "よく使うクエリ",
+                    [
+                        "カスタム（自分で入力）",
+                        "特定エンティティに関連するすべての関係を表示",
+                        "最も接続数が多いノードTop10を表示",
+                        "すべてのリレーションシップタイプを表示"
+                    ]
+                )
+
+                if template == "特定エンティティに関連するすべての関係を表示":
+                    entity_name = st.text_input("エンティティ名を入力:", placeholder="例: 桃太郎")
+                    if entity_name:
+                        nl_query = f"{entity_name}に関連するすべての関係を表示"
+                    else:
+                        nl_query = ""
+                elif template == "最も接続数が多いノードTop10を表示":
+                    nl_query = "最も接続数が多いノードTop10を表示"
+                elif template == "すべてのリレーションシップタイプを表示":
+                    nl_query = "すべてのリレーションシップタイプとその数を表示"
+                else:
+                    nl_query = ""
+
+            # 自然言語クエリ入力
+            user_query = st.text_area(
+                "自然言語クエリ:",
+                value=nl_query,
+                height=100,
+                placeholder="例: 桃太郎に関するグラフを見たい"
+            )
+
+            col1, col2 = st.columns([1, 4])
+            with col1:
+                convert_button = st.button("🔄 Cypherに変換", type="primary")
+
+            # Cypherクエリ生成
+            if "generated_cypher" not in st.session_state:
+                st.session_state.generated_cypher = ""
+
+            if convert_button and user_query:
+                with st.spinner("Cypherクエリを生成中..."):
+                    cypher_query = natural_language_to_cypher(user_query)
+                    st.session_state.generated_cypher = cypher_query
+
+            # 生成されたCypherクエリ表示（編集可能）
+            if st.session_state.generated_cypher:
+                st.markdown("### 📝 生成されたCypherクエリ")
+                edited_cypher = st.text_area(
+                    "Cypherクエリ（編集可能）:",
+                    value=st.session_state.generated_cypher,
+                    height=150,
+                    key="cypher_editor"
+                )
+
+                col1, col2, col3 = st.columns([1, 1, 3])
+                with col1:
+                    execute_button = st.button("▶️ 実行", type="primary")
+                with col2:
+                    clear_button = st.button("🗑️ クリア")
+
+                if clear_button:
+                    st.session_state.generated_cypher = ""
+                    st.rerun()
+
+                # クエリ実行
+                if execute_button and edited_cypher:
+                    with st.spinner("クエリ実行中..."):
+                        result = execute_cypher_and_visualize(edited_cypher, st.session_state.graph)
+
+                        if result:
+                            st.success(f"✅ {len(result)}件の結果を取得しました")
+
+                            # 結果をテーブル表示
+                            st.markdown("### 📊 クエリ結果")
+                            import pandas as pd
+                            df = pd.DataFrame(result)
+                            st.dataframe(df, width='stretch')
+
+                            # 可視化（source, relation, targetがある場合）
+                            if len(result) > 0 and 'source' in result[0] and 'target' in result[0] and 'relation' in result[0]:
+                                st.markdown("### 🕸️ グラフ可視化")
+
+                                viz_choice = st.radio(
+                                    "可視化エンジン",
+                                    ["Pyvis", "Streamlit-Agraph"],
+                                    horizontal=True,
+                                    key="cypher_viz_engine"
+                                )
+
+                                if "Pyvis" in viz_choice:
+                                    html = visualize_graph_pyvis_enhanced(result)
+                                    if html:
+                                        st.components.v1.html(html, height=700)
+                                else:
+                                    viz_result = visualize_graph_agraph(result)
+                                    if not viz_result:
+                                        st.warning("⚠️ Agraphで表示できません。Pyvisにフォールバック")
+                                        html = visualize_graph_pyvis_enhanced(result)
+                                        if html:
+                                            st.components.v1.html(html, height=700)
+
     else:
-        if not st.session_state.initialized:
-            st.info("RAGシステムを初期化するとグラフが表示されます")
+        st.info("まずRAGシステムを初期化してください")
 
 # フッター
 st.markdown("---")
