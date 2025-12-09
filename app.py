@@ -12,13 +12,14 @@ from pathlib import Path
 from dotenv import load_dotenv
 import tempfile
 from typing import List
+import fitz  # PyMuPDF
 
 # LangChain imports
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_community.graphs import Neo4jGraph
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
+from langchain_community.document_loaders import TextLoader
 try:
     from langchain_community.graphs.graph_document import GraphDocument
 except ImportError:
@@ -43,7 +44,7 @@ except ImportError:
     except ImportError:
         HAS_PARENT = False
 
-from langchain_core.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate, ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import (
     RunnableParallel,
@@ -105,6 +106,66 @@ with st.sidebar:
         filter_object = st.checkbox("📦 物 (Object)", value=True)
         filter_other = st.checkbox("❓ その他 (Other)", value=True)
 
+    st.markdown("---")
+    st.markdown("### 🗑️ データベース管理")
+
+    if "confirm_delete" not in st.session_state:
+        st.session_state.confirm_delete = False
+
+    if not st.session_state.confirm_delete:
+        if st.button("🗑️ データベースをクリア", use_container_width=True):
+            st.session_state.confirm_delete = True
+            st.rerun()
+    else:
+        st.warning("⚠️ 本当にすべてのデータを削除しますか？")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("✅ はい、削除", type="primary", use_container_width=True):
+                with st.spinner("データベースをクリア中..."):
+                    try:
+                        # Neo4jクリア
+                        temp_graph = Neo4jGraph(
+                            url=NEO4J_URI,
+                            username=NEO4J_USER,
+                            password=NEO4J_PW,
+                            enhanced_schema=True
+                        )
+                        temp_graph.query("MATCH (n) DETACH DELETE n")
+
+                        # PGVectorクリア
+                        from langchain_community.vectorstores import PGVector
+                        try:
+                            # PGVectorのテーブルを削除
+                            import psycopg2
+                            conn = psycopg2.connect(PG_CONN)
+                            cur = conn.cursor()
+                            cur.execute("DROP TABLE IF EXISTS langchain_pg_collection CASCADE")
+                            cur.execute("DROP TABLE IF EXISTS langchain_pg_embedding CASCADE")
+                            conn.commit()
+                            cur.close()
+                            conn.close()
+                        except Exception as e:
+                            st.warning(f"PGVectorクリアで警告: {e}")
+
+                        # セッションステートリセット
+                        st.session_state.chain = None
+                        st.session_state.graph = None
+                        st.session_state.initialized = False
+                        st.session_state.uploaded_files = []
+                        st.session_state.existing_graph_loaded = False
+                        st.session_state.graph_data_cache = None
+                        st.session_state.confirm_delete = False
+
+                        st.success("✅ データベースをクリアしました")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"クリアエラー: {e}")
+                        st.session_state.confirm_delete = False
+        with col2:
+            if st.button("❌ キャンセル", use_container_width=True):
+                st.session_state.confirm_delete = False
+                st.rerun()
+
 # セッションステート初期化
 if "chain" not in st.session_state:
     st.session_state.chain = None
@@ -154,7 +215,12 @@ def restore_from_existing_graph():
     """Neo4jとPGVectorから既存データを使ってシステムを復元"""
     try:
         # Neo4j接続
-        graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USER, password=NEO4J_PW)
+        graph = Neo4jGraph(
+            url=NEO4J_URI,
+            username=NEO4J_USER,
+            password=NEO4J_PW,
+            enhanced_schema=False  # APOC不要
+        )
 
         # PGVector接続
         embeddings = AzureOpenAIEmbeddings(
@@ -340,7 +406,7 @@ def restore_from_existing_graph():
                         chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
                         if chunk_results:
                             # グラフから取得したチャンクをドキュメントとして追加
-                            from langchain.schema import Document
+                            from langchain_core.documents import Document
                             docs = [Document(page_content=r.get('text', ''), metadata={'id': r.get('chunk_id')})
                                    for r in chunk_results if r.get('text')]
                     except Exception:
@@ -404,9 +470,10 @@ def restore_from_existing_graph():
         raise Exception(f"システム復元エラー: {e}")
 
 # ドキュメント読み込み関数
-def load_documents(uploaded_files) -> str:
-    """アップロードされたファイルからテキストを抽出"""
-    all_text = []
+def load_documents(uploaded_files) -> list:
+    """アップロードされたファイルからテキストを抽出（ソースメタデータ付き）"""
+    from langchain_core.documents import Document
+    all_docs = []
 
     for uploaded_file in uploaded_files:
         with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as tmp_file:
@@ -414,25 +481,39 @@ def load_documents(uploaded_files) -> str:
             tmp_path = tmp_file.name
 
         try:
+            file_name = uploaded_file.name
             if uploaded_file.name.endswith('.pdf'):
-                loader = PyPDFLoader(tmp_path)
-                docs = loader.load()
-                all_text.append("\n".join([doc.page_content for doc in docs]))
+                # PyMuPDF (fitz) で高精度抽出
+                pdf_doc = fitz.open(tmp_path)
+                text_parts = []
+                for page_num in range(len(pdf_doc)):
+                    page = pdf_doc[page_num]
+                    # レイアウト保持・ソート付きでテキスト抽出
+                    text = page.get_text("text", sort=True)
+                    if text.strip():  # 空ページをスキップ
+                        text_parts.append(text)
+                pdf_doc.close()
+                text_content = "\n\n".join(text_parts)
             elif uploaded_file.name.endswith('.txt'):
                 loader = TextLoader(tmp_path, encoding='utf-8')
                 docs = loader.load()
-                all_text.append("\n".join([doc.page_content for doc in docs]))
+                text_content = "\n".join([doc.page_content for doc in docs])
             else:
                 # その他のテキストファイル
-                text = uploaded_file.getvalue().decode('utf-8')
-                all_text.append(text)
+                text_content = uploaded_file.getvalue().decode('utf-8')
+
+            # メタデータ付きドキュメント作成
+            all_docs.append(Document(
+                page_content=text_content,
+                metadata={"source": file_name}
+            ))
         finally:
             os.unlink(tmp_path)
 
-    return "\n\n".join(all_text)
+    return all_docs
 
 # 初期化関数
-def build_rag_system(text_content: str):
+def build_rag_system(source_docs: list):
     """RAGシステムの構築"""
 
     # チャンク分割
@@ -443,7 +524,17 @@ def build_rag_system(text_content: str):
         api_key=AZURE_OPENAI_API_KEY
     )
     chunker = SemanticChunker(embeddings, buffer_size=50)
-    chunks = chunker.create_documents([text_content])
+
+    # ドキュメントごとにチャンク分割し、メタデータを保持
+    all_chunks = []
+    for doc in source_docs:
+        doc_chunks = chunker.create_documents([doc.page_content])
+        # 各チャンクにソースメタデータを付与
+        for chunk in doc_chunks:
+            chunk.metadata.update(doc.metadata)
+        all_chunks.extend(doc_chunks)
+
+    chunks = all_chunks
 
     # GraphDocument化
     llm = AzureChatOpenAI(
@@ -453,12 +544,161 @@ def build_rag_system(text_content: str):
         api_key=AZURE_OPENAI_API_KEY,
         temperature=0
     )
-    transformer = LLMGraphTransformer(llm=llm)
+
+    # カスタムKG抽出プロンプト（専門用語＋包括的な関係タイプ）
+    kg_system_prompt = """
+あなたはテキストから専門用語とその関係性を抽出する専門家です。
+以下のルールに従って、テキストから専門用語ノードと関係性を抽出してください。
+
+【ノード抽出ルール】
+- 専門用語（Term）のみを抽出してください
+- 専門用語の例:
+  - 技術用語: API、データベース、アルゴリズム、機械学習
+  - 医療用語: 疾患名、薬剤名、治療法
+  - 法律用語: 法令名、契約条項、法的概念
+  - ビジネス用語: KPI、ROI、サプライチェーン
+  - 学術用語: 理論名、方法論、概念
+  - プロセス・手順: 工程名、ステップ、フェーズ
+- 一般的な名詞や動詞は無視してください（「人」「物」「する」「行う」など）
+- 固有名詞は専門用語として扱ってください
+
+【表記ゆれの統一】
+- 同じ概念を指す異なる表記は同一ノードとして扱ってください
+  例: 「AI」「人工知能」「Artificial Intelligence」→「AI」
+  例: 「DB」「データベース」→「データベース」
+  例: 「ML」「機械学習」「Machine Learning」→「機械学習」
+
+【リレーションシップ抽出ルール】
+以下のカテゴリの関係性を抽出してください：
+
+**1. 階層・分類関係**
+- IS_A: 上位下位関係（具体→抽象）
+  例: 「MySQL」-[IS_A]->「データベース」
+- BELONGS_TO_CATEGORY: カテゴリ所属
+  例: 「決算書」-[BELONGS_TO_CATEGORY]->「財務書類」
+- PART_OF: 部分構成関係
+  例: 「エンジン」-[PART_OF]->「自動車」
+- HAS_STEP: プロセスのステップ
+  例: 「要件定義」-[HAS_STEP]->「システム開発」
+
+**2. 属性・特性関係**
+- HAS_ATTRIBUTE: 属性保持
+  例: 「データベース」-[HAS_ATTRIBUTE]->「ACID特性」
+- RELATED_TO: 一般的な関連性
+  例: 「セキュリティ」-[RELATED_TO]->「認証」
+
+**3. 因果・依存関係**
+- AFFECTS: 影響関係
+  例: 「金利」-[AFFECTS]->「住宅ローン」
+- CAUSES: 原因結果
+  例: 「メモリリーク」-[CAUSES]->「システムダウン」
+- DEPENDS_ON: 依存関係
+  例: 「デプロイ」-[DEPENDS_ON]->「テスト完了」
+
+**4. 適用・制約関係**
+- APPLIES_TO: 適用対象
+  例: 「GDPR」-[APPLIES_TO]->「個人情報」
+- APPLIES_WHEN: 適用条件
+  例: 「緊急対応手順」-[APPLIES_WHEN]->「障害発生時」
+- REQUIRES_QUALITY_GATE: 品質ゲート要求
+  例: 「本番リリース」-[REQUIRES_QUALITY_GATE]->「セキュリティ監査」
+- REQUIRES_APPROVAL_FROM: 承認要求
+  例: 「予算執行」-[REQUIRES_APPROVAL_FROM]->「取締役会」
+
+**5. 所有・責任関係**
+- OWNED_BY: 所有者
+  例: 「認証サービス」-[OWNED_BY]->「セキュリティチーム」
+
+**6. 同義語関係**
+- SAME_AS: 完全同義
+  例: 「AI」-[SAME_AS]->「人工知能」
+- ALIAS_OF: エイリアス・略称
+  例: 「DB」-[ALIAS_OF]->「データベース」
+
+【重要な注意事項】
+- 明確な関係性のみを抽出し、推測や曖昧な関係は含めないでください
+- 関係の方向性に注意してください（特にIS_A、PART_OFなど）
+- テキスト中に明示されている関係を優先してください
+"""
+
+    kg_user_prompt = """
+以下のテキストから、上記ルールに従って専門用語とその関係性を抽出してください。
+
+テキスト:
+{input}
+"""
+
+    kg_prompt = ChatPromptTemplate.from_messages([
+        ("system", kg_system_prompt),
+        ("user", kg_user_prompt)
+    ])
+
+    transformer = LLMGraphTransformer(
+        llm=llm,
+        prompt=kg_prompt,
+        allowed_nodes=["Term"],
+        allowed_relationships=[
+            # 階層・分類関係
+            "IS_A", "BELONGS_TO_CATEGORY", "PART_OF", "HAS_STEP",
+            # 属性・特性関係
+            "HAS_ATTRIBUTE", "RELATED_TO",
+            # 因果・依存関係
+            "AFFECTS", "CAUSES", "DEPENDS_ON",
+            # 適用・制約関係
+            "APPLIES_TO", "APPLIES_WHEN", "REQUIRES_QUALITY_GATE", "REQUIRES_APPROVAL_FROM",
+            # 所有・責任関係
+            "OWNED_BY",
+            # 同義語関係
+            "SAME_AS", "ALIAS_OF"
+        ],
+        strict_mode=True
+    )
     graph_docs = transformer.convert_to_graph_documents(chunks)
 
     # Neo4jロード
-    graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USER, password=NEO4J_PW)
+    graph = Neo4jGraph(
+        url=NEO4J_URI,
+        username=NEO4J_USER,
+        password=NEO4J_PW,
+        enhanced_schema=True  # APOCを使用
+    )
     graph.add_graph_documents(graph_docs, include_source=True)
+
+    # Documentノードを作成してChunkとリンク
+    for doc in source_docs:
+        doc_name = doc.metadata.get("source", "Unknown")
+        # Documentノードを作成
+        graph.query("""
+            MERGE (d:Document {name: $doc_name})
+            SET d.created = timestamp()
+        """, params={"doc_name": doc_name})
+
+    # 各ChunkをDocumentにリンク
+    for chunk in chunks:
+        chunk_id = chunk.metadata.get("id")
+        doc_name = chunk.metadata.get("source", "Unknown")
+        if chunk_id:
+            graph.query("""
+                MATCH (c:Chunk {id: $chunk_id})
+                MATCH (d:Document {name: $doc_name})
+                MERGE (c)-[:FROM_DOCUMENT]->(d)
+            """, params={"chunk_id": chunk_id, "doc_name": doc_name})
+
+    # クロスドキュメント推論: 共通する専門用語を持つドキュメント間にリレーションを作成
+    cross_doc_query = """
+    MATCH (d1:Document)<-[:FROM_DOCUMENT]-(c1:Chunk)-[:MENTIONS]->(term:Term)
+    MATCH (d2:Document)<-[:FROM_DOCUMENT]-(c2:Chunk)-[:MENTIONS]->(term)
+    WHERE d1.name <> d2.name
+    WITH d1, d2, COUNT(DISTINCT term) AS common_terms
+    WHERE common_terms >= 2
+    MERGE (d1)-[r:SHARES_TOPICS_WITH]->(d2)
+    SET r.common_term_count = common_terms
+    """
+    try:
+        graph.query(cross_doc_query)
+    except Exception as e:
+        # クロスドキュメント推論が失敗しても続行
+        pass
 
     # PGVector保存
     vector_store = PGVector.from_documents(chunks, embeddings, connection_string=PG_CONN)
@@ -609,22 +849,28 @@ def build_rag_system(text_content: str):
             # グラフから関連エンティティを取得し、それに関連するドキュメントチャンクを取得
             entity_names = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
 
-            # エンティティに関連するチャンクを取得
+            # エンティティに関連するチャンクを取得（ドキュメント情報付き）
             if entity_names:
                 chunk_query = """
                 UNWIND $entity_names AS entity_name
                 MATCH (e {id: entity_name})<-[:MENTIONS]-(chunk)
                 WHERE chunk.id =~ '[0-9a-f]{32}'
-                RETURN DISTINCT chunk.id AS chunk_id, chunk.text AS text
+                OPTIONAL MATCH (chunk)-[:FROM_DOCUMENT]->(doc:Document)
+                RETURN DISTINCT chunk.id AS chunk_id, chunk.text AS text, doc.name AS source
                 LIMIT 5
                 """
                 try:
                     chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
                     if chunk_results:
-                        # グラフから取得したチャンクをドキュメントとして追加
-                        from langchain.schema import Document
-                        docs = [Document(page_content=r.get('text', ''), metadata={'id': r.get('chunk_id')})
-                               for r in chunk_results if r.get('text')]
+                        # グラフから取得したチャンクをドキュメントとして追加（ソース情報付き）
+                        from langchain_core.documents import Document
+                        docs = [Document(
+                            page_content=r.get('text', ''),
+                            metadata={
+                                'id': r.get('chunk_id'),
+                                'source': r.get('source', 'Unknown')
+                            })
+                            for r in chunk_results if r.get('text')]
                 except Exception:
                     pass
 
@@ -637,9 +883,15 @@ def build_rag_system(text_content: str):
             for t in triples
         ] if triples else ["(グラフデータなし)"]
 
+        # ドキュメントコンテキストにソース情報を含める
+        doc_contexts = []
+        for d in docs:
+            source = d.metadata.get('source', 'Unknown')
+            doc_contexts.append(f"[出典: {source}]\n{d.page_content}")
+
         context = (
             "<GRAPH_CONTEXT>\n" + "\n".join(graph_lines) + "\n</GRAPH_CONTEXT>\n\n" +
-            "<DOCUMENT_CONTEXT>\n" + "\n---\n".join(d.page_content for d in docs) + "\n</DOCUMENT_CONTEXT>"
+            "<DOCUMENT_CONTEXT>\n" + "\n---\n".join(doc_contexts) + "\n</DOCUMENT_CONTEXT>"
         )
         return {
             "context": context,
@@ -649,7 +901,8 @@ def build_rag_system(text_content: str):
         }
 
     prompt = PromptTemplate.from_template(
-        """あなたはドキュメントの専門家です。\n質問: {question}\n\n{context}\n\n---\n上記情報のみを根拠に、日本語で網羅的かつ正確に回答してください。"""
+        """あなたはドキュメントの専門家です。\n質問: {question}\n\n{context}\n\n---\n上記情報のみを根拠に、日本語で網羅的かつ正確に回答してください。
+複数のドキュメントから情報を取得した場合は、それぞれの出典を明示してください。"""
     )
 
     # LLM呼び出し部分
@@ -684,13 +937,17 @@ def build_rag_system(text_content: str):
 
 # グラフ取得関数（改善版）
 def get_enhanced_graph_data(graph, limit=200):
-    """Neo4jから拡張グラフデータを取得（チャンクID除外、MENTIONS関係除外）"""
+    """Neo4jから拡張グラフデータを取得（チャンクID除外、MENTIONS関係除外、ドキュメント情報付与）"""
     query = f"""
     MATCH (n)-[r]->(m)
     WHERE type(r) <> 'MENTIONS'
     AND NOT n.id =~ '[0-9a-f]{{32}}'
     AND NOT m.id =~ '[0-9a-f]{{32}}'
-    WITH n, r, m, labels(n) as source_labels, labels(m) as target_labels
+    OPTIONAL MATCH (n)<-[:MENTIONS]-(chunk_n)-[:FROM_DOCUMENT]->(doc_n:Document)
+    OPTIONAL MATCH (m)<-[:MENTIONS]-(chunk_m)-[:FROM_DOCUMENT]->(doc_m:Document)
+    WITH n, r, m, labels(n) as source_labels, labels(m) as target_labels,
+         COLLECT(DISTINCT doc_n.name) AS source_docs,
+         COLLECT(DISTINCT doc_m.name) AS target_docs
     RETURN
       n.id AS source,
       CASE WHEN size(source_labels) > 0 THEN source_labels[0] ELSE 'Unknown' END AS source_type,
@@ -698,7 +955,9 @@ def get_enhanced_graph_data(graph, limit=200):
       m.id AS target,
       CASE WHEN size(target_labels) > 0 THEN target_labels[0] ELSE 'Unknown' END AS target_type,
       COUNT {{ (n)--() }} AS source_degree,
-      COUNT {{ (m)--() }} AS target_degree
+      COUNT {{ (m)--() }} AS target_degree,
+      source_docs,
+      target_docs
     LIMIT {limit}
     """
     result = graph.query(query)
@@ -910,30 +1169,35 @@ def visualize_graph_pyvis_enhanced(graph_data):
 
             source_degree = item.get('source_degree', 1)
             target_degree = item.get('target_degree', 1)
+            source_docs = item.get('source_docs', [])
+            target_docs = item.get('target_docs', [])
 
             if item['source'] not in node_dict:
                 node_dict[item['source']] = {
                     'type': source_type,
                     'degree': source_degree,
-                    'color': get_color_for_type(source_type)
+                    'color': get_color_for_type(source_type),
+                    'docs': source_docs
                 }
 
             if item['target'] not in node_dict:
                 node_dict[item['target']] = {
                     'type': target_type,
                     'degree': target_degree,
-                    'color': get_color_for_type(target_type)
+                    'color': get_color_for_type(target_type),
+                    'docs': target_docs
                 }
 
         # ノード追加（サイズを控えめに調整）
         for node_id, node_info in node_dict.items():
             size = 12 + min(node_info['degree'] * 1, 18)  # 最小12、最大30（控えめ）
+            docs_str = "<br>出典: " + ", ".join(node_info['docs']) if node_info.get('docs') else ""
             net.add_node(
                 node_id,
                 label=node_id,
                 color=node_info['color'],
                 size=size,
-                title=f"<b>{node_id}</b><br>タイプ: {node_info['type']}<br>接続数: {node_info['degree']}",
+                title=f"<b>{node_id}</b><br>タイプ: {node_info['type']}<br>接続数: {node_info['degree']}{docs_str}",
                 borderWidth=2
             )
 
@@ -1141,7 +1405,12 @@ st.header("📁 ドキュメントアップロード")
 # 既存グラフのチェック（初回のみ）
 if not st.session_state.existing_graph_loaded and not st.session_state.initialized:
     try:
-        temp_graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USER, password=NEO4J_PW)
+        temp_graph = Neo4jGraph(
+            url=NEO4J_URI,
+            username=NEO4J_USER,
+            password=NEO4J_PW,
+            enhanced_schema=False  # APOC不要
+        )
         graph_info = check_existing_graph(temp_graph)
 
         if graph_info['exists']:
@@ -1195,15 +1464,16 @@ if uploaded_files:
     if st.button("🚀 ナレッジグラフを構築", type="primary"):
         with st.spinner("ドキュメント読み込み中..."):
             try:
-                text_content = load_documents(uploaded_files)
-                st.info(f"テキスト長: {len(text_content)} 文字")
+                source_docs = load_documents(uploaded_files)
+                total_chars = sum(len(doc.page_content) for doc in source_docs)
+                st.info(f"📄 {len(source_docs)} ファイル読み込み完了（総文字数: {total_chars:,} 文字）")
             except Exception as e:
                 st.error(f"ファイル読み込みエラー: {e}")
                 st.stop()
 
         with st.spinner("ナレッジグラフ構築中... (数分かかる場合があります)"):
             try:
-                st.session_state.chain, st.session_state.graph = build_rag_system(text_content)
+                st.session_state.chain, st.session_state.graph = build_rag_system(source_docs)
                 st.session_state.initialized = True
                 st.session_state.uploaded_files = [f.name for f in uploaded_files]
                 st.success("✅ ナレッジグラフ構築完了!")
