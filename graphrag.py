@@ -40,14 +40,16 @@ python graph_rag_lcel.py   # input.txt を同階層に配置
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 from typing import List, Dict, Any
+import hashlib
 
 from dotenv import load_dotenv
 
 # ── LangChain / OpenAI ─────────────────────────────────────────────
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_experimental.text_splitter import SemanticChunker
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_community.graphs import Neo4jGraph
 try:
@@ -77,18 +79,30 @@ except ImportError:
         HAS_PARENT = False  # fallback to simple retriever
 
 from langchain_core.prompts import PromptTemplate
-from langchain.schema.output_parser import StrOutputParser
-from langchain.schema.runnable import (
-    RunnableParallel,
-    RunnablePassthrough,
-    RunnableLambda,
-)
+try:
+    # langchain>=0.2
+    from langchain_core.output_parsers import StrOutputParser
+    from langchain_core.runnables import (
+        RunnableParallel,
+        RunnablePassthrough,
+        RunnableLambda,
+    )
+except ImportError:  # legacy (<0.2)
+    from langchain.schema.output_parser import StrOutputParser  # type: ignore
+    from langchain.schema.runnable import (  # type: ignore
+        RunnableParallel,
+        RunnablePassthrough,
+        RunnableLambda,
+    )
 
 # ── 環境変数 ───────────────────────────────────────────────────────
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Neo4j
+# Graph Backend選択
+GRAPH_BACKEND = os.getenv("GRAPH_BACKEND", "networkx").lower()  # デフォルト: networkx
+
+# Neo4j (GRAPH_BACKEND=neo4j の場合のみ必要)
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PW = os.getenv("NEO4J_PW")
@@ -98,31 +112,128 @@ PG_CONN = os.getenv("PG_CONN")
 if not PG_CONN:
     raise ValueError("PG_CONN 環境変数が未設定です。")
 
+# バックエンド検証
+if GRAPH_BACKEND not in ["neo4j", "networkx"]:
+    raise ValueError(f"GRAPH_BACKEND は 'neo4j' または 'networkx' を指定してください。現在: {GRAPH_BACKEND}")
+
+if GRAPH_BACKEND == "neo4j" and not all([NEO4J_URI, NEO4J_USER, NEO4J_PW]):
+    raise ValueError("GRAPH_BACKEND=neo4j の場合、NEO4J_URI, NEO4J_USER, NEO4J_PW が必要です。")
+
 # ── 0. ドキュメント読み込み ───────────────────────────────────────
 DOC_PATH = "input.txt"
 if not Path(DOC_PATH).is_file():
     raise FileNotFoundError(f"{DOC_PATH} が見つかりません")
 raw_text = Path(DOC_PATH).read_text(encoding="utf-8")
 
-# ── 1. チャンク分割 (SemanticChunker) ─────────────────────────────
+# ── 1. チャンク分割 (RecursiveCharacterTextSplitter) ─────────────────────────────
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-chunker = SemanticChunker(embeddings, buffer_size=50)  # chunk_size 引数は不要
+chunker = RecursiveCharacterTextSplitter(
+    chunk_size=500,           # 500文字ごとに分割
+    chunk_overlap=100,        # 100文字オーバーラップ（文脈保持）
+    separators=["\n\n", "\n", "。", "、", " ", ""],  # 日本語対応
+    length_function=len
+)
 chunks = chunker.create_documents([raw_text])
 
+# 重複チャンクを内容ハッシュで除去し、ハッシュをIDとして付与
+deduped = []
+seen_hashes = set()
+for chunk in chunks:
+    digest = hashlib.sha256(chunk.page_content.encode("utf-8")).hexdigest()
+    if digest in seen_hashes:
+        continue
+    seen_hashes.add(digest)
+    chunk.metadata["id"] = digest
+    deduped.append(chunk)
+chunks = deduped
+
+
+# --- ベクトルDBクリア機能（UI/CLI/ENVで利用） ---
+class _DummyEmbeddings:
+    """OpenAIを呼ばずにコレクション削除だけ行うためのダミー埋め込み"""
+
+    def __init__(self, dim: int = 1536) -> None:
+        self.dim = dim
+
+    def embed_query(self, _: str):
+        return [0.0] * self.dim
+
+    def embed_documents(self, texts):
+        return [[0.0] * self.dim for _ in texts]
+
+
+def clear_vector_store() -> None:
+    """PGVector の既存コレクションを削除してクリーンにする"""
+    store = PGVector(
+        connection_string=PG_CONN,
+        embedding_function=_DummyEmbeddings(),
+        collection_name="graphrag",
+        embedding_length=1536,
+    )
+    store.delete_collection()
+    print("✅ Vector store collection 'graphrag' を削除しました")
+
+
+def maybe_handle_control_mode() -> None:
+    """UIメニュー/CLI引数/環境変数でクリア指示があれば即実行して終了"""
+    args = [a.lower() for a in sys.argv[1:]]
+    env_clear = os.getenv("CLEAR_VECTOR_STORE") == "1"
+    use_ui = os.getenv("GRAPHRAG_UI") == "1" or any(a in {"ui", "menu", "manage"} for a in args)
+    wants_clear = env_clear or any(a.strip("-") in {"clear", "reset", "cleanup"} for a in args)
+
+    if use_ui:
+        print("[GraphRAG 管理メニュー]")
+        print("  1) Vector store を削除する")
+        print("  2) 通常実行する")
+        print("  3) 何もしないで終了")
+        choice = input("選択番号を入力してください [1/2/3]: ").strip()
+        if choice == "1":
+            clear_vector_store()
+            sys.exit(0)
+        if choice == "3":
+            sys.exit(0)
+        # choice == "2" はそのまま続行
+
+    if wants_clear:
+        clear_vector_store()
+        sys.exit(0)
+
+
+maybe_handle_control_mode()
+
 # ── 2. LLMGraphTransformer で GraphDocument 化 ───────────────────
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
 transformer = LLMGraphTransformer(llm=llm)
 graph_docs: List[GraphDocument] = transformer.convert_to_graph_documents(chunks)
 
-# ── 3. Neo4j にロード ────────────────────────────────────────────
-graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USER, password=NEO4J_PW)
-graph.add_graph_documents(graph_docs, include_source=True)
+# ── 3. グラフバックエンドにロード ────────────────────────────────────────────
+if GRAPH_BACKEND == "neo4j":
+    graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USER, password=NEO4J_PW)
+    graph.add_graph_documents(graph_docs, include_source=True)
+    print(f"✅ Neo4jにグラフをロードしました (URI: {NEO4J_URI})")
+else:  # networkx
+    from networkx_graph import NetworkXGraph
+    graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
+    graph.add_graph_documents(graph_docs, include_source=True)
+    print(f"✅ NetworkXにグラフをロードしました (保存先: graph.pkl)")
 
-# ── 4. PGVector にチャンク保存 ────────────────────────────────────
-vector_store = PGVector.from_documents(chunks, embeddings, connection_string=PG_CONN)
+# ── 4. PGVector にチャンク保存 ───────────────────────────────────────────
+vector_store = PGVector.from_documents(
+    chunks,
+    embeddings,
+    connection_string=PG_CONN,
+    collection_name="graphrag",
+    pre_delete_collection=True,  # 再実行時に既存コレクションを削除して重複を防止
+    ids=[c.metadata["id"] for c in chunks],  # 同一IDの再登録を防ぐ
+)
 
 # ── 5. Retriever 構築 ─────────────────────────────────────────────
-graph_retriever = GraphRetriever(graph=graph, k=4, search_type="cypher")
+if GRAPH_BACKEND == "neo4j":
+    graph_retriever = GraphRetriever(graph=graph, k=4, search_type="cypher")
+else:  # networkx
+    from networkx_graph import NetworkXGraphRetriever
+    graph_retriever = NetworkXGraphRetriever(graph=graph, k=15, llm=llm)
+
 if HAS_PARENT:
     vector_retriever = ParentDocumentRetriever(vector_store, search_kwargs={"k": 4})
 else:
@@ -156,13 +267,14 @@ chain = (
     | RunnableParallel({"graph": graph_run, "docs": vector_run})
     | RunnableLambda(merge_ctx)
     | prompt
-    | ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    | ChatOpenAI(model="gpt-4.1-mini", temperature=0)
     | StrOutputParser()
 )
 
 # ── 7. 対話ループ ────────────────────────────────────────────────
 if __name__ == "__main__":
-    print("Graph-RAG LCEL デモ。質問を入力してください (exit で終了)。")
+    print(f"Graph-RAG LCEL デモ (Backend: {GRAPH_BACKEND.upper()})")
+    print("質問を入力してください (exit で終了)。")
     while True:
         q = input("\n質問> ").strip()
         if q.lower() in {"exit", "quit", "q"}:

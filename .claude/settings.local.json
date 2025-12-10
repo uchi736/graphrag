@@ -4,7 +4,12 @@
       "Bash(findstr:*)",
       "Bash(python:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: Graph-RAG with Streamlit UI\n\nFeatures:\n- Streamlit web interface with PDF/text file upload\n- Automatic knowledge graph construction using LLMGraphTransformer\n- Neo4j graph database integration\n- PGVector for vector embeddings\n- Dual visualization engines (Streamlit-Agraph & Pyvis)\n- Node type auto-detection and color-coding\n- Interactive filters and graph exploration\n- Existing graph auto-detection and restore\n- Azure OpenAI integration\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

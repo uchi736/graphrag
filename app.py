@@ -12,11 +12,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 import tempfile
 from typing import List
+import hashlib
 import fitz  # PyMuPDF
 
 # LangChain imports
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
-from langchain_experimental.text_splitter import SemanticChunker
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_community.graphs import Neo4jGraph
 from langchain_community.document_loaders import TextLoader
@@ -62,7 +63,12 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🔗 Graph-RAG with Neo4j & PGVector")
+# セッションステートでバックエンド管理（早期初期化）
+if "graph_backend" not in st.session_state:
+    st.session_state.graph_backend = os.getenv("GRAPH_BACKEND", "networkx").lower()
+
+# タイトルをバックエンドに応じて動的に変更
+st.title(f"🔗 Graph-RAG with {st.session_state.graph_backend.upper()} & PGVector")
 
 # サイドバー: 環境設定確認
 with st.sidebar:
@@ -73,16 +79,85 @@ with st.sidebar:
     AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
     AZURE_OPENAI_CHAT_DEPLOYMENT = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME")
     AZURE_OPENAI_EMBEDDING_DEPLOYMENT = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
+
     NEO4J_URI = os.getenv("NEO4J_URI")
     NEO4J_USER = os.getenv("NEO4J_USER")
     NEO4J_PW = os.getenv("NEO4J_PW")
     PG_CONN = os.getenv("PG_CONN")
 
-    if not all([AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, NEO4J_URI, NEO4J_USER, NEO4J_PW, PG_CONN]):
+    # 必須環境変数チェック（OpenAI, PGVector）
+    if not all([AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, PG_CONN]):
         st.error("環境変数が不足しています。.envファイルを確認してください。")
         st.stop()
 
-    st.success("✅ 環境変数読み込み完了")
+    st.markdown("---")
+    st.markdown("### 🗄️ グラフバックエンド")
+
+    # バックエンド選択UI
+    backend_options = {
+        "NetworkX (軽量・Neo4j不要)": "networkx",
+        "Neo4j (高性能・大規模)": "neo4j"
+    }
+
+    current_backend_label = [k for k, v in backend_options.items()
+                              if v == st.session_state.graph_backend][0]
+
+    selected_backend = st.radio(
+        "バックエンド選択",
+        list(backend_options.keys()),
+        index=list(backend_options.values()).index(st.session_state.graph_backend),
+        help="NetworkX: 即座に使用可能、小〜中規模データ / Neo4j: 大規模データ・高度なクエリ",
+        label_visibility="collapsed"
+    )
+
+    # バックエンド切り替え検出
+    new_backend = backend_options[selected_backend]
+    if new_backend != st.session_state.graph_backend:
+        st.warning("⚠️ バックエンドを切り替えると、既存のグラフデータはクリアされます。")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("✅ 切り替える", type="primary", use_container_width=True, key="switch_backend"):
+                # データクリア
+                st.session_state.chain = None
+                st.session_state.graph = None
+                st.session_state.initialized = False
+                st.session_state.uploaded_files = []
+                st.session_state.existing_graph_loaded = False
+                st.session_state.graph_data_cache = None
+                st.session_state.graph_backend = new_backend
+                st.success(f"✅ {new_backend.upper()}に切り替えました")
+                st.rerun()
+        with col2:
+            if st.button("❌ キャンセル", use_container_width=True, key="cancel_switch"):
+                st.rerun()
+        st.stop()  # 切り替え確認中は以降の処理を停止
+
+    # Neo4j使用時のみNeo4j設定を必須化
+    if st.session_state.graph_backend == "neo4j":
+        if not all([NEO4J_URI, NEO4J_USER, NEO4J_PW]):
+            st.error("❌ Neo4jを使用するには NEO4J_URI, NEO4J_USER, NEO4J_PW が必要です。")
+            st.info("💡 NetworkXに切り替えると、Neo4j設定なしで使用できます。")
+            if st.button("NetworkXに切り替え", key="fallback_to_networkx"):
+                st.session_state.graph_backend = "networkx"
+                st.rerun()
+            st.stop()
+
+        # Neo4j接続テスト
+        try:
+            with st.spinner("Neo4j接続確認中..."):
+                test_graph = Neo4jGraph(url=NEO4J_URI, username=NEO4J_USER, password=NEO4J_PW)
+                del test_graph
+            st.success(f"✅ Neo4j接続成功")
+        except Exception as e:
+            st.error(f"❌ Neo4j接続エラー: {str(e)[:100]}")
+            st.info("💡 NetworkXに切り替えますか？")
+            if st.button("NetworkXに切り替え", key="fallback_on_error"):
+                st.session_state.graph_backend = "networkx"
+                st.rerun()
+            st.stop()
+    else:
+        st.success(f"✅ NetworkXモード (Neo4j設定不要)")
 
     st.markdown("---")
     st.markdown("### 📊 グラフ可視化設定")
@@ -123,14 +198,22 @@ with st.sidebar:
             if st.button("✅ はい、削除", type="primary", use_container_width=True):
                 with st.spinner("データベースをクリア中..."):
                     try:
-                        # Neo4jクリア
-                        temp_graph = Neo4jGraph(
-                            url=NEO4J_URI,
-                            username=NEO4J_USER,
-                            password=NEO4J_PW,
-                            enhanced_schema=True
-                        )
-                        temp_graph.query("MATCH (n) DETACH DELETE n")
+                        # グラフバックエンドクリア
+                        if st.session_state.graph_backend == "neo4j":
+                            temp_graph = Neo4jGraph(
+                                url=NEO4J_URI,
+                                username=NEO4J_USER,
+                                password=NEO4J_PW,
+                                enhanced_schema=True
+                            )
+                            temp_graph.query("MATCH (n) DETACH DELETE n")
+                        else:  # networkx
+                            from networkx_graph import NetworkXGraph
+                            temp_graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
+                            temp_graph.graph.clear()
+                            temp_graph.node_metadata.clear()
+                            temp_graph.edge_metadata.clear()
+                            temp_graph.save()
 
                         # PGVectorクリア
                         from langchain_community.vectorstores import PGVector
@@ -180,47 +263,62 @@ if "existing_graph_loaded" not in st.session_state:
 if "graph_data_cache" not in st.session_state:
     st.session_state.graph_data_cache = None
 
-# Neo4j既存データチェック関数
-def check_existing_graph(graph) -> dict:
-    """Neo4jに既存のグラフデータがあるかチェック"""
+# 既存データチェック関数（バックエンド共通）
+def check_existing_graph(graph, backend: str) -> dict:
+    """グラフバックエンドに既存のグラフデータがあるかチェック"""
     try:
-        query = """
-        MATCH (n)
-        RETURN count(n) AS node_count
-        """
-        result = graph.query(query)
-        node_count = result[0]['node_count'] if result else 0
-
-        if node_count > 0:
-            # リレーションシップもカウント
-            query_rel = """
-            MATCH ()-[r]->()
-            RETURN count(r) AS rel_count
+        if backend == "neo4j":
+            query = """
+            MATCH (n)
+            RETURN count(n) AS node_count
             """
-            result_rel = graph.query(query_rel)
-            rel_count = result_rel[0]['rel_count'] if result_rel else 0
+            result = graph.query(query)
+            node_count = result[0]['node_count'] if result else 0
 
-            return {
-                'exists': True,
-                'node_count': node_count,
-                'rel_count': rel_count
-            }
+            if node_count > 0:
+                query_rel = """
+                MATCH ()-[r]->()
+                RETURN count(r) AS rel_count
+                """
+                result_rel = graph.query(query_rel)
+                rel_count = result_rel[0]['rel_count'] if result_rel else 0
+
+                return {
+                    'exists': True,
+                    'node_count': node_count,
+                    'rel_count': rel_count
+                }
+        else:  # networkx
+            node_count = graph.graph.number_of_nodes()
+            rel_count = graph.graph.number_of_edges()
+
+            if node_count > 0:
+                return {
+                    'exists': True,
+                    'node_count': node_count,
+                    'rel_count': rel_count
+                }
+
         return {'exists': False, 'node_count': 0, 'rel_count': 0}
     except Exception as e:
-        st.error(f"Neo4j接続エラー: {e}")
+        st.error(f"グラフ接続エラー: {e}")
         return {'exists': False, 'node_count': 0, 'rel_count': 0}
 
 # 既存グラフからシステムを復元
 def restore_from_existing_graph():
-    """Neo4jとPGVectorから既存データを使ってシステムを復元"""
+    """グラフバックエンドとPGVectorから既存データを使ってシステムを復元"""
     try:
-        # Neo4j接続
-        graph = Neo4jGraph(
-            url=NEO4J_URI,
-            username=NEO4J_USER,
-            password=NEO4J_PW,
-            enhanced_schema=False  # APOC不要
-        )
+        # グラフ接続
+        if st.session_state.graph_backend == "neo4j":
+            graph = Neo4jGraph(
+                url=NEO4J_URI,
+                username=NEO4J_USER,
+                password=NEO4J_PW,
+                enhanced_schema=False  # APOC不要
+            )
+        else:  # networkx
+            from networkx_graph import NetworkXGraph
+            graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
 
         # PGVector接続
         embeddings = AzureOpenAIEmbeddings(
@@ -516,14 +614,19 @@ def load_documents(uploaded_files) -> list:
 def build_rag_system(source_docs: list):
     """RAGシステムの構築"""
 
-    # チャンク分割
+    # チャンク分割（RecursiveCharacterTextSplitter: 重複を防ぐ）
     embeddings = AzureOpenAIEmbeddings(
         azure_deployment=AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
         openai_api_version=AZURE_OPENAI_API_VERSION,
         azure_endpoint=AZURE_OPENAI_ENDPOINT,
         api_key=AZURE_OPENAI_API_KEY
     )
-    chunker = SemanticChunker(embeddings, buffer_size=50)
+    chunker = RecursiveCharacterTextSplitter(
+        chunk_size=500,           # 500文字ごとに分割
+        chunk_overlap=100,        # 100文字オーバーラップ（文脈保持）
+        separators=["\n\n", "\n", "。", "、", " ", ""],  # 日本語対応
+        length_function=len
+    )
 
     # ドキュメントごとにチャンク分割し、メタデータを保持
     all_chunks = []
@@ -535,6 +638,18 @@ def build_rag_system(source_docs: list):
         all_chunks.extend(doc_chunks)
 
     chunks = all_chunks
+
+    # チャンク重複除去（ハッシュベース）
+    deduped = []
+    seen_hashes = set()
+    for chunk in chunks:
+        digest = hashlib.sha256(chunk.page_content.encode("utf-8")).hexdigest()
+        if digest in seen_hashes:
+            continue
+        seen_hashes.add(digest)
+        chunk.metadata["id"] = digest
+        deduped.append(chunk)
+    chunks = deduped
 
     # GraphDocument化
     llm = AzureChatOpenAI(
@@ -655,14 +770,19 @@ def build_rag_system(source_docs: list):
     )
     graph_docs = transformer.convert_to_graph_documents(chunks)
 
-    # Neo4jロード
-    graph = Neo4jGraph(
-        url=NEO4J_URI,
-        username=NEO4J_USER,
-        password=NEO4J_PW,
-        enhanced_schema=True  # APOCを使用
-    )
-    graph.add_graph_documents(graph_docs, include_source=True)
+    # グラフバックエンドにロード
+    if st.session_state.graph_backend == "neo4j":
+        graph = Neo4jGraph(
+            url=NEO4J_URI,
+            username=NEO4J_USER,
+            password=NEO4J_PW,
+            enhanced_schema=True  # APOCを使用
+        )
+        graph.add_graph_documents(graph_docs, include_source=True)
+    else:  # networkx
+        from networkx_graph import NetworkXGraph
+        graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
+        graph.add_graph_documents(graph_docs, include_source=True)
 
     # Documentノードを作成してChunkとリンク
     for doc in source_docs:
@@ -700,8 +820,15 @@ def build_rag_system(source_docs: list):
         # クロスドキュメント推論が失敗しても続行
         pass
 
-    # PGVector保存
-    vector_store = PGVector.from_documents(chunks, embeddings, connection_string=PG_CONN)
+    # PGVector保存（重複防止設定付き）
+    vector_store = PGVector.from_documents(
+        chunks,
+        embeddings,
+        connection_string=PG_CONN,
+        collection_name="graphrag",
+        pre_delete_collection=True,  # 既存コレクション削除
+        ids=[c.metadata["id"] for c in chunks]  # ID指定で重複防止
+    )
 
     # Vector Retriever構築
     if HAS_PARENT:
@@ -935,9 +1062,15 @@ def build_rag_system(source_docs: list):
 
     return chain, graph
 
-# グラフ取得関数（改善版）
+# グラフ取得関数（改善版・バックエンド共通）
 def get_enhanced_graph_data(graph, limit=200):
-    """Neo4jから拡張グラフデータを取得（チャンクID除外、MENTIONS関係除外、ドキュメント情報付与）"""
+    """グラフバックエンドから拡張グラフデータを取得（チャンクID除外、MENTIONS関係除外、ドキュメント情報付与）"""
+    # NetworkXの場合は専用メソッドを使用
+    if hasattr(graph, 'get_graph_data'):
+        # NetworkXGraph の場合
+        return graph.get_graph_data(limit=limit)
+
+    # Neo4jの場合は既存のCypherクエリ
     query = f"""
     MATCH (n)-[r]->(m)
     WHERE type(r) <> 'MENTIONS'
@@ -1405,13 +1538,19 @@ st.header("📁 ドキュメントアップロード")
 # 既存グラフのチェック（初回のみ）
 if not st.session_state.existing_graph_loaded and not st.session_state.initialized:
     try:
-        temp_graph = Neo4jGraph(
-            url=NEO4J_URI,
-            username=NEO4J_USER,
-            password=NEO4J_PW,
-            enhanced_schema=False  # APOC不要
-        )
-        graph_info = check_existing_graph(temp_graph)
+        # グラフバックエンド接続
+        if st.session_state.graph_backend == "neo4j":
+            temp_graph = Neo4jGraph(
+                url=NEO4J_URI,
+                username=NEO4J_USER,
+                password=NEO4J_PW,
+                enhanced_schema=False  # APOC不要
+            )
+        else:  # networkx
+            from networkx_graph import NetworkXGraph
+            temp_graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
+
+        graph_info = check_existing_graph(temp_graph, st.session_state.graph_backend)
 
         if graph_info['exists']:
             st.info(f"📊 既存のナレッジグラフを発見しました: ノード {graph_info['node_count']}個、リレーションシップ {graph_info['rel_count']}本")
