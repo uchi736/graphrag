@@ -14,6 +14,7 @@ import tempfile
 from typing import List
 import hashlib
 import fitz  # PyMuPDF
+import json
 
 # LangChain imports
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
@@ -26,6 +27,10 @@ try:
 except ImportError:
     from langchain_community.graphs import GraphDocument
 from langchain_community.vectorstores.pgvector import PGVector
+
+# 日本語ハイブリッド検索
+from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
+from hybrid_retriever import HybridRetriever
 
 try:
     from langchain_community.retrievers.graph import GraphRetriever
@@ -174,12 +179,42 @@ with st.sidebar:
     if show_graph:
         max_nodes = st.slider("最大表示ノード数", 50, 500, 200, 50)
 
-        st.markdown("**ノードタイプフィルター**")
-        filter_person = st.checkbox("👤 人物 (Person)", value=True)
-        filter_place = st.checkbox("🏞️ 場所 (Place)", value=True)
-        filter_event = st.checkbox("⚡ イベント (Event)", value=True)
-        filter_object = st.checkbox("📦 物 (Object)", value=True)
-        filter_other = st.checkbox("❓ その他 (Other)", value=True)
+    st.markdown("---")
+    st.markdown("### 🔍 検索設定")
+
+    # 日本語ハイブリッド検索設定
+    if SUDACHI_AVAILABLE:
+        enable_jp_search = st.checkbox(
+            "日本語ハイブリッド検索",
+            value=os.getenv("ENABLE_JAPANESE_SEARCH", "true").lower() == "true",
+            help="ベクトル検索とキーワード検索を組み合わせます（精度向上）"
+        )
+
+        if enable_jp_search:
+            search_mode = st.radio(
+                "検索モード",
+                ["ハイブリッド (推奨)", "ベクトルのみ", "キーワードのみ"],
+                help="ハイブリッド: RRFでスコア統合 / ベクトル: 意味検索 / キーワード: 全文検索"
+            )
+
+            # 検索モードをセッションステートに保存
+            mode_map = {
+                "ハイブリッド (推奨)": "hybrid",
+                "ベクトルのみ": "vector",
+                "キーワードのみ": "keyword"
+            }
+            st.session_state.search_mode = mode_map[search_mode]
+            st.session_state.enable_japanese_search = True
+        else:
+            st.session_state.search_mode = "vector"
+            st.session_state.enable_japanese_search = False
+    else:
+        st.warning("⚠️ sudachipy未インストール")
+        st.caption("ベクトル検索のみ使用します")
+        with st.expander("インストール方法"):
+            st.code("pip install sudachipy sudachidict_core")
+        st.session_state.search_mode = "vector"
+        st.session_state.enable_japanese_search = False
 
     st.markdown("---")
     st.markdown("### 🗑️ データベース管理")
@@ -512,7 +547,34 @@ def restore_from_existing_graph():
 
             # 3. グラフからドキュメントが取得できない場合はベクトル検索を使用
             if not docs:
-                docs = vector_retriever.invoke(question)
+                # ハイブリッド検索を使用（有効な場合）
+                if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
+                    try:
+                        hybrid_retriever = HybridRetriever(PG_CONN, collection_name="graphrag")
+                        query_embedding = embeddings.embed_query(question)
+                        search_type = st.session_state.get('search_mode', 'hybrid')
+
+                        hybrid_results = hybrid_retriever.search(
+                            query_text=question,
+                            query_vector=query_embedding,
+                            k=4,
+                            search_type=search_type
+                        )
+
+                        # LangChain Document形式に変換
+                        from langchain_core.documents import Document
+                        docs = [
+                            Document(
+                                page_content=r['text'],
+                                metadata=r['metadata']
+                            ) for r in hybrid_results
+                        ]
+                    except Exception as e:
+                        st.warning(f"ハイブリッド検索エラー（ベクトル検索にフォールバック）: {e}")
+                        docs = vector_retriever.invoke(question)
+                else:
+                    # 従来のベクトル検索
+                    docs = vector_retriever.invoke(question)
 
             graph_lines = [
                 f"{t.get('start')} -[{t.get('type')}]→ {t.get('end')}"
@@ -820,6 +882,18 @@ def build_rag_system(source_docs: list):
         # クロスドキュメント推論が失敗しても続行
         pass
 
+    # 日本語トークン化（有効な場合）
+    japanese_processor = get_japanese_processor()
+    if japanese_processor and st.session_state.get('enable_japanese_search', True):
+        with st.spinner("日本語トークン化中..."):
+            for chunk in chunks:
+                try:
+                    tokenized = japanese_processor.tokenize(chunk.page_content)
+                    chunk.metadata['tokenized_content'] = tokenized
+                except Exception as e:
+                    st.warning(f"トークン化エラー（スキップ）: {e}")
+                    chunk.metadata['tokenized_content'] = None
+
     # PGVector保存（重複防止設定付き）
     vector_store = PGVector.from_documents(
         chunks,
@@ -829,6 +903,24 @@ def build_rag_system(source_docs: list):
         pre_delete_collection=True,  # 既存コレクション削除
         ids=[c.metadata["id"] for c in chunks]  # ID指定で重複防止
     )
+
+    # トークン化データをDBに反映
+    if japanese_processor and st.session_state.get('enable_japanese_search', True):
+        try:
+            import psycopg
+            with psycopg.connect(PG_CONN) as conn:
+                with conn.cursor() as cur:
+                    for chunk in chunks:
+                        tokenized = chunk.metadata.get('tokenized_content')
+                        if tokenized:
+                            cur.execute("""
+                                UPDATE langchain_pg_embedding
+                                SET tokenized_content = %s
+                                WHERE cmetadata->>'id' = %s
+                            """, (tokenized, chunk.metadata['id']))
+                conn.commit()
+        except Exception as e:
+            st.warning(f"トークン化データのDB保存エラー: {e}")
 
     # Vector Retriever構築
     if HAS_PARENT:
@@ -1003,7 +1095,34 @@ def build_rag_system(source_docs: list):
 
         # 3. グラフからドキュメントが取得できない場合はベクトル検索を使用
         if not docs:
-            docs = vector_retriever.invoke(question)
+            # ハイブリッド検索を使用（有効な場合）
+            if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
+                try:
+                    hybrid_retriever = HybridRetriever(PG_CONN, collection_name="graphrag")
+                    query_embedding = embeddings.embed_query(question)
+                    search_type = st.session_state.get('search_mode', 'hybrid')
+
+                    hybrid_results = hybrid_retriever.search(
+                        query_text=question,
+                        query_vector=query_embedding,
+                        k=4,
+                        search_type=search_type
+                    )
+
+                    # LangChain Document形式に変換
+                    from langchain_core.documents import Document
+                    docs = [
+                        Document(
+                            page_content=r['text'],
+                            metadata=r['metadata']
+                        ) for r in hybrid_results
+                    ]
+                except Exception as e:
+                    st.warning(f"ハイブリッド検索エラー（ベクトル検索にフォールバック）: {e}")
+                    docs = vector_retriever.invoke(question)
+            else:
+                # 従来のベクトル検索
+                docs = vector_retriever.invoke(question)
 
         graph_lines = [
             f"{t.get('start')} -[{t.get('type')}]→ {t.get('end')}"
@@ -1100,6 +1219,40 @@ def get_enhanced_graph_data(graph, limit=200):
 def get_graph_data(graph):
     """Neo4jからグラフデータを取得（シンプル版）"""
     return get_enhanced_graph_data(graph, limit=100)
+
+
+def get_enhanced_subgraph_data(graph, center_nodes: List[str], hop: int = 1, limit: int = 500):
+    """サブグラフデータ取得（バックエンド判定付き）"""
+    backend = st.session_state.graph_backend
+
+    if backend == "networkx":
+        # NetworkXの場合は専用メソッド使用
+        if hasattr(graph, 'get_subgraph_data'):
+            return graph.get_subgraph_data(center_nodes, hop, limit)
+        else:
+            # フォールバック: get_graph_data()で全取得
+            return graph.get_graph_data(limit=limit)
+    elif backend == "neo4j":
+        # Neo4jの場合はエンティティ検索使用
+        results = graph.query(params={'entities': center_nodes})
+        # 簡易変換（Neo4jのqueryメソッドの出力を想定）
+        graph_data = []
+        for r in results:
+            graph_data.append({
+                'source': r.get('start', ''),
+                'source_type': 'Unknown',
+                'target': r.get('end', ''),
+                'target_type': 'Unknown',
+                'relation': r.get('type', 'RELATED'),
+                'edge_key': 0,
+                'source_degree': 0,
+                'target_degree': 0,
+                'source_docs': [],
+                'target_docs': []
+            })
+        return graph_data[:limit]
+
+    return []
 
 # ノードタイプ推論関数
 def get_node_type(node_name: str, node_label: str = None) -> str:
@@ -1445,9 +1598,9 @@ def execute_cypher_and_visualize(cypher_query: str, graph):
         st.code(traceback.format_exc(), language="python")
         return None
 
-# テーブル表示関数
-def display_data_tables(graph_data):
-    """ノードとエッジをテーブル形式で表示"""
+# テーブル表示関数（編集機能付き）
+def display_data_tables(graph_data, graph=None, enable_edit=False):
+    """ノードとエッジをテーブル形式で表示（編集機能付き）"""
     import pandas as pd
 
     # ノードデータの集計
@@ -1479,17 +1632,72 @@ def display_data_tables(graph_data):
         edges_list.append({
             '始点': item['source'],
             'リレーション': item['relation'],
-            '終点': item['target']
+            '終点': item['target'],
+            'edge_key': item.get('edge_key', 0)
         })
 
     # ノードテーブル
     st.subheader("📍 ノード一覧")
+
+    # 編集機能が有効な場合は編集ボタンを追加
+    if enable_edit and graph:
+        col1, col2 = st.columns([3, 1])
+        with col2:
+            if st.button("➕ 新規ノード追加", key="add_node_btn"):
+                st.session_state.edit_mode = "add_node"
+
+        # 編集モードの処理
+        if st.session_state.get('edit_mode') == 'add_node':
+            with st.expander("➕ 新規ノード追加", expanded=True):
+                edit_node_dialog(graph, None)
+                if st.button("閉じる"):
+                    st.session_state.edit_mode = None
+                    st.rerun()
+
     nodes_df = pd.DataFrame(list(nodes_dict.values()))
     st.dataframe(
         nodes_df.sort_values('接続数', ascending=False),
         width='stretch',
         hide_index=True
     )
+
+    # 編集機能: ノード個別編集・削除
+    if enable_edit and graph:
+        st.caption("ノードを編集・削除する場合は以下から選択してください")
+        selected_node = st.selectbox(
+            "ノードを選択",
+            options=[""] + list(nodes_dict.keys()),
+            key="selected_node"
+        )
+
+        if selected_node:
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("✏️ 編集", key=f"edit_node_{selected_node}"):
+                    st.session_state.editing_node = selected_node
+
+            # 編集モード時は常にダイアログ表示
+            if st.session_state.get('editing_node') == selected_node:
+                node_info = graph.get_node_info(selected_node)
+                if node_info:
+                    with st.expander(f"✏️ ノード編集: {selected_node}", expanded=True):
+                        edit_node_dialog(graph, node_info)
+            with col2:
+                if st.button("🗑️ 削除", key=f"delete_node_{selected_node}"):
+                    if st.session_state.get(f'confirm_delete_node_{selected_node}'):
+                        success = graph.delete_node(selected_node)
+                        if success:
+                            st.success(f"✅ ノード '{selected_node}' を削除しました")
+                            # キャッシュクリア + 即座に再取得
+                            graph_data = graph.get_graph_data(limit=200)
+                            st.session_state.graph_data_cache = graph_data
+                            st.rerun()
+                        else:
+                            st.error("削除に失敗しました")
+                        st.session_state[f'confirm_delete_node_{selected_node}'] = False
+                    else:
+                        st.session_state[f'confirm_delete_node_{selected_node}'] = True
+                        st.warning(f"⚠️ ノード '{selected_node}' を削除しますか？もう一度削除ボタンを押してください。")
 
     # CSVダウンロード
     csv_nodes = nodes_df.to_csv(index=False).encode('utf-8-sig')
@@ -1504,12 +1712,79 @@ def display_data_tables(graph_data):
 
     # エッジテーブル
     st.subheader("🔗 エッジ一覧")
+
+    # 編集機能が有効な場合は追加ボタンを表示
+    if enable_edit and graph:
+        col1, col2 = st.columns([3, 1])
+        with col2:
+            if st.button("➕ 新規エッジ追加", key="add_edge_btn"):
+                st.session_state.edit_mode = "add_edge"
+
+        # 編集モードの処理
+        if st.session_state.get('edit_mode') == 'add_edge':
+            all_node_ids = list(nodes_dict.keys())
+            with st.expander("➕ 新規エッジ追加", expanded=True):
+                edit_edge_dialog(graph, None, all_node_ids)
+                if st.button("閉じる", key="close_add_edge"):
+                    st.session_state.edit_mode = None
+                    st.rerun()
+
     edges_df = pd.DataFrame(edges_list)
     st.dataframe(
         edges_df,
         width='stretch',
         hide_index=True
     )
+
+    # 編集機能: エッジ個別編集・削除
+    if enable_edit and graph:
+        st.caption("エッジを編集・削除する場合は以下から選択してください")
+
+        # エッジ選択肢を作成
+        edge_options = [""] + [f"{e['始点']} → {e['終点']} ({e['リレーション']})" for e in edges_list]
+        selected_edge_str = st.selectbox(
+            "エッジを選択",
+            options=edge_options,
+            key="selected_edge"
+        )
+
+        if selected_edge_str:
+            # 選択されたエッジを解析
+            selected_idx = edge_options.index(selected_edge_str) - 1
+            if selected_idx >= 0:
+                selected_edge_data = edges_list[selected_idx]
+                source = selected_edge_data['始点']
+                target = selected_edge_data['終点']
+                rel_type = selected_edge_data['リレーション']
+                edge_key = selected_edge_data.get('edge_key', 0)
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("✏️ 編集", key=f"edit_edge_{selected_idx}"):
+                        st.session_state.editing_edge = selected_idx
+
+                # 編集モード時は常にダイアログ表示
+                if st.session_state.get('editing_edge') == selected_idx:
+                    edge_info = graph.get_edge_info(source, target, edge_key)
+                    if edge_info:
+                        with st.expander(f"✏️ エッジ編集: {source} → {target}", expanded=True):
+                            edit_edge_dialog(graph, edge_info)
+                with col2:
+                    if st.button("🗑️ 削除", key=f"delete_edge_{selected_idx}"):
+                        if st.session_state.get(f'confirm_delete_edge_{selected_idx}'):
+                            success = graph.delete_edge(source, target, edge_key)
+                            if success:
+                                st.success(f"✅ エッジ '{source} → {target}' を削除しました")
+                                # キャッシュクリア + 即座に再取得
+                                graph_data = graph.get_graph_data(limit=200)
+                                st.session_state.graph_data_cache = graph_data
+                                st.rerun()
+                            else:
+                                st.error("削除に失敗しました")
+                            st.session_state[f'confirm_delete_edge_{selected_idx}'] = False
+                        else:
+                            st.session_state[f'confirm_delete_edge_{selected_idx}'] = True
+                            st.warning(f"⚠️ エッジ '{source} → {target}' を削除しますか？もう一度削除ボタンを押してください。")
 
     # CSVダウンロード
     csv_edges = edges_df.to_csv(index=False).encode('utf-8-sig')
@@ -1531,6 +1806,169 @@ def display_data_tables(graph_data):
     with col3:
         avg_degree = sum(n['接続数'] for n in nodes_dict.values()) / len(nodes_dict) if nodes_dict else 0
         st.metric("平均接続数", f"{avg_degree:.1f}")
+
+
+# グラフ編集用ヘルパー関数
+def edit_node_dialog(graph, node_info=None):
+    """ノード編集ダイアログ"""
+    st.subheader("✏️ ノード編集" if node_info else "➕ 新規ノード追加")
+
+    with st.form("node_form"):
+        if node_info:
+            node_id = st.text_input("ノードID", value=node_info['id'], disabled=True)
+            node_type = st.text_input("タイプ", value=node_info.get('type', 'Unknown'))
+            properties_str = st.text_area(
+                "プロパティ (JSON形式)",
+                value=json.dumps(node_info.get('properties', {}), ensure_ascii=False, indent=2)
+            )
+        else:
+            node_id = st.text_input("ノードID", placeholder="例: 桃太郎")
+            node_type = st.text_input("タイプ", value="Unknown", placeholder="例: Person")
+            properties_str = st.text_area("プロパティ (JSON形式)", value="{}")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            submit = st.form_submit_button("💾 保存", type="primary")
+        with col2:
+            cancel = st.form_submit_button("❌ キャンセル")
+
+        if submit:
+            try:
+                properties = json.loads(properties_str) if properties_str.strip() else {}
+
+                if node_info:
+                    # 更新
+                    success = graph.update_node(node_id, node_type, properties)
+                    if success:
+                        st.success(f"✅ ノード '{node_id}' を更新しました")
+                        # 編集状態をクリア
+                        st.session_state.editing_node = None
+                        # キャッシュクリア + 即座に再取得
+                        graph_data = graph.get_graph_data(limit=200)
+                        st.session_state.graph_data_cache = graph_data
+                        st.rerun()
+                    else:
+                        st.error("更新に失敗しました")
+                else:
+                    # 新規追加
+                    if not node_id:
+                        st.error("ノードIDを入力してください")
+                    else:
+                        success = graph.add_node_manual(node_id, node_type, properties)
+                        if success:
+                            st.success(f"✅ ノード '{node_id}' を追加しました")
+                            # 編集状態をクリア（新規追加の場合は該当なし）
+                            st.session_state.edit_mode = None
+                            # キャッシュクリア + 即座に再取得
+                            graph_data = graph.get_graph_data(limit=200)
+                            st.session_state.graph_data_cache = graph_data
+                            st.rerun()
+                        else:
+                            st.error("追加に失敗しました")
+            except json.JSONDecodeError:
+                st.error("プロパティのJSON形式が不正です")
+
+        if cancel:
+            # 編集状態をクリア
+            st.session_state.editing_node = None
+            st.session_state.edit_mode = None
+            st.rerun()
+
+
+def edit_edge_dialog(graph, edge_info=None, all_nodes=None):
+    """エッジ編集ダイアログ"""
+    st.subheader("✏️ エッジ編集" if edge_info else "➕ 新規エッジ追加")
+
+    if all_nodes is None:
+        all_nodes = []
+
+    with st.form("edge_form"):
+        if edge_info:
+            source = st.text_input("始点ノード", value=edge_info['source'], disabled=True)
+            target = st.text_input("終点ノード", value=edge_info['target'], disabled=True)
+            edge_key = edge_info.get('edge_key', 0)
+            rel_type = st.text_input("リレーションタイプ", value=edge_info.get('type', 'RELATED'))
+            properties_str = st.text_area(
+                "プロパティ (JSON形式)",
+                value=json.dumps(edge_info.get('properties', {}), ensure_ascii=False, indent=2)
+            )
+        else:
+            if all_nodes:
+                source = st.selectbox("始点ノード", options=all_nodes)
+                target = st.selectbox("終点ノード", options=all_nodes)
+            else:
+                source = st.text_input("始点ノード", placeholder="例: 桃太郎")
+                target = st.text_input("終点ノード", placeholder="例: 鬼")
+            edge_key = 0
+            rel_type = st.text_input("リレーションタイプ", value="RELATED", placeholder="例: 倒した")
+            properties_str = st.text_area("プロパティ (JSON形式)", value="{}")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            submit = st.form_submit_button("💾 保存", type="primary")
+        with col2:
+            cancel = st.form_submit_button("❌ キャンセル")
+
+        if submit:
+            try:
+                properties = json.loads(properties_str) if properties_str.strip() else {}
+
+                if edge_info:
+                    # 更新
+                    success = graph.update_edge(source, target, edge_key, rel_type, properties)
+                    if success:
+                        st.success(f"✅ エッジ '{source} -> {target}' を更新しました")
+                        # 編集状態をクリア
+                        st.session_state.editing_edge = None
+                        # キャッシュクリア + 即座に再取得
+                        graph_data = graph.get_graph_data(limit=200)
+                        st.session_state.graph_data_cache = graph_data
+                        st.rerun()
+                    else:
+                        st.error("更新に失敗しました")
+                else:
+                    # 新規追加
+                    if not source or not target:
+                        st.error("始点と終点を指定してください")
+                    else:
+                        edge_key = graph.add_edge_manual(source, target, rel_type, properties)
+                        if edge_key is not None:
+                            st.success(f"✅ エッジ '{source} -> {target}' を追加しました")
+                            # 編集状態をクリア（新規追加の場合は該当なし）
+                            st.session_state.edit_mode = None
+                            # キャッシュクリア + 即座に再取得
+                            graph_data = graph.get_graph_data(limit=200)
+                            st.session_state.graph_data_cache = graph_data
+                            st.rerun()
+                        else:
+                            st.error("追加に失敗しました")
+            except json.JSONDecodeError:
+                st.error("プロパティのJSON形式が不正です")
+
+        if cancel:
+            # 編集状態をクリア
+            st.session_state.editing_edge = None
+            st.session_state.edit_mode = None
+            st.rerun()
+
+
+def confirm_delete_dialog(item_type, item_name, callback):
+    """削除確認ダイアログ"""
+    st.warning(f"⚠️ {item_type} '{item_name}' を削除しますか？")
+    st.caption("この操作は取り消せません。")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🗑️ 削除する", type="primary"):
+            if callback():
+                st.success(f"✅ {item_type} '{item_name}' を削除しました")
+                st.session_state.graph_data_cache = None  # キャッシュクリア
+                st.rerun()
+            else:
+                st.error("削除に失敗しました")
+    with col2:
+        if st.button("❌ キャンセル"):
+            st.rerun()
 
 # メインUI
 st.header("📁 ドキュメントアップロード")
@@ -1689,78 +2127,200 @@ with tab2:
             if not show_graph:
                 st.warning("サイドバーで「ナレッジグラフを表示」をONにしてください")
             else:
-                # 初回グラフ読み込み
-                if st.session_state.graph_data_cache is None:
-                    if st.button("📊 グラフを読み込む", type="primary"):
-                        with st.spinner("グラフデータ取得中..."):
-                            try:
-                                graph_data = get_enhanced_graph_data(st.session_state.graph, limit=max_nodes)
-                                st.session_state.graph_data_cache = graph_data
-                                st.success(f"✅ {len(graph_data)}件のエッジを読み込みました")
-                            except Exception as e:
-                                st.error(f"エラー: {e}")
+                # 可視化範囲選択
+                viz_scope = st.radio(
+                    "📊 可視化範囲",
+                    ["全体表示", "部分表示（検索）"],
+                    horizontal=True,
+                    help="大規模グラフの場合は部分表示を推奨します"
+                )
 
-                # グラフデータがある場合はリアルタイム表示
-                if st.session_state.graph_data_cache:
-                    try:
-                        graph_data = st.session_state.graph_data_cache
+                if viz_scope == "部分表示（検索）":
+                    # 部分可視化モード
+                    st.markdown("### 🔍 ノード検索")
 
-                        # フィルタリング
-                        filtered_data = []
-                        for item in graph_data:
-                            source_type = get_node_type(item['source'], item.get('source_type'))
-                            target_type = get_node_type(item['target'], item.get('target_type'))
+                    # セッションステート初期化
+                    if 'center_nodes' not in st.session_state:
+                        st.session_state.center_nodes = []
 
-                            # フィルター適用
-                            type_filters = {
-                                'Person': filter_person,
-                                'Place': filter_place,
-                                'Event': filter_event,
-                                'Object': filter_object,
-                                'Other': filter_other
-                            }
-
-                            if type_filters.get(source_type, True) and type_filters.get(target_type, True):
-                                filtered_data.append(item)
-
-                        if not filtered_data:
-                            st.warning("フィルター条件に一致するデータがありません")
+                    # 全ノードリスト取得（初回のみ）
+                    if 'all_node_list' not in st.session_state:
+                        if st.session_state.graph_data_cache:
+                            graph_data = st.session_state.graph_data_cache
+                            all_nodes = list(set([item['source'] for item in graph_data] + [item['target'] for item in graph_data]))
+                            st.session_state.all_node_list = sorted(all_nodes)
                         else:
-                            # 統計情報表示
-                            unique_nodes = set()
-                            for item in filtered_data:
-                                unique_nodes.add(item['source'])
-                                unique_nodes.add(item['target'])
+                            # キャッシュがない場合は一度取得
+                            with st.spinner("ノードリスト取得中..."):
+                                try:
+                                    graph_data = get_enhanced_graph_data(st.session_state.graph, limit=max_nodes)
+                                    st.session_state.graph_data_cache = graph_data
+                                    all_nodes = list(set([item['source'] for item in graph_data] + [item['target'] for item in graph_data]))
+                                    st.session_state.all_node_list = sorted(all_nodes)
+                                except Exception as e:
+                                    st.error(f"エラー: {e}")
+                                    st.session_state.all_node_list = []
 
-                            st.info(f"📊 表示中: ノード {len(unique_nodes)}個 / エッジ {len(filtered_data)}本")
+                    if st.session_state.all_node_list:
+                        # 検索ボックス
+                        search_query = st.text_input(
+                            "🔍 ノード検索（部分一致）",
+                            placeholder="例: 桃太郎",
+                            help="検索したノードとその周辺を表示します"
+                        )
 
-                            # 可視化エンジン選択
-                            if "Agraph" in viz_engine:
-                                # Streamlit-Agraph可視化
-                                result = visualize_graph_agraph(filtered_data)
-                                if not result:
-                                    # Agraphが失敗した場合のみPyvisにフォールバック
-                                    st.warning("⚠️ Streamlit-Agraphが利用できません。Pyvisにフォールバックします。")
-                                    html = visualize_graph_pyvis_enhanced(filtered_data)
+                        if search_query:
+                            # 検索実行
+                            matched_nodes = [n for n in st.session_state.all_node_list
+                                            if search_query.lower() in n.lower()]
+
+                            st.caption(f"🔍 検索結果: {len(matched_nodes)}件")
+
+                            if matched_nodes:
+                                # selectboxで1つ選択
+                                selected_node = st.selectbox(
+                                    "ノードを選択",
+                                    options=[""] + matched_nodes,
+                                    index=0,
+                                    help="リストから1つ選んで追加してください"
+                                )
+
+                                # ボタン配置
+                                col1, col2 = st.columns([1, 1])
+                                with col1:
+                                    if selected_node and st.button("➕ 中心ノードに追加"):
+                                        if selected_node not in st.session_state.center_nodes:
+                                            st.session_state.center_nodes.append(selected_node)
+                                            st.rerun()
+                                        else:
+                                            st.warning("既に追加されています")
+
+                                with col2:
+                                    if st.session_state.center_nodes and st.button("🗑️ リセット"):
+                                        st.session_state.center_nodes = []
+                                        st.rerun()
+                            else:
+                                st.warning(f"「{search_query}」に一致するノードが見つかりませんでした")
+                        else:
+                            st.info("💡 ノード名を入力して検索してください")
+
+                        # 選択済み中心ノード表示
+                        if st.session_state.center_nodes:
+                            st.markdown("---")
+                            st.write("**中心ノード:**", ", ".join(st.session_state.center_nodes))
+
+                            # Hop数選択
+                            hop_distance = st.slider(
+                                "周辺表示範囲（Hop数）",
+                                min_value=1,
+                                max_value=3,
+                                value=2,
+                                help="選択ノードから何Hop先まで表示するか"
+                            )
+
+                            # サブグラフ取得＆表示
+                            if st.button("📊 サブグラフを表示", type="primary"):
+                                with st.spinner("サブグラフ取得中..."):
+                                    try:
+                                        subgraph_data = get_enhanced_subgraph_data(
+                                            st.session_state.graph,
+                                            st.session_state.center_nodes,
+                                            hop_distance,
+                                            limit=500
+                                        )
+
+                                        if subgraph_data:
+                                            # 統計情報
+                                            unique_nodes = set()
+                                            for item in subgraph_data:
+                                                unique_nodes.add(item['source'])
+                                                unique_nodes.add(item['target'])
+
+                                            st.success(f"✅ サブグラフ取得完了")
+                                            st.info(f"📊 表示: ノード {len(unique_nodes)}個 / エッジ {len(subgraph_data)}本")
+
+                                            # 可視化
+                                            if "Agraph" in viz_engine:
+                                                result = visualize_graph_agraph(subgraph_data)
+                                                if not result:
+                                                    st.warning("⚠️ Streamlit-Agraphが利用できません。Pyvisにフォールバックします。")
+                                                    html = visualize_graph_pyvis_enhanced(subgraph_data)
+                                                    if html:
+                                                        st.components.v1.html(html, height=700)
+                                            else:
+                                                html = visualize_graph_pyvis_enhanced(subgraph_data)
+                                                if html:
+                                                    st.components.v1.html(html, height=700)
+                                                else:
+                                                    st.warning("可視化ライブラリが利用できません。")
+                                        else:
+                                            st.warning("選択したノードのサブグラフが見つかりませんでした")
+                                    except Exception as e:
+                                        st.error(f"エラー: {e}")
+                                        import traceback
+                                        st.code(traceback.format_exc())
+                        else:
+                            st.info("👆 検索してノードを追加してください")
+                    else:
+                        st.warning("ノードリストが取得できませんでした。先に「全体表示」でグラフを読み込んでください。")
+
+                else:
+                    # 全体表示モード（既存処理）
+                    # 初回グラフ読み込み
+                    if st.session_state.graph_data_cache is None:
+                        if st.button("📊 グラフを読み込む", type="primary"):
+                            with st.spinner("グラフデータ取得中..."):
+                                try:
+                                    graph_data = get_enhanced_graph_data(st.session_state.graph, limit=max_nodes)
+                                    st.session_state.graph_data_cache = graph_data
+                                    st.success(f"✅ {len(graph_data)}件のエッジを読み込みました")
+                                except Exception as e:
+                                    st.error(f"エラー: {e}")
+
+                    # グラフデータがある場合はリアルタイム表示
+                    if st.session_state.graph_data_cache:
+                        try:
+                            graph_data = st.session_state.graph_data_cache
+
+                            if not graph_data:
+                                st.warning("グラフデータがありません")
+                            else:
+                                # 統計情報表示
+                                unique_nodes = set()
+                                for item in graph_data:
+                                    unique_nodes.add(item['source'])
+                                    unique_nodes.add(item['target'])
+
+                                st.info(f"📊 表示中: ノード {len(unique_nodes)}個 / エッジ {len(graph_data)}本")
+
+                                # 可視化エンジン選択
+                                if "Agraph" in viz_engine:
+                                    # Streamlit-Agraph可視化
+                                    result = visualize_graph_agraph(graph_data)
+                                    if not result:
+                                        # Agraphが失敗した場合のみPyvisにフォールバック
+                                        st.warning("⚠️ Streamlit-Agraphが利用できません。Pyvisにフォールバックします。")
+                                        html = visualize_graph_pyvis_enhanced(graph_data)
+                                        if html:
+                                            st.components.v1.html(html, height=700)
+                                else:
+                                    # Pyvis可視化
+                                    html = visualize_graph_pyvis_enhanced(graph_data)
                                     if html:
                                         st.components.v1.html(html, height=700)
-                            else:
-                                # Pyvis可視化
-                                html = visualize_graph_pyvis_enhanced(filtered_data)
-                                if html:
-                                    st.components.v1.html(html, height=700)
-                                else:
-                                    st.warning("可視化ライブラリが利用できません。")
+                                    else:
+                                        st.warning("可視化ライブラリが利用できません。")
 
-                        # グラフをリセットするボタン
-                        if st.button("🔄 グラフを再読み込み"):
-                            st.session_state.graph_data_cache = None
-                            st.rerun()
+                            # グラフをリセットするボタン
+                            if st.button("🔄 グラフを再読み込み"):
+                                st.session_state.graph_data_cache = None
+                                st.session_state.all_node_list = None
+                                st.rerun()
 
-                    except Exception as e:
-                        st.error(f"エラー: {e}")
-                        import traceback
-                        st.code(traceback.format_exc())
+                        except Exception as e:
+                            st.error(f"エラー: {e}")
+                            import traceback
+                            st.code(traceback.format_exc())
 
         # モード2: データテーブル
         elif display_mode == "📊 データテーブル":
@@ -1780,28 +2340,16 @@ with tab2:
                 try:
                     graph_data = st.session_state.graph_data_cache
 
-                    # フィルタリング
-                    filtered_data = []
-                    for item in graph_data:
-                        source_type = get_node_type(item['source'], item.get('source_type'))
-                        target_type = get_node_type(item['target'], item.get('target_type'))
-
-                        # フィルター適用
-                        type_filters = {
-                            'Person': filter_person,
-                            'Place': filter_place,
-                            'Event': filter_event,
-                            'Object': filter_object,
-                            'Other': filter_other
-                        }
-
-                        if type_filters.get(source_type, True) and type_filters.get(target_type, True):
-                            filtered_data.append(item)
-
-                    if filtered_data:
-                        display_data_tables(filtered_data)
+                    if graph_data:
+                        # NetworkXバックエンドの場合のみ編集機能を有効化
+                        enable_edit = (st.session_state.graph_backend == "networkx")
+                        display_data_tables(
+                            graph_data,
+                            graph=st.session_state.graph if enable_edit else None,
+                            enable_edit=enable_edit
+                        )
                     else:
-                        st.warning("フィルター条件に一致するデータがありません")
+                        st.warning("グラフデータがありません")
 
                 except Exception as e:
                     st.error(f"エラー: {e}")

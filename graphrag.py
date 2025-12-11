@@ -47,6 +47,10 @@ import hashlib
 
 from dotenv import load_dotenv
 
+# ── 日本語ハイブリッド検索 ──────────────────────────────────────────
+from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
+from hybrid_retriever import HybridRetriever
+
 # ── LangChain / OpenAI ─────────────────────────────────────────────
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -217,6 +221,20 @@ else:  # networkx
     graph.add_graph_documents(graph_docs, include_source=True)
     print(f"✅ NetworkXにグラフをロードしました (保存先: graph.pkl)")
 
+# ── 3.5. 日本語トークン化（有効な場合） ──────────────────────────────────
+japanese_processor = get_japanese_processor()
+enable_japanese_search = os.getenv("ENABLE_JAPANESE_SEARCH", "true").lower() == "true"
+
+if japanese_processor and enable_japanese_search:
+    print("📝 日本語トークン化中...")
+    for chunk in chunks:
+        try:
+            tokenized = japanese_processor.tokenize(chunk.page_content)
+            chunk.metadata['tokenized_content'] = tokenized
+        except Exception as e:
+            print(f"⚠️ トークン化エラー（スキップ）: {e}")
+            chunk.metadata['tokenized_content'] = None
+
 # ── 4. PGVector にチャンク保存 ───────────────────────────────────────────
 vector_store = PGVector.from_documents(
     chunks,
@@ -226,6 +244,25 @@ vector_store = PGVector.from_documents(
     pre_delete_collection=True,  # 再実行時に既存コレクションを削除して重複を防止
     ids=[c.metadata["id"] for c in chunks],  # 同一IDの再登録を防ぐ
 )
+
+# トークン化データをDBに反映
+if japanese_processor and enable_japanese_search:
+    try:
+        import psycopg
+        with psycopg.connect(PG_CONN) as conn:
+            with conn.cursor() as cur:
+                for chunk in chunks:
+                    tokenized = chunk.metadata.get('tokenized_content')
+                    if tokenized:
+                        cur.execute("""
+                            UPDATE langchain_pg_embedding
+                            SET tokenized_content = %s
+                            WHERE cmetadata->>'id' = %s
+                        """, (tokenized, chunk.metadata['id']))
+            conn.commit()
+        print("✅ 日本語トークン化データをDBに保存しました")
+    except Exception as e:
+        print(f"⚠️ トークン化データのDB保存エラー: {e}")
 
 # ── 5. Retriever 構築 ─────────────────────────────────────────────
 if GRAPH_BACKEND == "neo4j":

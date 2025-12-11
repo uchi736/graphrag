@@ -49,13 +49,7 @@
     ],
     "edges": [
       {
-        "type": "OWNED_BY",
-        "source": "桃太郎",
-        "target": "おじいさん",
-        "key": 0
-      },
-      {
-        "type": "OWNED_BY",
+        "type": "RELATED_TO",
         "source": "桃太郎",
         "target": "おばあさん",
         "key": 0
@@ -271,12 +265,8 @@
       "type": "SAME_AS",
       "properties": {}
     },
-    "('桃太郎', 'おじいさん', 0)": {
-      "type": "OWNED_BY",
-      "properties": {}
-    },
     "('桃太郎', 'おばあさん', 0)": {
-      "type": "OWNED_BY",
+      "type": "RELATED_TO",
       "properties": {}
     },
     "('桃太郎', '鬼ヶ島', 0)": {

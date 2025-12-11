@@ -273,12 +273,18 @@ class NetworkXGraph:
             source_docs = self._get_document_sources(u)
             target_docs = self._get_document_sources(v)
 
+            # メタデータから正確なタイプを取得（メタデータ優先）
+            metadata_key = (u, v, key)
+            edge_meta = self.edge_metadata.get(metadata_key, {})
+            rel_type = edge_meta.get('type', data.get('type', 'RELATED'))
+
             results.append({
                 'source': u,
                 'source_type': source_type,
                 'target': v,
                 'target_type': target_type,
-                'relation': data.get('type', 'RELATED'),
+                'relation': rel_type,
+                'edge_key': key,
                 'source_degree': source_degree,
                 'target_degree': target_degree,
                 'source_docs': source_docs,
@@ -365,6 +371,423 @@ class NetworkXGraph:
                 self.edge_metadata[key] = v
             except Exception:
                 pass
+
+    # ==================== 手動編集用CRUD操作 ====================
+
+    def add_node_manual(
+        self,
+        node_id: str,
+        node_type: str = "Unknown",
+        properties: Dict[str, Any] = None
+    ) -> bool:
+        """
+        手動でノードを追加
+
+        Args:
+            node_id: ノードID
+            node_type: ノードタイプ
+            properties: ノードプロパティ
+
+        Returns:
+            成功したらTrue
+        """
+        if properties is None:
+            properties = {}
+
+        # ノード追加
+        self.graph.add_node(node_id)
+        self.node_metadata[node_id] = {
+            'type': node_type,
+            'properties': properties
+        }
+
+        if self.auto_save:
+            self.save()
+
+        return True
+
+    def update_node(
+        self,
+        node_id: str,
+        node_type: str = None,
+        properties: Dict[str, Any] = None
+    ) -> bool:
+        """
+        ノード情報を更新
+
+        Args:
+            node_id: ノードID
+            node_type: 新しいノードタイプ（Noneなら変更なし）
+            properties: 新しいプロパティ（Noneなら変更なし）
+
+        Returns:
+            成功したらTrue、ノードが存在しなければFalse
+        """
+        if node_id not in self.graph.nodes():
+            return False
+
+        if node_id not in self.node_metadata:
+            self.node_metadata[node_id] = {'type': 'Unknown', 'properties': {}}
+
+        if node_type is not None:
+            self.node_metadata[node_id]['type'] = node_type
+
+        if properties is not None:
+            self.node_metadata[node_id]['properties'] = properties
+
+        if self.auto_save:
+            self.save()
+
+        return True
+
+    def delete_node(self, node_id: str) -> bool:
+        """
+        ノードを削除（関連するエッジも自動削除）
+
+        Args:
+            node_id: ノードID
+
+        Returns:
+            成功したらTrue、ノードが存在しなければFalse
+        """
+        if node_id not in self.graph.nodes():
+            return False
+
+        # エッジメタデータをクリーンアップ
+        edges_to_remove = []
+        for key in self.edge_metadata.keys():
+            src, tgt, edge_key = key
+            if src == node_id or tgt == node_id:
+                edges_to_remove.append(key)
+
+        for key in edges_to_remove:
+            del self.edge_metadata[key]
+
+        # ノード削除（関連エッジも自動削除される）
+        self.graph.remove_node(node_id)
+
+        # メタデータ削除
+        if node_id in self.node_metadata:
+            del self.node_metadata[node_id]
+
+        if self.auto_save:
+            self.save()
+
+        return True
+
+    def add_edge_manual(
+        self,
+        source: str,
+        target: str,
+        rel_type: str = "RELATED",
+        properties: Dict[str, Any] = None
+    ) -> Optional[int]:
+        """
+        手動でエッジを追加
+
+        Args:
+            source: 始点ノードID
+            target: 終点ノードID
+            rel_type: リレーションタイプ
+            properties: エッジプロパティ
+
+        Returns:
+            エッジキー（成功時）、失敗時はNone
+        """
+        if properties is None:
+            properties = {}
+
+        # ノードが存在しない場合は追加
+        if source not in self.graph.nodes():
+            self.add_node_manual(source, "Unknown")
+        if target not in self.graph.nodes():
+            self.add_node_manual(target, "Unknown")
+
+        # エッジ追加
+        edge_key = self.graph.add_edge(source, target)
+        # エッジデータを明示的に設定
+        self.graph[source][target][edge_key] = {'type': rel_type}
+        self.edge_metadata[(source, target, edge_key)] = {
+            'type': rel_type,
+            'properties': properties
+        }
+
+        if self.auto_save:
+            self.save()
+
+        return edge_key
+
+    def update_edge(
+        self,
+        source: str,
+        target: str,
+        edge_key: int = 0,
+        rel_type: str = None,
+        properties: Dict[str, Any] = None
+    ) -> bool:
+        """
+        エッジ情報を更新
+
+        Args:
+            source: 始点ノードID
+            target: 終点ノードID
+            edge_key: エッジキー（MultiDiGraphのため）
+            rel_type: 新しいリレーションタイプ（Noneなら変更なし）
+            properties: 新しいプロパティ（Noneなら変更なし）
+
+        Returns:
+            成功したらTrue、エッジが存在しなければFalse
+        """
+        if not self.graph.has_edge(source, target, key=edge_key):
+            return False
+
+        metadata_key = (source, target, edge_key)
+        if metadata_key not in self.edge_metadata:
+            self.edge_metadata[metadata_key] = {'type': 'RELATED', 'properties': {}}
+
+        if rel_type is not None:
+            self.edge_metadata[metadata_key]['type'] = rel_type
+            # エッジデータが存在しない場合は作成
+            if edge_key not in self.graph[source][target]:
+                self.graph[source][target][edge_key] = {}
+            # 辞書でない場合は辞書に変換
+            if not isinstance(self.graph[source][target][edge_key], dict):
+                self.graph[source][target][edge_key] = {}
+            # typeを設定
+            self.graph[source][target][edge_key]['type'] = rel_type
+
+        if properties is not None:
+            self.edge_metadata[metadata_key]['properties'] = properties
+
+        if self.auto_save:
+            self.save()
+
+        return True
+
+    def delete_edge(
+        self,
+        source: str,
+        target: str,
+        edge_key: int = None
+    ) -> bool:
+        """
+        エッジを削除
+
+        Args:
+            source: 始点ノードID
+            target: 終点ノードID
+            edge_key: エッジキー（Noneなら全エッジを削除）
+
+        Returns:
+            成功したらTrue、エッジが存在しなければFalse
+        """
+        if edge_key is None:
+            # 2ノード間の全エッジを削除
+            if not self.graph.has_edge(source, target):
+                return False
+
+            # メタデータ削除
+            keys_to_remove = []
+            for key in self.edge_metadata.keys():
+                src, tgt, ek = key
+                if src == source and tgt == target:
+                    keys_to_remove.append(key)
+
+            for key in keys_to_remove:
+                del self.edge_metadata[key]
+
+            # 全エッジ削除
+            self.graph.remove_edge(source, target)
+        else:
+            # 特定のエッジを削除
+            if not self.graph.has_edge(source, target, key=edge_key):
+                return False
+
+            metadata_key = (source, target, edge_key)
+            if metadata_key in self.edge_metadata:
+                del self.edge_metadata[metadata_key]
+
+            self.graph.remove_edge(source, target, key=edge_key)
+
+        if self.auto_save:
+            self.save()
+
+        return True
+
+    def get_node_info(self, node_id: str) -> Optional[Dict[str, Any]]:
+        """
+        ノードの詳細情報を取得
+
+        Args:
+            node_id: ノードID
+
+        Returns:
+            ノード情報（存在しなければNone）
+        """
+        if node_id not in self.graph.nodes():
+            return None
+
+        metadata = self.node_metadata.get(node_id, {'type': 'Unknown', 'properties': {}})
+
+        return {
+            'id': node_id,
+            'type': metadata.get('type', 'Unknown'),
+            'properties': metadata.get('properties', {}),
+            'degree': self.graph.degree(node_id)
+        }
+
+    def get_edge_info(
+        self,
+        source: str,
+        target: str,
+        edge_key: int = 0
+    ) -> Optional[Dict[str, Any]]:
+        """
+        エッジの詳細情報を取得
+
+        Args:
+            source: 始点ノードID
+            target: 終点ノードID
+            edge_key: エッジキー
+
+        Returns:
+            エッジ情報（存在しなければNone）
+        """
+        if not self.graph.has_edge(source, target, key=edge_key):
+            return None
+
+        metadata_key = (source, target, edge_key)
+        metadata = self.edge_metadata.get(
+            metadata_key,
+            {'type': 'RELATED', 'properties': {}}
+        )
+
+        return {
+            'source': source,
+            'target': target,
+            'edge_key': edge_key,
+            'type': metadata.get('type', 'RELATED'),
+            'properties': metadata.get('properties', {})
+        }
+
+    def list_all_nodes(self) -> List[Dict[str, Any]]:
+        """
+        全ノードのリストを取得
+
+        Returns:
+            ノード情報のリスト
+        """
+        nodes = []
+        for node_id in self.graph.nodes():
+            # Chunkノードはスキップ
+            if self._is_chunk_node(node_id):
+                continue
+
+            info = self.get_node_info(node_id)
+            if info:
+                nodes.append(info)
+
+        return nodes
+
+    def list_all_edges(self) -> List[Dict[str, Any]]:
+        """
+        全エッジのリストを取得
+
+        Returns:
+            エッジ情報のリスト
+        """
+        edges = []
+        for source, target, edge_key in self.graph.edges(keys=True):
+            # Chunkノードとの関係はスキップ
+            if self._is_chunk_node(source) or self._is_chunk_node(target):
+                continue
+
+            info = self.get_edge_info(source, target, edge_key)
+            if info:
+                edges.append(info)
+
+        return edges
+
+    def get_subgraph_data(
+        self,
+        center_nodes: List[str],
+        hop: int = 1,
+        limit: int = 500
+    ) -> List[Dict[str, Any]]:
+        """
+        指定ノードからN-hop以内のサブグラフを取得
+
+        Args:
+            center_nodes: 中心ノードのリスト
+            hop: 探索するHop数（1-3推奨）
+            limit: 最大エッジ数
+
+        Returns:
+            get_graph_data()互換のエッジリスト
+        """
+        # 幅優先探索でN-hop以内のノードを収集
+        visited_nodes = set(center_nodes)
+        current_layer = set(center_nodes)
+
+        for _ in range(hop):
+            next_layer = set()
+            for node in current_layer:
+                if node not in self.graph.nodes():
+                    continue
+                # 隣接ノード取得（双方向）
+                neighbors = set(self.graph.neighbors(node)) | set(self.graph.predecessors(node))
+                # Chunkノード除外
+                neighbors = {n for n in neighbors if not self._is_chunk_node(n)}
+                next_layer.update(neighbors)
+
+            visited_nodes.update(next_layer)
+            current_layer = next_layer
+
+        # visited_nodes内のエッジのみ抽出
+        results = []
+        count = 0
+
+        for u, v, key, data in self.graph.edges(keys=True, data=True):
+            if u not in visited_nodes or v not in visited_nodes:
+                continue
+            if self._is_chunk_node(u) or self._is_chunk_node(v):
+                continue
+            if data.get('type') == 'MENTIONS':
+                continue
+
+            # 既存のget_graph_data()と同じフォーマット
+            source_type = self.node_metadata.get(u, {}).get('type', 'Unknown')
+            target_type = self.node_metadata.get(v, {}).get('type', 'Unknown')
+
+            source_degree = self.graph.degree(u)
+            target_degree = self.graph.degree(v)
+
+            source_docs = self._get_document_sources(u)
+            target_docs = self._get_document_sources(v)
+
+            # メタデータから正確なタイプを取得（メタデータ優先）
+            metadata_key = (u, v, key)
+            edge_meta = self.edge_metadata.get(metadata_key, {})
+            rel_type = edge_meta.get('type', data.get('type', 'RELATED'))
+
+            results.append({
+                'source': u,
+                'source_type': source_type,
+                'target': v,
+                'target_type': target_type,
+                'relation': rel_type,
+                'edge_key': key,
+                'source_degree': source_degree,
+                'target_degree': target_degree,
+                'source_docs': source_docs,
+                'target_docs': target_docs
+            })
+
+            count += 1
+            if count >= limit:
+                break
+
+        return results
 
 
 class NetworkXGraphRetriever:
