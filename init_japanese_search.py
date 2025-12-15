@@ -59,8 +59,9 @@ def migrate_existing_data():
         with psycopg.connect(RAW_PG_CONN) as conn:
             with conn.cursor() as cur:
                 # tokenized_contentがNULLのレコードを取得
+                # cmetadata->>'id' を使用してチャンクIDを取得
                 cur.execute("""
-                    SELECT id, document
+                    SELECT uuid, document, cmetadata->>'id' as chunk_id
                     FROM langchain_pg_embedding
                     WHERE tokenized_content IS NULL
                 """)
@@ -74,7 +75,7 @@ def migrate_existing_data():
 
                 print(f"📊 {total}件のレコードを処理します...")
 
-                for idx, (record_id, text) in enumerate(rows, 1):
+                for idx, (record_uuid, text, chunk_id) in enumerate(rows, 1):
                     if idx % 10 == 0 or idx == total:
                         print(f"  処理中: {idx}/{total} ({idx*100//total}%)")
 
@@ -82,8 +83,8 @@ def migrate_existing_data():
                     cur.execute("""
                         UPDATE langchain_pg_embedding
                         SET tokenized_content = %s
-                        WHERE id = %s
-                    """, (tokenized, record_id))
+                        WHERE uuid = %s
+                    """, (tokenized, record_uuid))
 
             conn.commit()
         print("✅ 既存データの移行完了")
