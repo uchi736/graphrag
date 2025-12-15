@@ -5,7 +5,7 @@
 from typing import List, Dict, Any, Optional
 import psycopg
 from japanese_text_processor import get_japanese_processor
-from db_utils import normalize_pg_connection_string
+from db_utils import normalize_pg_connection_string, ensure_tokenized_schema
 
 
 class HybridRetriever:
@@ -14,6 +14,7 @@ class HybridRetriever:
     def __init__(self, pg_conn_string: str, collection_name: str = "graphrag"):
         # SQLAlchemy形式 → psycopg形式に正規化
         self.conn_string = normalize_pg_connection_string(pg_conn_string)
+        ensure_tokenized_schema(pg_conn_string)
         self.collection_name = collection_name
         self.japanese_processor = get_japanese_processor()
 

@@ -31,7 +31,7 @@ from langchain_community.vectorstores.pgvector import PGVector
 # 日本語ハイブリッド検索
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
 from hybrid_retriever import HybridRetriever
-from db_utils import normalize_pg_connection_string
+from db_utils import normalize_pg_connection_string, ensure_tokenized_schema
 
 try:
     from langchain_community.retrievers.graph import GraphRetriever
@@ -182,6 +182,17 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### 🔍 検索設定")
+
+    # TopK設定（検索結果数）
+    retrieval_top_k = st.slider(
+        "検索結果数 (Top-K)",
+        min_value=1,
+        max_value=20,
+        value=int(os.getenv("RETRIEVAL_TOP_K", "5")),
+        step=1,
+        help="RAG検索で取得するチャンク数。多いほど文脈が豊富になりますが、処理時間が増加します。"
+    )
+    st.session_state.retrieval_top_k = retrieval_top_k
 
     # 日本語ハイブリッド検索設定
     if SUDACHI_AVAILABLE:
@@ -369,10 +380,13 @@ def restore_from_existing_graph():
         )
 
         # Vector Retriever構築
+        # TopK値を取得（デフォルト: 5）
+        retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
+
         if HAS_PARENT:
-            vector_retriever = ParentDocumentRetriever(vector_store, search_kwargs={"k": 4})
+            vector_retriever = ParentDocumentRetriever(vector_store, search_kwargs={"k": retrieval_top_k})
         else:
-            vector_retriever = vector_store.as_retriever(search_kwargs={"k": 4})
+            vector_retriever = vector_store.as_retriever(search_kwargs={"k": retrieval_top_k})
 
         # エンティティ抽出関数
         def extract_entities_from_question(question: str) -> List[str]:
@@ -555,10 +569,13 @@ def restore_from_existing_graph():
                         query_embedding = embeddings.embed_query(question)
                         search_type = st.session_state.get('search_mode', 'hybrid')
 
+                        # TopK値を取得
+                        retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
+
                         hybrid_results = hybrid_retriever.search(
                             query_text=question,
                             query_vector=query_embedding,
-                            k=4,
+                            k=retrieval_top_k,
                             search_type=search_type
                         )
 
@@ -886,6 +903,7 @@ def build_rag_system(source_docs: list):
     # 日本語トークン化（有効な場合）
     japanese_processor = get_japanese_processor()
     if japanese_processor and st.session_state.get('enable_japanese_search', True):
+        ensure_tokenized_schema(PG_CONN)
         with st.spinner("日本語トークン化中..."):
             for chunk in chunks:
                 try:
@@ -925,10 +943,13 @@ def build_rag_system(source_docs: list):
             st.warning(f"トークン化データのDB保存エラー: {e}")
 
     # Vector Retriever構築
+    # TopK値を取得（デフォルト: 5）
+    retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
+
     if HAS_PARENT:
-        vector_retriever = ParentDocumentRetriever(vector_store, search_kwargs={"k": 4})
+        vector_retriever = ParentDocumentRetriever(vector_store, search_kwargs={"k": retrieval_top_k})
     else:
-        vector_retriever = vector_store.as_retriever(search_kwargs={"k": 4})
+        vector_retriever = vector_store.as_retriever(search_kwargs={"k": retrieval_top_k})
 
     # エンティティ抽出関数
     def extract_entities_from_question(question: str) -> List[str]:
@@ -1104,10 +1125,13 @@ def build_rag_system(source_docs: list):
                     query_embedding = embeddings.embed_query(question)
                     search_type = st.session_state.get('search_mode', 'hybrid')
 
+                    # TopK値を取得
+                    retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
+
                     hybrid_results = hybrid_retriever.search(
                         query_text=question,
                         query_vector=query_embedding,
-                        k=4,
+                        k=retrieval_top_k,
                         search_type=search_type
                     )
 

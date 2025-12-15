@@ -11,6 +11,7 @@ from db_utils import normalize_pg_connection_string
 
 load_dotenv()
 PG_CONN = os.getenv("PG_CONN")
+COLLECTION_NAME = os.getenv("PG_COLLECTION") or os.getenv("COLLECTION_NAME") or "graphrag"
 
 if not PG_CONN:
     print("❌ エラー: PG_CONN 環境変数が設定されていません")
@@ -54,17 +55,19 @@ def migrate_existing_data():
         print("   インストール: pip install sudachipy sudachidict_core")
         return False
 
-    print("📊 既存データを移行しています...")
+    print(f"📊 既存データを移行しています... (collection={COLLECTION_NAME})")
     try:
         with psycopg.connect(RAW_PG_CONN) as conn:
             with conn.cursor() as cur:
                 # tokenized_contentがNULLのレコードを取得
                 # cmetadata->>'id' を使用してチャンクIDを取得
                 cur.execute("""
-                    SELECT uuid, document, cmetadata->>'id' as chunk_id
-                    FROM langchain_pg_embedding
-                    WHERE tokenized_content IS NULL
-                """)
+                    SELECT e.uuid, e.document, e.cmetadata->>'id' as chunk_id
+                    FROM langchain_pg_embedding e
+                    JOIN langchain_pg_collection c ON e.collection_id = c.uuid
+                    WHERE c.name = %s
+                      AND e.tokenized_content IS NULL
+                """, (COLLECTION_NAME,))
 
                 rows = cur.fetchall()
                 total = len(rows)
@@ -131,8 +134,10 @@ def verify_setup():
                     SELECT
                         COUNT(*) as total,
                         COUNT(tokenized_content) as tokenized
-                    FROM langchain_pg_embedding
-                """)
+                    FROM langchain_pg_embedding e
+                    JOIN langchain_pg_collection c ON e.collection_id = c.uuid
+                    WHERE c.name = %s
+                """, (COLLECTION_NAME,))
                 row = cur.fetchone()
                 if row:
                     total, tokenized = row

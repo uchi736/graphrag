@@ -50,7 +50,7 @@ from dotenv import load_dotenv
 # ── 日本語ハイブリッド検索 ──────────────────────────────────────────
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
 from hybrid_retriever import HybridRetriever
-from db_utils import normalize_pg_connection_string
+from db_utils import normalize_pg_connection_string, ensure_tokenized_schema
 
 # ── LangChain / OpenAI ─────────────────────────────────────────────
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -106,6 +106,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Graph Backend選択
 GRAPH_BACKEND = os.getenv("GRAPH_BACKEND", "networkx").lower()  # デフォルト: networkx
+
+# 検索結果数設定
+RETRIEVAL_TOP_K = int(os.getenv("RETRIEVAL_TOP_K", "5"))
 
 # Neo4j (GRAPH_BACKEND=neo4j の場合のみ必要)
 NEO4J_URI = os.getenv("NEO4J_URI")
@@ -227,6 +230,7 @@ japanese_processor = get_japanese_processor()
 enable_japanese_search = os.getenv("ENABLE_JAPANESE_SEARCH", "true").lower() == "true"
 
 if japanese_processor and enable_japanese_search:
+    ensure_tokenized_schema(PG_CONN)
     print("📝 日本語トークン化中...")
     for chunk in chunks:
         try:
@@ -268,15 +272,16 @@ if japanese_processor and enable_japanese_search:
 
 # ── 5. Retriever 構築 ─────────────────────────────────────────────
 if GRAPH_BACKEND == "neo4j":
-    graph_retriever = GraphRetriever(graph=graph, k=4, search_type="cypher")
+    graph_retriever = GraphRetriever(graph=graph, k=RETRIEVAL_TOP_K, search_type="cypher")
 else:  # networkx
     from networkx_graph import NetworkXGraphRetriever
-    graph_retriever = NetworkXGraphRetriever(graph=graph, k=15, llm=llm)
+    # NetworkXの場合は、より多くのエンティティを取得してLLMで処理
+    graph_retriever = NetworkXGraphRetriever(graph=graph, k=RETRIEVAL_TOP_K * 3, llm=llm)
 
 if HAS_PARENT:
-    vector_retriever = ParentDocumentRetriever(vector_store, search_kwargs={"k": 4})
+    vector_retriever = ParentDocumentRetriever(vector_store, search_kwargs={"k": RETRIEVAL_TOP_K})
 else:
-    vector_retriever = vector_store.as_retriever(search_kwargs={"k": 4})
+    vector_retriever = vector_store.as_retriever(search_kwargs={"k": RETRIEVAL_TOP_K})
 
 # ── 6. LCEL チェイン定義 ───────────────────────────────────────────
 graph_run = graph_retriever.as_runnable()
