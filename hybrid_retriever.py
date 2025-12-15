@@ -5,13 +5,15 @@
 from typing import List, Dict, Any, Optional
 import psycopg
 from japanese_text_processor import get_japanese_processor
+from db_utils import normalize_pg_connection_string
 
 
 class HybridRetriever:
     """PGVectorベースのハイブリッド検索"""
 
     def __init__(self, pg_conn_string: str, collection_name: str = "graphrag"):
-        self.conn_string = pg_conn_string
+        # SQLAlchemy形式 → psycopg形式に正規化
+        self.conn_string = normalize_pg_connection_string(pg_conn_string)
         self.collection_name = collection_name
         self.japanese_processor = get_japanese_processor()
 

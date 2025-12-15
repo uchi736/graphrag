@@ -7,6 +7,7 @@ import sys
 import psycopg
 from dotenv import load_dotenv
 from japanese_text_processor import get_japanese_processor
+from db_utils import normalize_pg_connection_string
 
 load_dotenv()
 PG_CONN = os.getenv("PG_CONN")
@@ -15,12 +16,15 @@ if not PG_CONN:
     print("❌ エラー: PG_CONN 環境変数が設定されていません")
     sys.exit(1)
 
+# SQLAlchemy形式 → psycopg形式に正規化
+RAW_PG_CONN = normalize_pg_connection_string(PG_CONN)
+
 
 def init_db_schema():
     """スキーマ初期化"""
     print("📊 データベーススキーマを初期化しています...")
     try:
-        with psycopg.connect(PG_CONN) as conn:
+        with psycopg.connect(RAW_PG_CONN) as conn:
             with conn.cursor() as cur:
                 # 列追加
                 cur.execute("""
@@ -52,7 +56,7 @@ def migrate_existing_data():
 
     print("📊 既存データを移行しています...")
     try:
-        with psycopg.connect(PG_CONN) as conn:
+        with psycopg.connect(RAW_PG_CONN) as conn:
             with conn.cursor() as cur:
                 # tokenized_contentがNULLのレコードを取得
                 cur.execute("""
@@ -93,7 +97,7 @@ def verify_setup():
     """セットアップ確認"""
     print("\n📊 セットアップを確認しています...")
     try:
-        with psycopg.connect(PG_CONN) as conn:
+        with psycopg.connect(RAW_PG_CONN) as conn:
             with conn.cursor() as cur:
                 # tokenized_content列の存在確認
                 cur.execute("""

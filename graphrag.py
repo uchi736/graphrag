@@ -50,6 +50,7 @@ from dotenv import load_dotenv
 # ── 日本語ハイブリッド検索 ──────────────────────────────────────────
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
 from hybrid_retriever import HybridRetriever
+from db_utils import normalize_pg_connection_string
 
 # ── LangChain / OpenAI ─────────────────────────────────────────────
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -249,7 +250,8 @@ vector_store = PGVector.from_documents(
 if japanese_processor and enable_japanese_search:
     try:
         import psycopg
-        with psycopg.connect(PG_CONN) as conn:
+        raw_pg_conn = normalize_pg_connection_string(PG_CONN)
+        with psycopg.connect(raw_pg_conn) as conn:
             with conn.cursor() as cur:
                 for chunk in chunks:
                     tokenized = chunk.metadata.get('tokenized_content')

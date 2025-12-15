@@ -31,6 +31,7 @@ from langchain_community.vectorstores.pgvector import PGVector
 # 日本語ハイブリッド検索
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
 from hybrid_retriever import HybridRetriever
+from db_utils import normalize_pg_connection_string
 
 try:
     from langchain_community.retrievers.graph import GraphRetriever
@@ -908,7 +909,8 @@ def build_rag_system(source_docs: list):
     if japanese_processor and st.session_state.get('enable_japanese_search', True):
         try:
             import psycopg
-            with psycopg.connect(PG_CONN) as conn:
+            raw_pg_conn = normalize_pg_connection_string(PG_CONN)
+            with psycopg.connect(raw_pg_conn) as conn:
                 with conn.cursor() as cur:
                     for chunk in chunks:
                         tokenized = chunk.metadata.get('tokenized_content')
