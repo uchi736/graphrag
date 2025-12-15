@@ -51,7 +51,7 @@ class HybridRetriever:
             with conn.cursor() as cur:
                 cur.execute("""
                     SELECT
-                        e.id,
+                        e.uuid as id,
                         e.document as text,
                         e.cmetadata as metadata,
                         1 - (e.embedding <=> %s::vector) as score
@@ -89,7 +89,7 @@ class HybridRetriever:
             with conn.cursor() as cur:
                 cur.execute("""
                     SELECT
-                        e.id,
+                        e.uuid as id,
                         e.document as text,
                         e.cmetadata as metadata,
                         ts_rank(
@@ -139,7 +139,7 @@ class HybridRetriever:
                 cur.execute("""
                     WITH keyword_results AS (
                         SELECT
-                            e.id,
+                            e.uuid as id,
                             e.document as text,
                             e.cmetadata as metadata,
                             ROW_NUMBER() OVER (ORDER BY ts_rank(
@@ -155,7 +155,7 @@ class HybridRetriever:
                     ),
                     vector_results AS (
                         SELECT
-                            e.id,
+                            e.uuid as id,
                             e.document as text,
                             e.cmetadata as metadata,
                             ROW_NUMBER() OVER (ORDER BY e.embedding <=> %(vector)s::vector) as v_rank
