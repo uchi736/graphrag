@@ -63,7 +63,7 @@ try:
     from langchain_community.graphs.graph_document import GraphDocument  # ≥0.3.0
 except ImportError:  # 旧互換
     from langchain_community.graphs import GraphDocument  # type: ignore
-from langchain_community.vectorstores.pgvector import PGVector
+from langchain_postgres import PGVector
 
 # --- GraphRetriever (多段フォールバック) ---
 try:
@@ -175,10 +175,11 @@ class _DummyEmbeddings:
 def clear_vector_store() -> None:
     """PGVector の既存コレクションを削除してクリーンにする"""
     store = PGVector(
-        connection_string=PG_CONN,
-        embedding_function=_DummyEmbeddings(),
+        embeddings=_DummyEmbeddings(),
+        connection=PG_CONN,
         collection_name="graphrag",
         embedding_length=1536,
+        use_jsonb=True,
     )
     store.delete_collection()
     print("✅ Vector store collection 'graphrag' を削除しました")
@@ -243,17 +244,31 @@ if japanese_processor and enable_japanese_search:
             chunk.metadata['tokenized_content'] = None
 
 # ── 4. PGVector にチャンク保存 ───────────────────────────────────────────
-vector_store = PGVector.from_documents(
-    chunks,
-    embeddings,
-    connection_string=PG_CONN,
-    collection_name="graphrag",
-    pre_delete_collection=True,  # 再実行時に既存コレクションを削除して重複を防止
-    ids=[c.metadata["id"] for c in chunks],  # 同一IDの再登録を防ぐ
-)
+# チャンクが0件の場合はスキップ
+if not chunks:
+    print("⚠️ チャンクが0件のためベクトルストア保存をスキップしました")
+    vector_store = None
+else:
+    # IDのNULLチェック
+    ids = []
+    for c in chunks:
+        cid = c.metadata.get("id")
+        if not cid:
+            raise ValueError("Chunk metadata に id がありません")
+        ids.append(cid)
+
+    vector_store = PGVector.from_documents(
+        chunks,
+        embeddings,
+        connection=PG_CONN,
+        collection_name="graphrag",
+        pre_delete_collection=True,  # 再実行時に既存コレクションを削除して重複を防止
+        ids=ids,  # 同一IDの再登録を防ぐ
+        use_jsonb=True,
+    )
 
 # トークン化データをDBに反映
-if japanese_processor and enable_japanese_search:
+if vector_store and japanese_processor and enable_japanese_search:
     try:
         import psycopg
         raw_pg_conn = normalize_pg_connection_string(PG_CONN)
@@ -280,20 +295,23 @@ else:  # networkx
     # NetworkXの場合は、より多くのエンティティを取得してLLMで処理
     graph_retriever = NetworkXGraphRetriever(graph=graph, k=RETRIEVAL_TOP_K * 3, llm=llm)
 
-if HAS_PARENT:
+# vector_storeがNoneの場合はretrieverもNone
+if vector_store is None:
+    vector_retriever = None
+elif HAS_PARENT:
     vector_retriever = ParentDocumentRetriever(vector_store, search_kwargs={"k": RETRIEVAL_TOP_K})
 else:
     vector_retriever = vector_store.as_retriever(search_kwargs={"k": RETRIEVAL_TOP_K})
 
 # ── 6. LCEL チェイン定義 ───────────────────────────────────────────
 graph_run = graph_retriever.as_runnable()
-vector_run = vector_retriever.as_runnable()
+vector_run = vector_retriever.as_runnable() if vector_retriever else RunnableLambda(lambda _: [])
 
 
 def merge_ctx(data: Dict[str, Any]) -> Dict[str, Any]:
     """Graph/Vector の結果を 1 つの context 文字列へ整形"""
-    triples = data["graph"]
-    docs = data["docs"]
+    triples = data.get("graph", []) or []
+    docs = data.get("docs", []) or []
     graph_lines = [
         f"{t.get('start') or t.get('subject')} -[{t.get('predicate') or t.get('type')}]→ {t.get('end') or t.get('object')}"
         for t in triples

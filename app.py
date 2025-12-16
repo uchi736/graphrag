@@ -28,12 +28,15 @@ try:
     from langchain_community.graphs.graph_document import GraphDocument
 except ImportError:
     from langchain_community.graphs import GraphDocument
-from langchain_community.vectorstores.pgvector import PGVector
+from langchain_postgres import PGVector
 
 # 日本語ハイブリッド検索
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
 from hybrid_retriever import HybridRetriever
-from db_utils import normalize_pg_connection_string, ensure_tokenized_schema
+from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, ensure_hnsw_index
+
+# エンティティベクトル化
+from entity_vectorizer import EntityVectorizer
 
 try:
     from langchain_community.retrievers.graph import GraphRetriever
@@ -92,6 +95,9 @@ with st.sidebar:
     NEO4J_USER = os.getenv("NEO4J_USER")
     NEO4J_PW = os.getenv("NEO4J_PW")
     PG_CONN = os.getenv("PG_CONN")
+    if PG_CONN and not os.getenv("PGVECTOR_CONNECTION_STRING"):
+        # Keep PGVector's expected env var in sync with the existing PG_CONN setting
+        os.environ["PGVECTOR_CONNECTION_STRING"] = PG_CONN
 
     # 必須環境変数チェック（OpenAI, PGVector）
     if not all([AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, PG_CONN]):
@@ -201,6 +207,52 @@ with st.sidebar:
         help="RAG検索で取得するチャンク数。多いほど文脈が豊富になりますが、処理時間が増加します。"
     )
     st.session_state.retrieval_top_k = retrieval_top_k
+
+    # ナレッジグラフ機能設定
+    st.markdown("---")
+    st.markdown("### 🕸️ ナレッジグラフ")
+
+    enable_knowledge_graph = st.checkbox(
+        "ナレッジグラフ生成を有効化",
+        value=os.getenv("ENABLE_KNOWLEDGE_GRAPH", "true").lower() == "true",
+        help="テキストからエンティティと関係性を抽出してグラフ構造を生成します。処理時間が増加しますが、より高度な質問応答が可能になります。"
+    )
+    st.session_state.enable_knowledge_graph = enable_knowledge_graph
+
+    if enable_knowledge_graph:
+        st.info("🔍 ナレッジグラフ: 有効\nエンティティと関係性を抽出し、グラフベースの推論を行います")
+
+        # グラフ探索ホップ数設定
+        graph_hop_count = st.slider(
+            "グラフ探索ホップ数",
+            min_value=1,
+            max_value=3,
+            value=int(os.getenv("GRAPH_HOP_COUNT", "1")),
+            step=1,
+            help="1hop=直接関係のみ、2hop=友達の友達まで、3hop=さらに間接的な関係まで探索"
+        )
+        st.session_state.graph_hop_count = graph_hop_count
+
+        # エンティティベクトル検索設定
+        enable_entity_vector = st.checkbox(
+            "エンティティベクトル検索",
+            value=os.getenv("ENABLE_ENTITY_VECTOR_SEARCH", "true").lower() == "true",
+            help="エンティティの類似度検索を有効化。類義語や関連語も検索可能になります。"
+        )
+        st.session_state.enable_entity_vector = enable_entity_vector
+
+        if enable_entity_vector:
+            entity_similarity_threshold = st.slider(
+                "エンティティ類似度閾値",
+                min_value=0.5,
+                max_value=1.0,
+                value=float(os.getenv("ENTITY_SIMILARITY_THRESHOLD", "0.7")),
+                step=0.05,
+                help="エンティティ検索の類似度閾値。低いほど幅広く検索します。"
+            )
+            st.session_state.entity_similarity_threshold = entity_similarity_threshold
+    else:
+        st.warning("⚡ ナレッジグラフ: 無効\nベクトル検索のみ使用（高速モード）")
 
     # 日本語ハイブリッド検索設定
     if SUDACHI_AVAILABLE:
@@ -383,8 +435,8 @@ def restore_from_existing_graph():
             api_key=AZURE_OPENAI_API_KEY
         )
         vector_store = PGVector(
-            connection_string=PG_CONN,
-            embedding_function=embeddings
+            connection=PG_CONN,
+            embeddings=embeddings
         )
 
         # Vector Retriever構築
@@ -396,9 +448,12 @@ def restore_from_existing_graph():
         else:
             vector_retriever = vector_store.as_retriever(search_kwargs={"k": retrieval_top_k})
 
-        # エンティティ抽出関数
+        # エンティティ抽出関数（ハイブリッド版）
         def extract_entities_from_question(question: str) -> List[str]:
-            """LLMを使って質問からエンティティを抽出"""
+            """LLMとベクトル検索を使って質問からエンティティを抽出"""
+            entities = []
+
+            # 1. LLMによるエンティティ抽出
             extraction_prompt = f"""以下の質問文から、固有名詞や重要なエンティティ（人物、場所、物）を抽出してください。
 エンティティのみをカンマ区切りで出力してください。説明は不要です。
 
@@ -408,11 +463,41 @@ def restore_from_existing_graph():
             try:
                 llm = create_chat_llm(temperature=0)
                 response = llm.invoke(extraction_prompt)
-                entities = [e.strip() for e in response.content.split(',') if e.strip()]
-                return entities
+                llm_entities = [e.strip() for e in response.content.split(',') if e.strip()]
+                entities.extend(llm_entities)
             except Exception:
                 # フォールバック: 簡易的なキーワード抽出
-                return [w for w in question.split() if len(w) > 1]
+                entities.extend([w for w in question.split() if len(w) > 1])
+
+            # 2. ベクトル検索によるエンティティ抽出（有効な場合）
+            if st.session_state.get('enable_entity_vector', False):
+                try:
+                    entity_vectorizer = EntityVectorizer(PG_CONN, embeddings)
+
+                    # 質問のベクトルで類似エンティティを検索
+                    similarity_threshold = st.session_state.get('entity_similarity_threshold', 0.7)
+                    similar_entities = entity_vectorizer.search_similar_entities(
+                        question,
+                        k=10,
+                        score_threshold=similarity_threshold
+                    )
+
+                    # 検索結果をログ出力
+                    if similar_entities:
+                        print(f"[Entity Vector Search] Found {len(similar_entities)} similar entities")
+                        for eid, score in similar_entities[:3]:
+                            print(f"  - {eid}: {score:.3f}")
+
+                    # エンティティIDのみを追加（重複排除）
+                    for entity_id, score in similar_entities:
+                        if entity_id not in entities:
+                            entities.append(entity_id)
+
+                except Exception as e:
+                    # ベクトル検索が失敗してもLLM結果を使用
+                    print(f"[Entity Vector Search Error] {e}")
+
+            return entities
 
         def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
             """LLMを使って関係性の質問への関連度をスコアリング"""
@@ -482,28 +567,79 @@ def restore_from_existing_graph():
             if not entities:
                 return []
 
-            # 2. 双方向1-hop直接関係のみ取得
-            query = """
-            UNWIND $entities AS entity
-            MATCH (n)
-            WHERE n.id CONTAINS entity
-            AND NOT n.id =~ '[0-9a-f]{32}'
-            WITH collect(DISTINCT n) AS matched_nodes
+            # 2. ホップ数を取得
+            hop_count = st.session_state.get('graph_hop_count', 1)
 
-            UNWIND matched_nodes AS start_node
-            MATCH (start_node)-[r]-(connected_node)
-            WHERE type(r) <> 'MENTIONS'
-            AND NOT connected_node.id =~ '[0-9a-f]{32}'
+            # 3. ホップ数に応じたクエリを実行
+            if hop_count == 1:
+                # 1-hop: 直接関係のみ
+                query = """
+                UNWIND $entities AS entity
+                MATCH (n)
+                WHERE n.id CONTAINS entity
+                AND NOT n.id =~ '[0-9a-f]{32}'
+                WITH collect(DISTINCT n) AS matched_nodes
 
-            WITH r, startNode(r) AS actual_start, endNode(r) AS actual_end
-            RETURN DISTINCT actual_start.id AS start, type(r) AS type, actual_end.id AS end
-            LIMIT 30
-            """
+                UNWIND matched_nodes AS start_node
+                MATCH (start_node)-[r]-(connected_node)
+                WHERE type(r) <> 'MENTIONS'
+                AND NOT connected_node.id =~ '[0-9a-f]{32}'
+
+                WITH r, startNode(r) AS actual_start, endNode(r) AS actual_end
+                RETURN DISTINCT actual_start.id AS start, type(r) AS type, actual_end.id AS end
+                LIMIT 30
+                """
+                top_k = 15
+            elif hop_count == 2:
+                # 2-hop: 可変長パス [*1..2]
+                query = """
+                UNWIND $entities AS entity
+                MATCH (n)
+                WHERE n.id CONTAINS entity
+                AND NOT n.id =~ '[0-9a-f]{32}'
+                WITH collect(DISTINCT n) AS matched_nodes
+
+                UNWIND matched_nodes AS start_node
+                MATCH path = (start_node)-[*1..2]-(end_node)
+                WHERE ALL(r IN relationships(path) WHERE type(r) <> 'MENTIONS')
+                AND ALL(node IN nodes(path) WHERE NOT node.id =~ '[0-9a-f]{32}')
+                AND start_node <> end_node
+
+                WITH relationships(path) AS rels
+                UNWIND range(0, size(rels)-1) AS i
+                WITH rels[i] AS r, startNode(rels[i]) AS s, endNode(rels[i]) AS e
+                RETURN DISTINCT s.id AS start, type(r) AS type, e.id AS end
+                LIMIT 50
+                """
+                top_k = 20
+            else:  # hop_count == 3
+                # 3-hop: 可変長パス [*1..3]
+                query = """
+                UNWIND $entities AS entity
+                MATCH (n)
+                WHERE n.id CONTAINS entity
+                AND NOT n.id =~ '[0-9a-f]{32}'
+                WITH collect(DISTINCT n) AS matched_nodes
+
+                UNWIND matched_nodes AS start_node
+                MATCH path = (start_node)-[*1..3]-(end_node)
+                WHERE ALL(r IN relationships(path) WHERE type(r) <> 'MENTIONS')
+                AND ALL(node IN nodes(path) WHERE NOT node.id =~ '[0-9a-f]{32}')
+                AND start_node <> end_node
+
+                WITH relationships(path) AS rels
+                UNWIND range(0, size(rels)-1) AS i
+                WITH rels[i] AS r, startNode(rels[i]) AS s, endNode(rels[i]) AS e
+                RETURN DISTINCT s.id AS start, type(r) AS type, e.id AS end
+                LIMIT 80
+                """
+                top_k = 25
+
             try:
                 result = graph.query(query, params={"entities": entities})
                 if result:
-                    # 3. LLMリランキングで関連度の高い関係性のみに絞る
-                    result = rank_relations_by_relevance(question, result, top_k=15)
+                    # 4. LLMリランキングで関連度の高い関係性のみに絞る
+                    result = rank_relations_by_relevance(question, result, top_k=top_k)
                 return result if result else []
             except Exception as e:
                 # フォールバック: 単純な1-hopマッチング
@@ -528,8 +664,12 @@ def restore_from_existing_graph():
 
         # チェイン構築（Graph-First Retrieval）
         def retriever_and_merge(question: str):
-            # 1. 質問からグラフ検索を優先実行
-            triples = get_graph_context(question)
+            # 1. ナレッジグラフが有効な場合のみグラフ検索を実行
+            triples = []
+            enable_knowledge_graph = st.session_state.get('enable_knowledge_graph', True)
+
+            if enable_knowledge_graph:
+                triples = get_graph_context(question)
 
             # 2. グラフ検索結果があればそれを使用、なければベクトル検索を補助的に使用
             docs = []
@@ -681,7 +821,44 @@ def load_documents(uploaded_files) -> list:
     return all_docs
 
 # 初期化関数
-def build_rag_system(source_docs: list):
+def load_csv_edges(uploaded_file):
+    """CSV( source,target,label ) を読み込みシンプルなエッジリストを返す"""
+    if not uploaded_file:
+        return []
+    import csv
+    import io
+
+    # UTF-8-sig (BOM付き) にも対応
+    try:
+        text = uploaded_file.getvalue().decode("utf-8-sig")
+    except Exception:
+        try:
+            text = uploaded_file.getvalue().decode("utf-8")
+        except Exception:
+            text = uploaded_file.getvalue().decode("utf-8", errors="ignore")
+
+    reader = csv.DictReader(io.StringIO(text))
+    edges = []
+
+    for row in reader:
+        if not row:
+            continue
+
+        # ヘッダーの空白も考慮してキーを正規化（小文字化・空白除去）
+        normalized_row = {k.strip().lower() if k else k: v for k, v in row.items()}
+
+        src = (normalized_row.get("source") or normalized_row.get("from") or normalized_row.get("src") or "").strip()
+        tgt = (normalized_row.get("target") or normalized_row.get("to") or normalized_row.get("dst") or "").strip()
+        rel = (normalized_row.get("label") or normalized_row.get("relation") or normalized_row.get("rel") or "RELATED_TO").strip()
+
+        if not src or not tgt:
+            continue
+        edges.append({"source": src, "target": tgt, "label": rel})
+
+    return edges
+
+
+def build_rag_system(source_docs: list, csv_edges: list | None = None):
     """RAGシステムの構築"""
 
     # チャンク分割（RecursiveCharacterTextSplitter: 重複を防ぐ）
@@ -721,11 +898,17 @@ def build_rag_system(source_docs: list):
         deduped.append(chunk)
     chunks = deduped
 
-    # GraphDocument化
-    llm = create_chat_llm(temperature=0)
+    # ナレッジグラフ機能のチェック
+    enable_knowledge_graph = st.session_state.get('enable_knowledge_graph', True)
 
-    # カスタムKG抽出プロンプト（専門用語＋包括的な関係タイプ）
-    kg_system_prompt = """
+    if enable_knowledge_graph:
+        st.info("🕸️ ナレッジグラフ生成中...")
+
+        # GraphDocument化
+        llm = create_chat_llm(temperature=0)
+
+        # カスタムKG抽出プロンプト（専門用語＋包括的な関係タイプ）
+        kg_system_prompt = """
 あなたはテキストから専門用語とその関係性を抽出する専門家です。
 以下のルールに従って、テキストから専門用語ノードと関係性を抽出してください。
 
@@ -800,94 +983,201 @@ def build_rag_system(source_docs: list):
 - テキスト中に明示されている関係を優先してください
 """
 
-    kg_user_prompt = """
+        kg_user_prompt = """
 以下のテキストから、上記ルールに従って専門用語とその関係性を抽出してください。
 
 テキスト:
 {input}
 """
 
-    kg_prompt = ChatPromptTemplate.from_messages([
-        ("system", kg_system_prompt),
-        ("user", kg_user_prompt)
-    ])
+        kg_prompt = ChatPromptTemplate.from_messages([
+            ("system", kg_system_prompt),
+            ("user", kg_user_prompt)
+        ])
 
-    transformer = LLMGraphTransformer(
-        llm=llm,
-        prompt=kg_prompt,
-        allowed_nodes=["Term"],
-        allowed_relationships=[
-            # 階層・分類関係
-            "IS_A", "BELONGS_TO_CATEGORY", "PART_OF", "HAS_STEP",
-            # 属性・特性関係
-            "HAS_ATTRIBUTE", "RELATED_TO",
-            # 因果・依存関係
-            "AFFECTS", "CAUSES", "DEPENDS_ON",
-            # 適用・制約関係
-            "APPLIES_TO", "APPLIES_WHEN", "REQUIRES_QUALITY_GATE", "REQUIRES_APPROVAL_FROM",
-            # 所有・責任関係
-            "OWNED_BY",
-            # 同義語関係
-            "SAME_AS", "ALIAS_OF"
-        ],
-        strict_mode=True
-    )
-    graph_docs = transformer.convert_to_graph_documents(chunks)
-
-    # グラフバックエンドにロード
-    if st.session_state.graph_backend == "neo4j":
-        graph = Neo4jGraph(
-            url=NEO4J_URI,
-            username=NEO4J_USER,
-            password=NEO4J_PW,
-            enhanced_schema=True  # APOCを使用
+        transformer = LLMGraphTransformer(
+            llm=llm,
+            prompt=kg_prompt,
+            allowed_nodes=["Term"],
+            allowed_relationships=[
+                # 階層・分類関係
+                "IS_A", "BELONGS_TO_CATEGORY", "PART_OF", "HAS_STEP",
+                # 属性・特性関係
+                "HAS_ATTRIBUTE", "RELATED_TO",
+                # 因果・依存関係
+                "AFFECTS", "CAUSES", "DEPENDS_ON",
+                # 適用・制約関係
+                "APPLIES_TO", "APPLIES_WHEN", "REQUIRES_QUALITY_GATE", "REQUIRES_APPROVAL_FROM",
+                # 所有・責任関係
+                "OWNED_BY",
+                # 同義語関係
+                "SAME_AS", "ALIAS_OF"
+            ],
+            strict_mode=True
         )
-        graph.add_graph_documents(graph_docs, include_source=True)
-    else:  # networkx
-        from networkx_graph import NetworkXGraph
-        graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
-        graph.add_graph_documents(graph_docs, include_source=True)
+        graph_docs = transformer.convert_to_graph_documents(chunks)
 
-    # Documentノードを作成してChunkとリンク
-    for doc in source_docs:
-        doc_name = doc.metadata.get("source", "Unknown")
-        # Documentノードを作成
-        graph.query("""
-            MERGE (d:Document {name: $doc_name})
-            SET d.created = timestamp()
-        """, params={"doc_name": doc_name})
+        # グラフバックエンドにロード
+        if st.session_state.graph_backend == "neo4j":
+            graph = Neo4jGraph(
+                url=NEO4J_URI,
+                username=NEO4J_USER,
+                password=NEO4J_PW,
+                enhanced_schema=True  # APOCを使用
+            )
+            graph.add_graph_documents(graph_docs, include_source=True)
+        else:  # networkx
+            from networkx_graph import NetworkXGraph
+            graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
+            graph.add_graph_documents(graph_docs, include_source=True)
 
-    # 各ChunkをDocumentにリンク
-    for chunk in chunks:
-        chunk_id = chunk.metadata.get("id")
-        doc_name = chunk.metadata.get("source", "Unknown")
-        if chunk_id:
+        # CSVエッジ取り込み（source,target,label のシンプル形式）
+        if csv_edges:
+            if st.session_state.graph_backend == "neo4j":
+                for edge in csv_edges:
+                    graph.query(
+                        f"""
+                        MERGE (s:CSVNode {{id: $src}})
+                        MERGE (t:CSVNode {{id: $tgt}})
+                        MERGE (s)-[r:`{edge['label']}`]->(t)
+                        """,
+                        params={"src": edge["source"], "tgt": edge["target"]}
+                    )
+            else:
+                # NetworkXGraphはCypher MERGEをサポートしないので手動追加
+                for edge in csv_edges:
+                    src = edge["source"]
+                    tgt = edge["target"]
+                    rel = edge["label"]
+                    graph.add_node_manual(src, node_type="CSVNode")
+                    graph.add_node_manual(tgt, node_type="CSVNode")
+                    graph.add_edge_manual(src, tgt, rel_type=rel)
+                if getattr(graph, "auto_save", False):
+                    graph.save()
+
+        # Documentノードを作成してChunkとリンク
+        for doc in source_docs:
+            doc_name = doc.metadata.get("source", "Unknown")
+            # Documentノードを作成
             graph.query("""
-                MATCH (c:Chunk {id: $chunk_id})
-                MATCH (d:Document {name: $doc_name})
-                MERGE (c)-[:FROM_DOCUMENT]->(d)
-            """, params={"chunk_id": chunk_id, "doc_name": doc_name})
+                MERGE (d:Document {name: $doc_name})
+                SET d.created = timestamp()
+            """, params={"doc_name": doc_name})
 
-    # クロスドキュメント推論: 共通する専門用語を持つドキュメント間にリレーションを作成
-    cross_doc_query = """
-    MATCH (d1:Document)<-[:FROM_DOCUMENT]-(c1:Chunk)-[:MENTIONS]->(term:Term)
-    MATCH (d2:Document)<-[:FROM_DOCUMENT]-(c2:Chunk)-[:MENTIONS]->(term)
-    WHERE d1.name <> d2.name
-    WITH d1, d2, COUNT(DISTINCT term) AS common_terms
-    WHERE common_terms >= 2
-    MERGE (d1)-[r:SHARES_TOPICS_WITH]->(d2)
-    SET r.common_term_count = common_terms
-    """
-    try:
-        graph.query(cross_doc_query)
-    except Exception as e:
-        # クロスドキュメント推論が失敗しても続行
-        pass
+        # 各ChunkをDocumentにリンク
+        for chunk in chunks:
+            chunk_id = chunk.metadata.get("id")
+            doc_name = chunk.metadata.get("source", "Unknown")
+            if chunk_id:
+                graph.query("""
+                    MATCH (c:Chunk {id: $chunk_id})
+                    MATCH (d:Document {name: $doc_name})
+                    MERGE (c)-[:FROM_DOCUMENT]->(d)
+                """, params={"chunk_id": chunk_id, "doc_name": doc_name})
+
+        # クロスドキュメント推論: 共通する専門用語を持つドキュメント間にリレーションを作成
+        cross_doc_query = """
+        MATCH (d1:Document)<-[:FROM_DOCUMENT]-(c1:Chunk)-[:MENTIONS]->(term:Term)
+        MATCH (d2:Document)<-[:FROM_DOCUMENT]-(c2:Chunk)-[:MENTIONS]->(term)
+        WHERE d1.name <> d2.name
+        WITH d1, d2, COUNT(DISTINCT term) AS common_terms
+        WHERE common_terms >= 2
+        MERGE (d1)-[r:SHARES_TOPICS_WITH]->(d2)
+        SET r.common_term_count = common_terms
+        """
+        try:
+            graph.query(cross_doc_query)
+        except Exception as e:
+            # クロスドキュメント推論が失敗しても続行
+            pass
+
+        # エンティティベクトル化（有効な場合）
+        if st.session_state.get('enable_entity_vector', True):
+            with st.spinner("エンティティをベクトル化中..."):
+                try:
+                    entity_vectorizer = EntityVectorizer(PG_CONN, embeddings)
+
+                    # グラフからエンティティを抽出
+                    entities = entity_vectorizer.extract_entities_from_graph(
+                        graph,
+                        graph_backend=st.session_state.graph_backend
+                    )
+
+                    # エンティティをベクトル化して保存
+                    num_saved = entity_vectorizer.add_entities(entities, graph_docs)
+
+                    if num_saved > 0:
+                        st.success(f"✅ {num_saved}個のエンティティをベクトル化しました")
+
+                except Exception as e:
+                    st.warning(f"エンティティベクトル化エラー: {e}")
+    else:
+        st.info("⚡ ナレッジグラフをスキップし、ベクトル検索のみを使用します")
+        # LLMはチェーン構築で必要
+        llm = create_chat_llm(temperature=0)
+        graph_docs = []  # ナレッジグラフOFFの場合は空
+
+        # グラフオブジェクトは作成（CSVエッジ用）
+        if st.session_state.graph_backend == "neo4j":
+            graph = Neo4jGraph(
+                url=NEO4J_URI,
+                username=NEO4J_USER,
+                password=NEO4J_PW,
+                enhanced_schema=True
+            )
+        else:  # networkx
+            from networkx_graph import NetworkXGraph
+            graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
+
+        # CSVエッジ取り込み（ナレッジグラフOFFでもCSVは処理）
+        if csv_edges:
+            st.info(f"🔗 CSVから{len(csv_edges)}件のエッジを追加中...")
+            if st.session_state.graph_backend == "neo4j":
+                for edge in csv_edges:
+                    graph.query(
+                        f"""
+                        MERGE (s:CSVNode {{id: $src}})
+                        MERGE (t:CSVNode {{id: $tgt}})
+                        MERGE (s)-[r:`{edge['label']}`]->(t)
+                        """,
+                        params={"src": edge["source"], "tgt": edge["target"]}
+                    )
+            else:
+                for edge in csv_edges:
+                    src = edge["source"]
+                    tgt = edge["target"]
+                    rel = edge["label"]
+                    graph.add_node_manual(src, node_type="CSVNode")
+                    graph.add_node_manual(tgt, node_type="CSVNode")
+                    graph.add_edge_manual(src, tgt, rel_type=rel)
+                if getattr(graph, "auto_save", False):
+                    graph.save()
+            st.success(f"✅ CSVから{len(csv_edges)}件のエッジを追加しました")
+
+        # CSVエッジからのエンティティベクトル化（有効な場合）
+        if csv_edges and st.session_state.get('enable_entity_vector', True):
+            with st.spinner("CSVエンティティをベクトル化中..."):
+                try:
+                    entity_vectorizer = EntityVectorizer(PG_CONN, embeddings)
+
+                    # グラフからエンティティを抽出
+                    entities = entity_vectorizer.extract_entities_from_graph(
+                        graph,
+                        graph_backend=st.session_state.graph_backend
+                    )
+
+                    # エンティティをベクトル化して保存
+                    num_saved = entity_vectorizer.add_entities(entities, [])
+
+                    if num_saved > 0:
+                        st.success(f"✅ {num_saved}個のエンティティをベクトル化しました")
+
+                except Exception as e:
+                    st.warning(f"エンティティベクトル化エラー: {e}")
 
     # 日本語トークン化（有効な場合）
     japanese_processor = get_japanese_processor()
     if japanese_processor and st.session_state.get('enable_japanese_search', True):
-        ensure_tokenized_schema(PG_CONN)
         with st.spinner("日本語トークン化中..."):
             for chunk in chunks:
                 try:
@@ -898,18 +1188,34 @@ def build_rag_system(source_docs: list):
                     chunk.metadata['tokenized_content'] = None
 
     # PGVector保存（重複防止設定付き）
-    vector_store = PGVector.from_documents(
-        chunks,
-        embeddings,
-        connection_string=PG_CONN,
-        collection_name="graphrag",
-        pre_delete_collection=True,  # 既存コレクション削除
-        ids=[c.metadata["id"] for c in chunks]  # ID指定で重複防止
-    )
+    # チャンクが0件の場合はスキップ（CSVのみの場合など）
+    if not chunks:
+        st.warning("チャンクが0件のためベクトルストア保存をスキップしました")
+        vector_store = None
+    else:
+        # IDのNULLチェック
+        ids = []
+        for c in chunks:
+            cid = c.metadata.get("id")
+            if not cid:
+                raise ValueError("Chunk metadata に id がありません")
+            ids.append(cid)
+
+        ensure_hnsw_index(PG_CONN)
+        vector_store = PGVector.from_documents(
+            chunks,
+            embeddings,
+            connection=PG_CONN,
+            collection_name="graphrag",
+            pre_delete_collection=True,  # 既存コレクション削除
+            ids=ids,  # ID指定で重複防止
+            use_jsonb=True,
+        )
 
     # トークン化データをDBに反映
-    if japanese_processor and st.session_state.get('enable_japanese_search', True):
+    if vector_store and japanese_processor and st.session_state.get('enable_japanese_search', True):
         try:
+            ensure_tokenized_schema(PG_CONN)
             import psycopg
             raw_pg_conn = normalize_pg_connection_string(PG_CONN)
             with psycopg.connect(raw_pg_conn) as conn:
@@ -930,14 +1236,20 @@ def build_rag_system(source_docs: list):
     # TopK値を取得（デフォルト: 5）
     retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
 
-    if HAS_PARENT:
+    # vector_storeがNone（CSVのみ）の場合はretrieverもNone
+    if vector_store is None:
+        vector_retriever = None
+    elif HAS_PARENT:
         vector_retriever = ParentDocumentRetriever(vector_store, search_kwargs={"k": retrieval_top_k})
     else:
         vector_retriever = vector_store.as_retriever(search_kwargs={"k": retrieval_top_k})
 
-    # エンティティ抽出関数
+    # エンティティ抽出関数（ハイブリッド版）
     def extract_entities_from_question(question: str) -> List[str]:
-        """LLMを使って質問からエンティティを抽出"""
+        """LLMとベクトル検索を使って質問からエンティティを抽出"""
+        entities = []
+
+        # 1. LLMによるエンティティ抽出
         extraction_prompt = f"""以下の質問文から、固有名詞や重要なエンティティ（人物、場所、物）を抽出してください。
 エンティティのみをカンマ区切りで出力してください。説明は不要です。
 
@@ -946,11 +1258,41 @@ def build_rag_system(source_docs: list):
 エンティティ:"""
         try:
             response = llm.invoke(extraction_prompt)
-            entities = [e.strip() for e in response.content.split(',') if e.strip()]
-            return entities
+            llm_entities = [e.strip() for e in response.content.split(',') if e.strip()]
+            entities.extend(llm_entities)
         except Exception:
             # フォールバック: 簡易的なキーワード抽出
-            return [w for w in question.split() if len(w) > 1]
+            entities.extend([w for w in question.split() if len(w) > 1])
+
+        # 2. ベクトル検索によるエンティティ抽出（有効な場合）
+        if st.session_state.get('enable_entity_vector', False):
+            try:
+                entity_vectorizer = EntityVectorizer(PG_CONN, embeddings)
+
+                # 質問のベクトルで類似エンティティを検索
+                similarity_threshold = st.session_state.get('entity_similarity_threshold', 0.7)
+                similar_entities = entity_vectorizer.search_similar_entities(
+                    question,
+                    k=10,
+                    score_threshold=similarity_threshold
+                )
+
+                # 検索結果をログ出力
+                if similar_entities:
+                    print(f"[Entity Vector Search] Found {len(similar_entities)} similar entities")
+                    for eid, score in similar_entities[:3]:
+                        print(f"  - {eid}: {score:.3f}")
+
+                # エンティティIDのみを追加（重複排除）
+                for entity_id, score in similar_entities:
+                    if entity_id not in entities:
+                        entities.append(entity_id)
+
+            except Exception as e:
+                # ベクトル検索が失敗してもLLM結果を使用
+                print(f"[Entity Vector Search Error] {e}")
+
+        return entities
 
     def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
         """LLMを使って関係性の質問への関連度をスコアリング"""
@@ -1019,28 +1361,79 @@ def build_rag_system(source_docs: list):
         if not entities:
             return []
 
-        # 2. 双方向1-hop直接関係のみ取得
-        query = """
-        UNWIND $entities AS entity
-        MATCH (n)
-        WHERE n.id CONTAINS entity
-        AND NOT n.id =~ '[0-9a-f]{32}'
-        WITH collect(DISTINCT n) AS matched_nodes
+        # 2. ホップ数を取得
+        hop_count = st.session_state.get('graph_hop_count', 1)
 
-        UNWIND matched_nodes AS start_node
-        MATCH (start_node)-[r]-(connected_node)
-        WHERE type(r) <> 'MENTIONS'
-        AND NOT connected_node.id =~ '[0-9a-f]{32}'
+        # 3. ホップ数に応じたクエリを実行
+        if hop_count == 1:
+            # 1-hop: 直接関係のみ
+            query = """
+            UNWIND $entities AS entity
+            MATCH (n)
+            WHERE n.id CONTAINS entity
+            AND NOT n.id =~ '[0-9a-f]{32}'
+            WITH collect(DISTINCT n) AS matched_nodes
 
-        WITH r, startNode(r) AS actual_start, endNode(r) AS actual_end
-        RETURN DISTINCT actual_start.id AS start, type(r) AS type, actual_end.id AS end
-        LIMIT 30
-        """
+            UNWIND matched_nodes AS start_node
+            MATCH (start_node)-[r]-(connected_node)
+            WHERE type(r) <> 'MENTIONS'
+            AND NOT connected_node.id =~ '[0-9a-f]{32}'
+
+            WITH r, startNode(r) AS actual_start, endNode(r) AS actual_end
+            RETURN DISTINCT actual_start.id AS start, type(r) AS type, actual_end.id AS end
+            LIMIT 30
+            """
+            top_k = 15
+        elif hop_count == 2:
+            # 2-hop: 可変長パス [*1..2]
+            query = """
+            UNWIND $entities AS entity
+            MATCH (n)
+            WHERE n.id CONTAINS entity
+            AND NOT n.id =~ '[0-9a-f]{32}'
+            WITH collect(DISTINCT n) AS matched_nodes
+
+            UNWIND matched_nodes AS start_node
+            MATCH path = (start_node)-[*1..2]-(end_node)
+            WHERE ALL(r IN relationships(path) WHERE type(r) <> 'MENTIONS')
+            AND ALL(node IN nodes(path) WHERE NOT node.id =~ '[0-9a-f]{32}')
+            AND start_node <> end_node
+
+            WITH relationships(path) AS rels
+            UNWIND range(0, size(rels)-1) AS i
+            WITH rels[i] AS r, startNode(rels[i]) AS s, endNode(rels[i]) AS e
+            RETURN DISTINCT s.id AS start, type(r) AS type, e.id AS end
+            LIMIT 50
+            """
+            top_k = 20
+        else:  # hop_count == 3
+            # 3-hop: 可変長パス [*1..3]
+            query = """
+            UNWIND $entities AS entity
+            MATCH (n)
+            WHERE n.id CONTAINS entity
+            AND NOT n.id =~ '[0-9a-f]{32}'
+            WITH collect(DISTINCT n) AS matched_nodes
+
+            UNWIND matched_nodes AS start_node
+            MATCH path = (start_node)-[*1..3]-(end_node)
+            WHERE ALL(r IN relationships(path) WHERE type(r) <> 'MENTIONS')
+            AND ALL(node IN nodes(path) WHERE NOT node.id =~ '[0-9a-f]{32}')
+            AND start_node <> end_node
+
+            WITH relationships(path) AS rels
+            UNWIND range(0, size(rels)-1) AS i
+            WITH rels[i] AS r, startNode(rels[i]) AS s, endNode(rels[i]) AS e
+            RETURN DISTINCT s.id AS start, type(r) AS type, e.id AS end
+            LIMIT 80
+            """
+            top_k = 25
+
         try:
             result = graph.query(query, params={"entities": entities})
             if result:
-                # 3. LLMリランキングで関連度の高い関係性のみに絞る
-                result = rank_relations_by_relevance(question, result, top_k=15)
+                # 4. LLMリランキングで関連度の高い関係性のみに絞る
+                result = rank_relations_by_relevance(question, result, top_k=top_k)
             return result if result else []
         except Exception as e:
             # フォールバック: 単純な1-hopマッチング
@@ -1066,8 +1459,12 @@ def build_rag_system(source_docs: list):
     # LCELチェイン構築（Graph-First Retrieval）
     def retriever_and_merge(question: str):
         """グラフ検索を優先し、補助的にベクトル検索を使用"""
-        # 1. 質問からグラフ検索を優先実行
-        triples = get_graph_context(question)
+        # 1. ナレッジグラフが有効な場合のみグラフ検索を実行
+        triples = []
+        enable_knowledge_graph = st.session_state.get('enable_knowledge_graph', True)
+
+        if enable_knowledge_graph:
+            triples = get_graph_context(question)
 
         # 2. グラフ検索結果があればそれを使用、なければベクトル検索を補助的に使用
         docs = []
@@ -2026,31 +2423,49 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True,
     help="複数ファイルをアップロード可能です"
 )
+csv_edges_file = st.file_uploader(
+    "edges.csv (source,target,label)",
+    type=["csv"],
+    accept_multiple_files=False,
+    help="シンプルなノード・エッジ関係をCSVで追加する場合に指定してください"
+)
+has_docs = bool(uploaded_files)
+has_csv = bool(csv_edges_file)
 
-if uploaded_files:
+if has_docs:
     st.success(f"✅ {len(uploaded_files)} ファイルがアップロードされました")
 
-    # ファイル一覧表示
     with st.expander("📄 アップロード済みファイル"):
         for file in uploaded_files:
             st.write(f"- {file.name} ({file.size} bytes)")
 
-    # ナレッジグラフ構築ボタン
+if has_csv:
+    st.info(f"🔗 edges.csv を受信: {csv_edges_file.name}")
+
+# ナレッジグラフ構築ボタン（ドキュメントまたはCSVがあれば表示）
+if has_docs or has_csv:
     if st.button("🚀 ナレッジグラフを構築", type="primary"):
-        with st.spinner("ドキュメント読み込み中..."):
-            try:
-                source_docs = load_documents(uploaded_files)
-                total_chars = sum(len(doc.page_content) for doc in source_docs)
-                st.info(f"📄 {len(source_docs)} ファイル読み込み完了（総文字数: {total_chars:,} 文字）")
-            except Exception as e:
-                st.error(f"ファイル読み込みエラー: {e}")
-                st.stop()
+        source_docs = []
+        if has_docs:
+            with st.spinner("ドキュメント読み込み中..."):
+                try:
+                    source_docs = load_documents(uploaded_files)
+                    total_chars = sum(len(doc.page_content) for doc in source_docs)
+                    st.info(f"📄 {len(source_docs)} ファイル読み込み完了（総文字数: {total_chars:,} 文字）")
+                except Exception as e:
+                    st.error(f"ファイル読み込みエラー: {e}")
+                    st.stop()
 
         with st.spinner("ナレッジグラフ構築中... (数分かかる場合があります)"):
             try:
-                st.session_state.chain, st.session_state.graph = build_rag_system(source_docs)
+                csv_edges = load_csv_edges(csv_edges_file) if has_csv else []
+                st.session_state.chain, st.session_state.graph = build_rag_system(source_docs, csv_edges)
                 st.session_state.initialized = True
-                st.session_state.uploaded_files = [f.name for f in uploaded_files]
+                st.session_state.uploaded_files = [f.name for f in uploaded_files] if has_docs else []
+                # 新しいグラフに合わせてキャッシュをクリア
+                st.session_state.graph_data_cache = None
+                if 'all_node_list' in st.session_state:
+                    st.session_state.all_node_list = None
                 st.success("✅ ナレッジグラフ構築完了!")
             except Exception as e:
                 st.error(f"構築エラー: {e}")

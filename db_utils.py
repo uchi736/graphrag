@@ -57,3 +57,35 @@ def ensure_tokenized_schema(conn_string: str) -> None:
                 """
             )
         conn.commit()
+
+
+def ensure_hnsw_index(conn_string: str) -> None:
+    """コサイン距離用の HNSW インデックスを保証する（冪等）。"""
+    raw_conn = normalize_pg_connection_string(conn_string)
+    with psycopg.connect(raw_conn) as conn:
+        with conn.cursor() as cur:
+            # ベクトル次元が未指定のテーブルではHNSWを張れないので確認
+            cur.execute(
+                """
+                SELECT atttypmod
+                FROM pg_attribute
+                WHERE attrelid = 'langchain_pg_embedding'::regclass
+                  AND attname = 'embedding'
+                  AND NOT attisdropped
+                """
+            )
+            row = cur.fetchone()
+            dim = row[0] - 4 if row else None  # vectorのtypmodから次元を計算（typmod=-1なら未指定）
+            if not dim or dim <= 0:
+                # 次元未指定の場合はインデックス作成をスキップ（エラー防止）
+                print("Skip HNSW index: embedding column has no fixed dimension")
+                return
+
+            cur.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_embedding_hnsw
+                ON langchain_pg_embedding
+                USING hnsw (embedding vector_cosine_ops)
+                """
+            )
+        conn.commit()

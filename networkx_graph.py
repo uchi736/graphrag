@@ -503,10 +503,8 @@ class NetworkXGraph:
         if target not in self.graph.nodes():
             self.add_node_manual(target, "Unknown")
 
-        # エッジ追加
-        edge_key = self.graph.add_edge(source, target)
-        # エッジデータを明示的に設定
-        self.graph[source][target][edge_key] = {'type': rel_type}
+        # エッジ追加（属性を直接指定）
+        edge_key = self.graph.add_edge(source, target, type=rel_type)
         self.edge_metadata[(source, target, edge_key)] = {
             'type': rel_type,
             'properties': properties
