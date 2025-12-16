@@ -54,6 +54,8 @@ from db_utils import normalize_pg_connection_string, ensure_tokenized_schema
 
 # ── LangChain / OpenAI ─────────────────────────────────────────────
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+# LLM Factory for provider selection
+from llm_factory import create_standard_llm
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_community.graphs import Neo4jGraph
@@ -210,7 +212,7 @@ def maybe_handle_control_mode() -> None:
 maybe_handle_control_mode()
 
 # ── 2. LLMGraphTransformer で GraphDocument 化 ───────────────────
-llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+llm = create_standard_llm(model="gpt-4o-mini", temperature=0)
 transformer = LLMGraphTransformer(llm=llm)
 graph_docs: List[GraphDocument] = transformer.convert_to_graph_documents(chunks)
 
@@ -311,7 +313,7 @@ chain = (
     | RunnableParallel({"graph": graph_run, "docs": vector_run})
     | RunnableLambda(merge_ctx)
     | prompt
-    | ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+    | create_standard_llm(model="gpt-4o-mini", temperature=0)
     | StrOutputParser()
 )
 

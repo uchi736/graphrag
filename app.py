@@ -18,6 +18,8 @@ import json
 
 # LangChain imports
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
+# LLM Factory for provider selection
+from llm_factory import create_chat_llm, get_llm_provider_info
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_community.graphs import Neo4jGraph
@@ -95,6 +97,12 @@ with st.sidebar:
     if not all([AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, PG_CONN]):
         st.error("環境変数が不足しています。.envファイルを確認してください。")
         st.stop()
+
+    # LLM Provider Status
+    st.markdown("---")
+    st.markdown("### 🤖 LLM Provider")
+    llm_info = get_llm_provider_info()
+    st.info(f"{llm_info['status']}\n\nProvider: {llm_info['provider']}\nModel: {llm_info['model']}")
 
     st.markdown("---")
     st.markdown("### 🗄️ グラフバックエンド")
@@ -398,13 +406,7 @@ def restore_from_existing_graph():
 
 エンティティ:"""
             try:
-                llm = AzureChatOpenAI(
-                    azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
-                    openai_api_version=AZURE_OPENAI_API_VERSION,
-                    azure_endpoint=AZURE_OPENAI_ENDPOINT,
-                    api_key=AZURE_OPENAI_API_KEY,
-                    temperature=0
-                )
+                llm = create_chat_llm(temperature=0)
                 response = llm.invoke(extraction_prompt)
                 entities = [e.strip() for e in response.content.split(',') if e.strip()]
                 return entities
@@ -446,13 +448,7 @@ def restore_from_existing_graph():
 【出力】"""
 
             try:
-                llm = AzureChatOpenAI(
-                    azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
-                    openai_api_version=AZURE_OPENAI_API_VERSION,
-                    azure_endpoint=AZURE_OPENAI_ENDPOINT,
-                    api_key=AZURE_OPENAI_API_KEY,
-                    temperature=0
-                )
+                llm = create_chat_llm(temperature=0)
                 response = llm.invoke(ranking_prompt)
 
                 # スコアをパース
@@ -617,13 +613,7 @@ def restore_from_existing_graph():
         # LLM呼び出し部分
         llm_chain = (
             prompt
-            | AzureChatOpenAI(
-                azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
-                openai_api_version=AZURE_OPENAI_API_VERSION,
-                azure_endpoint=AZURE_OPENAI_ENDPOINT,
-                api_key=AZURE_OPENAI_API_KEY,
-                temperature=0
-            )
+            | create_chat_llm(temperature=0)
             | StrOutputParser()
         )
 
@@ -732,13 +722,7 @@ def build_rag_system(source_docs: list):
     chunks = deduped
 
     # GraphDocument化
-    llm = AzureChatOpenAI(
-        azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
-        openai_api_version=AZURE_OPENAI_API_VERSION,
-        azure_endpoint=AZURE_OPENAI_ENDPOINT,
-        api_key=AZURE_OPENAI_API_KEY,
-        temperature=0
-    )
+    llm = create_chat_llm(temperature=0)
 
     # カスタムKG抽出プロンプト（専門用語＋包括的な関係タイプ）
     kg_system_prompt = """
@@ -1180,13 +1164,7 @@ def build_rag_system(source_docs: list):
     # LLM呼び出し部分
     llm_chain = (
         prompt
-        | AzureChatOpenAI(
-            azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
-            openai_api_version=AZURE_OPENAI_API_VERSION,
-            azure_endpoint=AZURE_OPENAI_ENDPOINT,
-            api_key=AZURE_OPENAI_API_KEY,
-            temperature=0
-        )
+        | create_chat_llm(temperature=0)
         | StrOutputParser()
     )
 
@@ -1553,13 +1531,7 @@ def visualize_graph(graph_data):
 def natural_language_to_cypher(query: str) -> str:
     """自然言語クエリをCypherクエリに変換"""
     try:
-        llm = AzureChatOpenAI(
-            azure_deployment=AZURE_OPENAI_CHAT_DEPLOYMENT,
-            openai_api_version=AZURE_OPENAI_API_VERSION,
-            azure_endpoint=AZURE_OPENAI_ENDPOINT,
-            api_key=AZURE_OPENAI_API_KEY,
-            temperature=0
-        )
+        llm = create_chat_llm(temperature=0)
 
         prompt = f"""あなたはNeo4jのCypherクエリエキスパートです。
 以下の自然言語をCypherクエリに変換してください。
