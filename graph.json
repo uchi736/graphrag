@@ -5,45 +5,6 @@
     "graph": {},
     "nodes": [
       {
-        "id": "桃太郎"
-      },
-      {
-        "id": "おじいさん"
-      },
-      {
-        "id": "おばあさん"
-      },
-      {
-        "id": "鬼ヶ島"
-      },
-      {
-        "id": "鬼"
-      },
-      {
-        "id": "犬"
-      },
-      {
-        "id": "猿"
-      },
-      {
-        "id": "雉"
-      },
-      {
-        "id": "きびだんご"
-      },
-      {
-        "id": "宝物"
-      },
-      {
-        "id": "桃"
-      },
-      {
-        "id": "村"
-      },
-      {
-        "id": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887"
-      },
-      {
         "id": "ガス軸受"
       },
       {
@@ -52,200 +13,20 @@
     ],
     "edges": [
       {
-        "type": "RELATED_TO",
-        "source": "桃太郎",
-        "target": "おじいさん",
-        "key": 0
-      },
-      {
-        "type": "RELATED_TO",
-        "source": "桃太郎",
-        "target": "おばあさん",
-        "key": 0
-      },
-      {
-        "type": "BELONGS_TO_CATEGORY",
-        "source": "鬼",
-        "target": "鬼ヶ島",
-        "key": 0
-      },
-      {
-        "type": "RELATED_TO",
-        "source": "犬",
-        "target": "桃太郎",
-        "key": 0
-      },
-      {
-        "type": "RELATED_TO",
-        "source": "猿",
-        "target": "桃太郎",
-        "key": 0
-      },
-      {
-        "type": "RELATED_TO",
-        "source": "雉",
-        "target": "桃太郎",
-        "key": 0
-      },
-      {
-        "type": "RELATED_TO",
-        "source": "きびだんご",
-        "target": "桃太郎",
-        "key": 0
-      },
-      {
-        "type": "RELATED_TO",
-        "source": "宝物",
-        "target": "桃太郎",
-        "key": 0
-      },
-      {
-        "type": "RELATED_TO",
-        "source": "桃",
-        "target": "桃太郎",
-        "key": 0
-      },
-      {
-        "type": "RELATED_TO",
-        "source": "村",
-        "target": "桃太郎",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "桃太郎",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "おじいさん",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "おばあさん",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "鬼ヶ島",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "鬼",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "犬",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "猿",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "雉",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "きびだんご",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "宝物",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "桃",
-        "key": 0
-      },
-      {
-        "type": "MENTIONS",
-        "source": "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887",
-        "target": "村",
+        "type": "synonym_of",
+        "source": "ガス軸受",
+        "target": "空気軸受",
         "key": 0
       },
       {
         "type": "synonym_of",
         "source": "ガス軸受",
         "target": "空気軸受",
-        "key": 0
+        "key": 1
       }
     ]
   },
   "node_metadata": {
-    "桃太郎": {
-      "type": "Term",
-      "properties": {}
-    },
-    "おじいさん": {
-      "type": "Term",
-      "properties": {}
-    },
-    "おばあさん": {
-      "type": "Term",
-      "properties": {}
-    },
-    "鬼ヶ島": {
-      "type": "Term",
-      "properties": {}
-    },
-    "鬼": {
-      "type": "Term",
-      "properties": {}
-    },
-    "犬": {
-      "type": "Term",
-      "properties": {}
-    },
-    "猿": {
-      "type": "Term",
-      "properties": {}
-    },
-    "雉": {
-      "type": "Term",
-      "properties": {}
-    },
-    "きびだんご": {
-      "type": "Term",
-      "properties": {}
-    },
-    "宝物": {
-      "type": "Term",
-      "properties": {}
-    },
-    "桃": {
-      "type": "Term",
-      "properties": {}
-    },
-    "村": {
-      "type": "Term",
-      "properties": {}
-    },
-    "4eaf55431bf9427eebe9d17ab866d7ad0f6182c69e20a3d7d78954d37227a887": {
-      "type": "Chunk",
-      "properties": {
-        "text": "昔々、ある村におじいさんとおばあさんが住んでいました。\nおじいさんは山へ芝刈りに、おばあさんは川へ洗濯に行きました。\nおばあさんが川で洗濯をしていると、大きな桃が流れてきました。\nおばあさんがその桃を持ち帰ると、中から元気な男の子が生まれました。\nおじいさんとおばあさんは、その子を桃太郎と名付けて大切に育てました。\n桃太郎は大きくなると、鬼ヶ島に住む鬼を退治しに行くことにしました。\n旅の途中、桃太郎は犬と出会い、きびだんごを与えて仲間にしました。\nその後、猿と雉も同じようにきびだんごをもらって桃太郎の仲間になりました。\n桃太郎と仲間たちは鬼ヶ島に到着し、鬼と戦って勝利しました。\n鬼は桃太郎たちに宝物を差し出し、二度と悪さをしないと約束しました。\n桃太郎は村に帰り、おじいさんとおばあさんに宝物を分けました。"
-      }
-    },
     "ガス軸受": {
       "type": "CSVNode",
       "properties": {}
@@ -256,47 +37,11 @@
     }
   },
   "edge_metadata": {
-    "('桃太郎', 'おじいさん', 0)": {
-      "type": "RELATED_TO",
-      "properties": {}
-    },
-    "('桃太郎', 'おばあさん', 0)": {
-      "type": "RELATED_TO",
-      "properties": {}
-    },
-    "('鬼', '鬼ヶ島', 0)": {
-      "type": "BELONGS_TO_CATEGORY",
-      "properties": {}
-    },
-    "('犬', '桃太郎', 0)": {
-      "type": "RELATED_TO",
-      "properties": {}
-    },
-    "('猿', '桃太郎', 0)": {
-      "type": "RELATED_TO",
-      "properties": {}
-    },
-    "('雉', '桃太郎', 0)": {
-      "type": "RELATED_TO",
-      "properties": {}
-    },
-    "('きびだんご', '桃太郎', 0)": {
-      "type": "RELATED_TO",
-      "properties": {}
-    },
-    "('宝物', '桃太郎', 0)": {
-      "type": "RELATED_TO",
-      "properties": {}
-    },
-    "('桃', '桃太郎', 0)": {
-      "type": "RELATED_TO",
-      "properties": {}
-    },
-    "('村', '桃太郎', 0)": {
-      "type": "RELATED_TO",
-      "properties": {}
-    },
     "('ガス軸受', '空気軸受', 0)": {
+      "type": "synonym_of",
+      "properties": {}
+    },
+    "('ガス軸受', '空気軸受', 1)": {
       "type": "synonym_of",
       "properties": {}
     }

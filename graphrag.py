@@ -45,6 +45,11 @@ from pathlib import Path
 from typing import List, Dict, Any
 import hashlib
 
+# Ensure the script directory is in Python path for local module imports
+_script_dir = Path(__file__).parent.resolve()
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
+
 from dotenv import load_dotenv
 
 # ── 日本語ハイブリッド検索 ──────────────────────────────────────────

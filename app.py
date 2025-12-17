@@ -7,14 +7,23 @@ Streamlit UI for Graph-RAG
 - ナレッジグラフの可視化
 """
 import os
-import streamlit as st
+import sys
 from pathlib import Path
+
+# Ensure the script directory is in Python path for local module imports
+_script_dir = Path(__file__).parent.resolve()
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
+
+import streamlit as st
 from dotenv import load_dotenv
 import tempfile
-from typing import List
+from typing import List, Dict, Any
 import hashlib
-import fitz  # PyMuPDF
 import json
+
+# Azure Document Intelligence
+from azure_di_processor import AzureDocumentIntelligenceProcessor
 
 # LangChain imports
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
@@ -109,6 +118,15 @@ with st.sidebar:
     st.markdown("### 🤖 LLM Provider")
     llm_info = get_llm_provider_info()
     st.info(f"{llm_info['status']}\n\nProvider: {llm_info['provider']}\nModel: {llm_info['model']}")
+
+    # Azure Document Intelligence Status
+    st.markdown("---")
+    st.markdown("### 📄 PDF解析")
+    azure_di_endpoint = os.getenv("AZURE_DI_ENDPOINT")
+    if azure_di_endpoint:
+        st.success("✅ Azure Document Intelligence")
+    else:
+        st.info("ℹ️ PyMuPDF (Azure DI未設定)")
 
     st.markdown("---")
     st.markdown("### 🗄️ グラフバックエンド")
@@ -449,8 +467,20 @@ def restore_from_existing_graph():
             vector_retriever = vector_store.as_retriever(search_kwargs={"k": retrieval_top_k})
 
         # エンティティ抽出関数（ハイブリッド版）
-        def extract_entities_from_question(question: str) -> List[str]:
-            """LLMとベクトル検索を使って質問からエンティティを抽出"""
+        def extract_entities_from_question(question: str) -> Dict[str, Any]:
+            """LLMとベクトル検索を使って質問からエンティティを抽出
+
+            Returns:
+                Dict with keys:
+                - llm_entities: LLMで抽出したエンティティ
+                - vector_entities: ベクトル検索で見つかったエンティティ [(id, score), ...]
+                - merged_entities: 統合後のエンティティリスト
+            """
+            result = {
+                "llm_entities": [],
+                "vector_entities": [],
+                "merged_entities": []
+            }
             entities = []
 
             # 1. LLMによるエンティティ抽出
@@ -464,27 +494,35 @@ def restore_from_existing_graph():
                 llm = create_chat_llm(temperature=0)
                 response = llm.invoke(extraction_prompt)
                 llm_entities = [e.strip() for e in response.content.split(',') if e.strip()]
+                result["llm_entities"] = llm_entities
                 entities.extend(llm_entities)
             except Exception:
                 # フォールバック: 簡易的なキーワード抽出
-                entities.extend([w for w in question.split() if len(w) > 1])
+                fallback_entities = [w for w in question.split() if len(w) > 1]
+                result["llm_entities"] = fallback_entities
+                entities.extend(fallback_entities)
 
-            # 2. ベクトル検索によるエンティティ抽出（有効な場合）
+            # 2. ハイブリッド検索によるエンティティ抽出（有効な場合）
             if st.session_state.get('enable_entity_vector', False):
                 try:
                     entity_vectorizer = EntityVectorizer(PG_CONN, embeddings)
 
-                    # 質問のベクトルで類似エンティティを検索
+                    # 質問からハイブリッド検索（ベクトル + キーワード）
                     similarity_threshold = st.session_state.get('entity_similarity_threshold', 0.7)
-                    similar_entities = entity_vectorizer.search_similar_entities(
+                    search_mode = st.session_state.get('search_mode', 'hybrid')
+                    similar_entities = entity_vectorizer.search_hybrid_entities(
                         question,
                         k=10,
-                        score_threshold=similarity_threshold
+                        score_threshold=similarity_threshold,
+                        search_type=search_mode
                     )
+
+                    # 検索結果を保存
+                    result["vector_entities"] = similar_entities
 
                     # 検索結果をログ出力
                     if similar_entities:
-                        print(f"[Entity Vector Search] Found {len(similar_entities)} similar entities")
+                        print(f"[Entity Hybrid Search] Found {len(similar_entities)} entities (mode={search_mode})")
                         for eid, score in similar_entities[:3]:
                             print(f"  - {eid}: {score:.3f}")
 
@@ -494,10 +532,11 @@ def restore_from_existing_graph():
                             entities.append(entity_id)
 
                 except Exception as e:
-                    # ベクトル検索が失敗してもLLM結果を使用
-                    print(f"[Entity Vector Search Error] {e}")
+                    # ハイブリッド検索が失敗してもLLM結果を使用
+                    print(f"[Entity Hybrid Search Error] {e}")
 
-            return entities
+            result["merged_entities"] = entities
+            return result
 
         def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
             """LLMを使って関係性の質問への関連度をスコアリング"""
@@ -560,12 +599,19 @@ def restore_from_existing_graph():
                 return relations[:top_k]
 
         # グラフ検索関数（N-hopトラバーサル対応）
-        def get_graph_context(question: str) -> list:
-            """質問からエンティティを抽出し、N-hopトラバーサルでサブグラフを取得"""
+        def get_graph_context(question: str) -> Dict[str, Any]:
+            """質問からエンティティを抽出し、N-hopトラバーサルでサブグラフを取得
+
+            Returns:
+                Dict with keys:
+                - triples: 関係性トリプルのリスト
+                - extracted_entities: 抽出エンティティ情報
+            """
             # 1. エンティティ抽出
-            entities = extract_entities_from_question(question)
+            entity_result = extract_entities_from_question(question)
+            entities = entity_result.get("merged_entities", [])
             if not entities:
-                return []
+                return {"triples": [], "extracted_entities": entity_result}
 
             # 2. ホップ数を取得
             hop_count = st.session_state.get('graph_hop_count', 1)
@@ -640,7 +686,7 @@ def restore_from_existing_graph():
                 if result:
                     # 4. LLMリランキングで関連度の高い関係性のみに絞る
                     result = rank_relations_by_relevance(question, result, top_k=top_k)
-                return result if result else []
+                return {"triples": result if result else [], "extracted_entities": entity_result}
             except Exception as e:
                 # フォールバック: 単純な1-hopマッチング
                 fallback_query = """
@@ -658,18 +704,19 @@ def restore_from_existing_graph():
                     result = graph.query(fallback_query, params={"entities": entities})
                     if result:
                         result = rank_relations_by_relevance(question, result, top_k=15)
-                    return result if result else []
+                    return {"triples": result if result else [], "extracted_entities": entity_result}
                 except Exception:
-                    return []
+                    return {"triples": [], "extracted_entities": entity_result}
 
         # チェイン構築（Graph-First Retrieval）
         def retriever_and_merge(question: str):
-            # 1. ナレッジグラフが有効な場合のみグラフ検索を実行
+            # 1. グラフにデータがあれば検索を実行（enable_knowledge_graphに関係なく）
             triples = []
-            enable_knowledge_graph = st.session_state.get('enable_knowledge_graph', True)
-
-            if enable_knowledge_graph:
-                triples = get_graph_context(question)
+            extracted_entities = {}
+            if graph is not None:
+                graph_result = get_graph_context(question)
+                triples = graph_result.get("triples", [])
+                extracted_entities = graph_result.get("extracted_entities", {})
 
             # 2. グラフ検索結果があればそれを使用、なければベクトル検索を補助的に使用
             docs = []
@@ -743,7 +790,8 @@ def restore_from_existing_graph():
                 "context": context,
                 "question": question,
                 "vector_sources": docs,
-                "graph_sources": triples
+                "graph_sources": triples,
+                "extracted_entities": extracted_entities
             }
 
         prompt = PromptTemplate.from_template(
@@ -763,7 +811,8 @@ def restore_from_existing_graph():
             return {
                 "answer": answer,
                 "vector_sources": data["vector_sources"],
-                "graph_sources": data["graph_sources"]
+                "graph_sources": data["graph_sources"],
+                "extracted_entities": data.get("extracted_entities", {})
             }
 
         chain = (
@@ -776,6 +825,21 @@ def restore_from_existing_graph():
 
     except Exception as e:
         raise Exception(f"システム復元エラー: {e}")
+
+# Azure Document Intelligence設定クラス
+class AzureDIConfig:
+    """Azure Document Intelligence用の設定クラス"""
+    def __init__(self):
+        self.azure_di_endpoint = os.getenv("AZURE_DI_ENDPOINT")
+        self.azure_di_api_key = os.getenv("AZURE_DI_API_KEY")
+        self.azure_di_model = os.getenv("AZURE_DI_MODEL", "prebuilt-layout")
+        # Azure OpenAI設定（画像要約用）
+        self.azure_openai_api_key = os.getenv("AZURE_OPENAI_API_KEY")
+        self.azure_openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+        self.azure_openai_chat_deployment_name = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT_NAME")
+        self.azure_openai_api_version = os.getenv("AZURE_OPENAI_API_VERSION")
+        self.save_markdown = False
+
 
 # ドキュメント読み込み関数
 def load_documents(uploaded_files) -> list:
@@ -791,17 +855,56 @@ def load_documents(uploaded_files) -> list:
         try:
             file_name = uploaded_file.name
             if uploaded_file.name.endswith('.pdf'):
-                # PyMuPDF (fitz) で高精度抽出
-                pdf_doc = fitz.open(tmp_path)
-                text_parts = []
-                for page_num in range(len(pdf_doc)):
-                    page = pdf_doc[page_num]
-                    # レイアウト保持・ソート付きでテキスト抽出
-                    text = page.get_text("text", sort=True)
-                    if text.strip():  # 空ページをスキップ
-                        text_parts.append(text)
-                pdf_doc.close()
-                text_content = "\n\n".join(text_parts)
+                # Azure Document Intelligence で高精度PDF解析
+                azure_di_endpoint = os.getenv("AZURE_DI_ENDPOINT")
+                azure_di_api_key = os.getenv("AZURE_DI_API_KEY")
+
+                if azure_di_endpoint and azure_di_api_key:
+                    try:
+                        config = AzureDIConfig()
+                        processor = AzureDocumentIntelligenceProcessor(config)
+                        docs = processor.process(tmp_path)
+                        if docs:
+                            text_content = docs[0].page_content
+
+                            # Azure DI出力をoutputフォルダに保存
+                            output_dir = Path("output")
+                            output_dir.mkdir(exist_ok=True)
+                            output_filename = Path(file_name).stem + "_azure_di.md"
+                            output_path = output_dir / output_filename
+                            with open(output_path, "w", encoding="utf-8") as f:
+                                f.write(f"# {file_name}\n\n")
+                                f.write(f"*Processed by Azure Document Intelligence ({config.azure_di_model})*\n\n")
+                                f.write("---\n\n")
+                                f.write(text_content)
+                            st.info(f"📄 Azure DI出力を保存: {output_path}")
+                        else:
+                            text_content = ""
+                    except Exception as e:
+                        st.warning(f"Azure DI処理エラー、PyMuPDFにフォールバック: {e}")
+                        # フォールバック: PyMuPDF
+                        import fitz
+                        pdf_doc = fitz.open(tmp_path)
+                        text_parts = []
+                        for page_num in range(len(pdf_doc)):
+                            page = pdf_doc[page_num]
+                            text = page.get_text("text", sort=True)
+                            if text.strip():
+                                text_parts.append(text)
+                        pdf_doc.close()
+                        text_content = "\n\n".join(text_parts)
+                else:
+                    # Azure DI未設定: PyMuPDFを使用
+                    import fitz
+                    pdf_doc = fitz.open(tmp_path)
+                    text_parts = []
+                    for page_num in range(len(pdf_doc)):
+                        page = pdf_doc[page_num]
+                        text = page.get_text("text", sort=True)
+                        if text.strip():
+                            text_parts.append(text)
+                    pdf_doc.close()
+                    text_content = "\n\n".join(text_parts)
             elif uploaded_file.name.endswith('.txt'):
                 loader = TextLoader(tmp_path, encoding='utf-8')
                 docs = loader.load()
@@ -1245,8 +1348,20 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         vector_retriever = vector_store.as_retriever(search_kwargs={"k": retrieval_top_k})
 
     # エンティティ抽出関数（ハイブリッド版）
-    def extract_entities_from_question(question: str) -> List[str]:
-        """LLMとベクトル検索を使って質問からエンティティを抽出"""
+    def extract_entities_from_question(question: str) -> Dict[str, Any]:
+        """LLMとベクトル検索を使って質問からエンティティを抽出
+
+        Returns:
+            Dict with keys:
+            - llm_entities: LLMで抽出したエンティティ
+            - vector_entities: ベクトル検索で見つかったエンティティ [(id, score), ...]
+            - merged_entities: 統合後のエンティティリスト
+        """
+        result = {
+            "llm_entities": [],
+            "vector_entities": [],
+            "merged_entities": []
+        }
         entities = []
 
         # 1. LLMによるエンティティ抽出
@@ -1259,27 +1374,35 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         try:
             response = llm.invoke(extraction_prompt)
             llm_entities = [e.strip() for e in response.content.split(',') if e.strip()]
+            result["llm_entities"] = llm_entities
             entities.extend(llm_entities)
         except Exception:
             # フォールバック: 簡易的なキーワード抽出
-            entities.extend([w for w in question.split() if len(w) > 1])
+            fallback_entities = [w for w in question.split() if len(w) > 1]
+            result["llm_entities"] = fallback_entities
+            entities.extend(fallback_entities)
 
-        # 2. ベクトル検索によるエンティティ抽出（有効な場合）
+        # 2. ハイブリッド検索によるエンティティ抽出（有効な場合）
         if st.session_state.get('enable_entity_vector', False):
             try:
                 entity_vectorizer = EntityVectorizer(PG_CONN, embeddings)
 
-                # 質問のベクトルで類似エンティティを検索
+                # 質問からハイブリッド検索（ベクトル + キーワード）
                 similarity_threshold = st.session_state.get('entity_similarity_threshold', 0.7)
-                similar_entities = entity_vectorizer.search_similar_entities(
+                search_mode = st.session_state.get('search_mode', 'hybrid')
+                similar_entities = entity_vectorizer.search_hybrid_entities(
                     question,
                     k=10,
-                    score_threshold=similarity_threshold
+                    score_threshold=similarity_threshold,
+                    search_type=search_mode
                 )
+
+                # 検索結果を保存
+                result["vector_entities"] = similar_entities
 
                 # 検索結果をログ出力
                 if similar_entities:
-                    print(f"[Entity Vector Search] Found {len(similar_entities)} similar entities")
+                    print(f"[Entity Hybrid Search] Found {len(similar_entities)} entities (mode={search_mode})")
                     for eid, score in similar_entities[:3]:
                         print(f"  - {eid}: {score:.3f}")
 
@@ -1289,10 +1412,11 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                         entities.append(entity_id)
 
             except Exception as e:
-                # ベクトル検索が失敗してもLLM結果を使用
-                print(f"[Entity Vector Search Error] {e}")
+                # ハイブリッド検索が失敗してもLLM結果を使用
+                print(f"[Entity Hybrid Search Error] {e}")
 
-        return entities
+        result["merged_entities"] = entities
+        return result
 
     def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
         """LLMを使って関係性の質問への関連度をスコアリング"""
@@ -1354,12 +1478,19 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             return relations[:top_k]
 
     # グラフ検索関数（N-hopトラバーサル対応）
-    def get_graph_context(question: str) -> list:
-        """質問からエンティティを抽出し、N-hopトラバーサルでサブグラフを取得"""
+    def get_graph_context(question: str) -> Dict[str, Any]:
+        """質問からエンティティを抽出し、N-hopトラバーサルでサブグラフを取得
+
+        Returns:
+            Dict with keys:
+            - triples: 関係性トリプルのリスト
+            - extracted_entities: 抽出エンティティ情報
+        """
         # 1. エンティティ抽出
-        entities = extract_entities_from_question(question)
+        entity_result = extract_entities_from_question(question)
+        entities = entity_result.get("merged_entities", [])
         if not entities:
-            return []
+            return {"triples": [], "extracted_entities": entity_result}
 
         # 2. ホップ数を取得
         hop_count = st.session_state.get('graph_hop_count', 1)
@@ -1434,7 +1565,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             if result:
                 # 4. LLMリランキングで関連度の高い関係性のみに絞る
                 result = rank_relations_by_relevance(question, result, top_k=top_k)
-            return result if result else []
+            return {"triples": result if result else [], "extracted_entities": entity_result}
         except Exception as e:
             # フォールバック: 単純な1-hopマッチング
             fallback_query = """
@@ -1452,19 +1583,20 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                 result = graph.query(fallback_query, params={"entities": entities})
                 if result:
                     result = rank_relations_by_relevance(question, result, top_k=15)
-                return result if result else []
+                return {"triples": result if result else [], "extracted_entities": entity_result}
             except Exception:
-                return []
+                return {"triples": [], "extracted_entities": entity_result}
 
     # LCELチェイン構築（Graph-First Retrieval）
     def retriever_and_merge(question: str):
         """グラフ検索を優先し、補助的にベクトル検索を使用"""
-        # 1. ナレッジグラフが有効な場合のみグラフ検索を実行
+        # 1. グラフにデータがあれば検索を実行（enable_knowledge_graphに関係なく）
         triples = []
-        enable_knowledge_graph = st.session_state.get('enable_knowledge_graph', True)
-
-        if enable_knowledge_graph:
-            triples = get_graph_context(question)
+        extracted_entities = {}
+        if graph is not None:
+            graph_result = get_graph_context(question)
+            triples = graph_result.get("triples", [])
+            extracted_entities = graph_result.get("extracted_entities", {})
 
         # 2. グラフ検索結果があればそれを使用、なければベクトル検索を補助的に使用
         docs = []
@@ -1550,7 +1682,8 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             "context": context,
             "question": question,
             "vector_sources": docs,
-            "graph_sources": triples
+            "graph_sources": triples,
+            "extracted_entities": extracted_entities
         }
 
     prompt = PromptTemplate.from_template(
@@ -1571,7 +1704,8 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         return {
             "answer": answer,
             "vector_sources": data["vector_sources"],
-            "graph_sources": data["graph_sources"]
+            "graph_sources": data["graph_sources"],
+            "extracted_entities": data.get("extracted_entities", {})
         }
 
     chain = (
@@ -2514,6 +2648,31 @@ with tab1:
                                     st.markdown(f"- `{triple.get('start')}` -[{triple.get('type')}]→ `{triple.get('end')}`")
                             else:
                                 st.info("グラフ検索結果なし")
+
+                        # 抽出されたエンティティ
+                        with st.expander("🔍 抽出されたエンティティ", expanded=False):
+                            extracted = result.get("extracted_entities", {})
+                            if extracted:
+                                # LLM抽出
+                                llm_ents = extracted.get("llm_entities", [])
+                                if llm_ents:
+                                    st.markdown("**LLM抽出:**")
+                                    st.write(", ".join(llm_ents))
+
+                                # ベクトル検索
+                                vector_ents = extracted.get("vector_entities", [])
+                                if vector_ents:
+                                    st.markdown("**ベクトル/キーワード検索:**")
+                                    for eid, score in vector_ents[:10]:
+                                        st.write(f"- {eid} (score: {score:.3f})")
+
+                                # 統合結果
+                                merged_ents = extracted.get("merged_entities", [])
+                                if merged_ents:
+                                    st.markdown("**グラフ検索に使用:**")
+                                    st.write(", ".join(merged_ents[:15]))
+                            else:
+                                st.info("エンティティ情報なし")
 
                     except Exception as e:
                         st.error(f"エラー: {e}")

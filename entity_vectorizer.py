@@ -262,6 +262,169 @@ class EntityVectorizer:
             logger.error(f"Failed to search entities by embedding: {e}")
             return []
 
+    def search_keyword_entities(
+        self,
+        query: str,
+        k: int = 10
+    ) -> List[Tuple[str, float]]:
+        """
+        キーワード検索でエンティティを検索（部分一致）
+
+        Args:
+            query: 検索クエリ
+            k: 取得する結果数
+
+        Returns:
+            [(entity_id, score)] のリスト
+        """
+        try:
+            import psycopg
+            from db_utils import normalize_pg_connection_string
+
+            conn_string = normalize_pg_connection_string(self.connection_string)
+
+            # 日本語トークナイザーがあれば使用
+            try:
+                from japanese_text_processor import get_japanese_processor
+                processor = get_japanese_processor()
+                if processor:
+                    tokens = processor.tokenize(query).split()
+                else:
+                    tokens = query.split()
+            except ImportError:
+                tokens = query.split()
+
+            if not tokens:
+                return []
+
+            results = []
+            with psycopg.connect(conn_string) as conn:
+                with conn.cursor() as cur:
+                    # エンティティコレクションのUUIDを取得
+                    cur.execute("""
+                        SELECT uuid FROM langchain_pg_collection
+                        WHERE name = %s
+                    """, (self.collection_name,))
+                    row = cur.fetchone()
+                    if not row:
+                        logger.warning(f"Collection {self.collection_name} not found")
+                        return []
+                    collection_uuid = row[0]
+
+                    # 各トークンでエンティティ名を部分一致検索
+                    # cmetadata->>'entity_id' にエンティティ名が格納されている
+                    for token in tokens:
+                        if len(token) < 2:  # 1文字は除外
+                            continue
+
+                        cur.execute("""
+                            SELECT DISTINCT cmetadata->>'entity_id' as entity_id
+                            FROM langchain_pg_embedding
+                            WHERE collection_id = %s
+                              AND (
+                                  cmetadata->>'entity_id' ILIKE %s
+                                  OR document ILIKE %s
+                              )
+                            LIMIT %s
+                        """, (collection_uuid, f'%{token}%', f'%{token}%', k))
+
+                        for row in cur.fetchall():
+                            entity_id = row[0]
+                            if entity_id:
+                                # キーワード一致は高スコア（1.0）
+                                results.append((entity_id, 1.0))
+
+            # 重複除去して返す
+            seen = set()
+            unique_results = []
+            for entity_id, score in results:
+                if entity_id not in seen:
+                    seen.add(entity_id)
+                    unique_results.append((entity_id, score))
+                    if len(unique_results) >= k:
+                        break
+
+            logger.info(f"Keyword search found {len(unique_results)} entities")
+            return unique_results
+
+        except Exception as e:
+            logger.error(f"Failed to search entities by keyword: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return []
+
+    def search_hybrid_entities(
+        self,
+        query: str,
+        k: int = 10,
+        score_threshold: float = 0.7,
+        vector_weight: float = 0.5,
+        keyword_weight: float = 0.5,
+        search_type: str = "hybrid"
+    ) -> List[Tuple[str, float]]:
+        """
+        ハイブリッド検索（ベクトル + キーワード）でエンティティを検索
+
+        Args:
+            query: 検索クエリ
+            k: 取得する結果数
+            score_threshold: ベクトル検索の類似度閾値
+            vector_weight: ベクトル検索の重み（RRF用）
+            keyword_weight: キーワード検索の重み（RRF用）
+            search_type: "hybrid", "vector", "keyword"
+
+        Returns:
+            [(entity_id, score)] のリスト
+        """
+        logger.info(f"Hybrid entity search: type={search_type}, query={query[:50]}...")
+
+        vector_results = []
+        keyword_results = []
+
+        # ベクトル検索
+        if search_type in ("hybrid", "vector"):
+            vector_results = self.search_similar_entities(
+                query,
+                k=k * 2,  # 多めに取得
+                score_threshold=score_threshold
+            )
+            logger.info(f"Vector search found {len(vector_results)} entities")
+
+        # キーワード検索
+        if search_type in ("hybrid", "keyword"):
+            keyword_results = self.search_keyword_entities(query, k=k * 2)
+            logger.info(f"Keyword search found {len(keyword_results)} entities")
+
+        # 単一モードの場合はそのまま返す
+        if search_type == "vector":
+            return vector_results[:k]
+        if search_type == "keyword":
+            return keyword_results[:k]
+
+        # RRF（Reciprocal Rank Fusion）でスコアを統合
+        rrf_scores = {}
+        rrf_k = 60  # RRFの定数
+
+        # ベクトル検索結果のRRFスコア
+        for rank, (entity_id, score) in enumerate(vector_results):
+            rrf_score = vector_weight * (1.0 / (rrf_k + rank + 1))
+            rrf_scores[entity_id] = rrf_scores.get(entity_id, 0) + rrf_score
+
+        # キーワード検索結果のRRFスコア
+        for rank, (entity_id, score) in enumerate(keyword_results):
+            rrf_score = keyword_weight * (1.0 / (rrf_k + rank + 1))
+            rrf_scores[entity_id] = rrf_scores.get(entity_id, 0) + rrf_score
+
+        # スコアでソートして返す
+        sorted_results = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+        final_results = [(entity_id, score) for entity_id, score in sorted_results[:k]]
+
+        logger.info(f"Hybrid search final: {len(final_results)} entities")
+        if final_results:
+            logger.info(f"Top entities: {[e[0] for e in final_results[:3]]}")
+
+        return final_results
+
     def extract_entities_from_graph(self, graph, graph_backend: str = "neo4j") -> List[Dict[str, Any]]:
         """
         グラフからエンティティを抽出してコンテキストを付加
@@ -340,7 +503,9 @@ class EntityVectorizer:
                     properties = meta.get('properties', {})
 
                     # 関連するエッジからコンテキストを取得
-                    related_nodes = list(nx_graph.neighbors(node_id))[:5]
+                    successors = list(nx_graph.successors(node_id))
+                    predecessors = list(nx_graph.predecessors(node_id))
+                    related_nodes = list(dict.fromkeys(successors + predecessors))[:5]
                     # 関連ノードもハッシュIDを除外
                     related_nodes = [n for n in related_nodes if len(n) != 32 and len(n) != 64]
                     related_text = f"Connected to: {', '.join(related_nodes)}" if related_nodes else ''
