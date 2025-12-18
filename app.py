@@ -961,6 +961,60 @@ def load_csv_edges(uploaded_file):
     return edges
 
 
+def add_cross_document_relations_networkx(graph, graph_docs, source_docs):
+    """
+    NetworkX版クロスドキュメント推論
+    共通エンティティを持つドキュメント間にSHARES_TOPICS_WITHリレーションを作成
+
+    Args:
+        graph: NetworkXGraphインスタンス
+        graph_docs: LLMGraphTransformerで生成されたGraphDocumentリスト
+        source_docs: 元のドキュメントリスト
+    """
+    from collections import defaultdict
+    from itertools import combinations
+
+    # ドキュメントごとのエンティティを収集
+    doc_entities = defaultdict(set)
+    for gd in graph_docs:
+        # GraphDocumentからソースドキュメント名を取得
+        if hasattr(gd, 'source') and gd.source:
+            doc_name = gd.source.metadata.get("source", "unknown")
+        else:
+            continue
+
+        # ノード（エンティティ）を収集
+        for node in gd.nodes:
+            if hasattr(node, 'id'):
+                doc_entities[doc_name].add(node.id)
+
+    # ドキュメントペア間の共通エンティティをチェック
+    doc_items = list(doc_entities.items())
+    relations_added = 0
+
+    for (doc1, entities1), (doc2, entities2) in combinations(doc_items, 2):
+        common = entities1 & entities2
+        if len(common) >= 2:  # 2つ以上の共通エンティティがある場合
+            # Documentノードを確保
+            graph.add_node_manual(doc1, node_type="Document")
+            graph.add_node_manual(doc2, node_type="Document")
+            # SHARES_TOPICS_WITHリレーション追加
+            graph.add_edge_manual(
+                doc1, doc2,
+                rel_type="SHARES_TOPICS_WITH",
+                properties={
+                    "common_term_count": len(common),
+                    "common_terms": list(common)[:10]  # 最大10個記録
+                }
+            )
+            relations_added += 1
+
+    if relations_added > 0 and getattr(graph, "auto_save", False):
+        graph.save()
+
+    return relations_added
+
+
 def build_rag_system(source_docs: list, csv_edges: list | None = None):
     """RAGシステムの構築"""
 
@@ -1179,20 +1233,30 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                 """, params={"chunk_id": chunk_id, "doc_name": doc_name})
 
         # クロスドキュメント推論: 共通する専門用語を持つドキュメント間にリレーションを作成
-        cross_doc_query = """
-        MATCH (d1:Document)<-[:FROM_DOCUMENT]-(c1:Chunk)-[:MENTIONS]->(term:Term)
-        MATCH (d2:Document)<-[:FROM_DOCUMENT]-(c2:Chunk)-[:MENTIONS]->(term)
-        WHERE d1.name <> d2.name
-        WITH d1, d2, COUNT(DISTINCT term) AS common_terms
-        WHERE common_terms >= 2
-        MERGE (d1)-[r:SHARES_TOPICS_WITH]->(d2)
-        SET r.common_term_count = common_terms
-        """
-        try:
-            graph.query(cross_doc_query)
-        except Exception as e:
-            # クロスドキュメント推論が失敗しても続行
-            pass
+        if st.session_state.graph_backend == "neo4j":
+            cross_doc_query = """
+            MATCH (d1:Document)<-[:FROM_DOCUMENT]-(c1:Chunk)-[:MENTIONS]->(term:Term)
+            MATCH (d2:Document)<-[:FROM_DOCUMENT]-(c2:Chunk)-[:MENTIONS]->(term)
+            WHERE d1.name <> d2.name
+            WITH d1, d2, COUNT(DISTINCT term) AS common_terms
+            WHERE common_terms >= 2
+            MERGE (d1)-[r:SHARES_TOPICS_WITH]->(d2)
+            SET r.common_term_count = common_terms
+            """
+            try:
+                graph.query(cross_doc_query)
+            except Exception as e:
+                # クロスドキュメント推論が失敗しても続行
+                pass
+        else:  # networkx
+            # NetworkX版クロスドキュメント推論
+            try:
+                relations_added = add_cross_document_relations_networkx(graph, graph_docs, source_docs)
+                if relations_added > 0:
+                    st.info(f"🔗 {relations_added}件のドキュメント間リレーションを作成しました")
+            except Exception as e:
+                # クロスドキュメント推論が失敗しても続行
+                pass
 
         # エンティティベクトル化（有効な場合）
         if st.session_state.get('enable_entity_vector', True):
