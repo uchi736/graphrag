@@ -9,11 +9,21 @@
 ## 🌟 主な機能
 
 ### ✨ Streamlit WebUI
-- 📁 **PDF/テキストファイルアップロード**: ドラッグ&ドロップで簡単アップロード（PyMuPDF対応）
+- 📁 **PDF/テキストファイルアップロード**: ドラッグ&ドロップで簡単アップロード
+  - **Azure Document Intelligence**: 高精度PDF解析（テーブル・レイアウト保持、OCR対応）
+  - **PyMuPDF**: 軽量PDF解析（フォールバック）
 - 🚀 **ワンクリックでナレッジグラフ構築**: LLMが自動的にエンティティとリレーションを抽出
-- 🔄 **既存グラフの自動検出**: Neo4jに既にデータがあれば即座に復元
+- 🔄 **既存グラフの自動検出**: Neo4j/NetworkXに既にデータがあれば即座に復元
 - 💬 **対話型質問応答**: Graph-First RAGによる高精度な回答生成
-- 🎯 **LLMリランキング**: 質問の意図に応じた関係性フィルタリング（~¥0.6/クエリ）
+- 🎯 **LLMリランキング**: 質問の意図に応じた関係性フィルタリング
+- 📥 **CSVエッジインポート**: 外部関係データの取り込み対応
+- ✏️ **グラフ編集機能**: ノード・エッジの追加・編集・削除
+
+### 🔍 高度な検索機能
+- **日本語ハイブリッド検索**: Sudachiによる形態素解析 + RRFスコア統合
+- **エンティティベクトル検索**: エンティティの類似度検索（類義語・関連語対応）
+- **可変ホップ検索**: 1〜3ホップのグラフ探索
+- **クロスドキュメント推論**: 共通エンティティを持つドキュメント間の自動リンク
 
 ### 🎨 高度なグラフ可視化
 - **2つの可視化エンジン**:
@@ -29,23 +39,20 @@
 
 ### 🧠 Graph-First RAGアーキテクチャ
 ```
-質問 → エンティティ抽出 → 1-hop双方向グラフ検索 (30件)
+質問 → エンティティ抽出 → エンティティベクトル検索
                               ↓
-                        LLMリランキング (15件)
+                        1-3 hop グラフ検索
                               ↓
-                    関連チャンク取得 (Neo4j)
+                        LLMリランキング
                               ↓
-                    フォールバック: Vector検索
+                    関連チャンク取得 (MENTIONS関係)
+                              ↓
+                    フォールバック: ハイブリッド検索
                               ↓
                         Context Merge
                               ↓
-                        Azure OpenAI → 回答生成
+                    Azure OpenAI / VLLM → 回答生成
 ```
-
-**精度向上の取り組み**:
-- ✅ **Phase 1**: 無向→有向トラバーサル（逆向きパス除外）
-- ✅ **Phase 1.5**: 2-hop可変長→1-hop直接関係（中間ノード除外）
-- ✅ **Phase 4**: LLMリランキング（質問の意図を考慮）
 
 ### 🔧 技術スタック
 - **LLMGraphTransformer**: カスタムプロンプト対応（ChatPromptTemplate）
@@ -53,8 +60,13 @@
   - **NetworkX**: 軽量インメモリグラフ（pickle永続化）
   - **Neo4j**: 本格グラフデータベース（オプション）
 - **PGVector**: ベクトルデータベース（PostgreSQL）
-- **Azure OpenAI**: LLMとEmbedding
-- **PyMuPDF**: 高精度PDF読み取り（pypdfより2-3倍高速）
+- **LLMプロバイダー**:
+  - **Azure OpenAI**: GPT-4o, text-embedding-3-small
+  - **VLLM**: セルフホステッドモデル対応
+- **PDF処理**:
+  - **Azure Document Intelligence**: 高精度PDF解析
+  - **PyMuPDF**: 軽量PDF解析
+- **日本語処理**: Sudachi形態素解析
 - **RecursiveCharacterTextSplitter**: 重複を防ぐ確実なテキスト分割
 - **LCEL**: ハイブリッド検索チェイン
 
@@ -65,7 +77,7 @@
   - **NetworkX** (デフォルト): Neo4j不要、軽量、小〜中規模データ向け
   - **Neo4j**: 大規模データ、高度なクエリ向け (Neo4j Aura またはローカルインスタンス)
 - PostgreSQL with PGVector拡張
-- Azure OpenAI API キー
+- Azure OpenAI API キー（またはVLLMサーバー）
 
 ## 🚀 クイックスタート
 
@@ -77,11 +89,10 @@ pip install -r requirements.txt
 
 ### 2. 環境変数の設定
 
-`.env`ファイルをプロジェクトのルートディレクトリに作成:
+`.env`ファイルをプロジェクトのルートディレクトリに作成（詳細は `.env.sample` 参照）:
 
 ```env
 # Graph Backend Configuration
-# "neo4j" または "networkx" を選択
 GRAPH_BACKEND=networkx
 
 # Neo4j Configuration (GRAPH_BACKEND=neo4j の場合のみ必要)
@@ -98,19 +109,34 @@ AZURE_OPENAI_ENDPOINT=https://your-endpoint.openai.azure.com
 AZURE_OPENAI_API_VERSION=2024-12-01-preview
 AZURE_OPENAI_CHAT_DEPLOYMENT_NAME=gpt-4o
 AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME=text-embedding-3-small
+
+# Azure Document Intelligence (Optional - 高精度PDF解析)
+AZURE_DI_ENDPOINT=https://your-di-resource.cognitiveservices.azure.com
+AZURE_DI_API_KEY=your_document_intelligence_api_key
+AZURE_DI_MODEL=prebuilt-layout
+
+# Knowledge Graph Configuration
+ENABLE_KNOWLEDGE_GRAPH=true
+
+# Entity Vector Search Configuration
+ENABLE_ENTITY_VECTOR_SEARCH=true
+ENTITY_SIMILARITY_THRESHOLD=0.7
+
+# Japanese Hybrid Search Configuration
+ENABLE_JAPANESE_SEARCH=true
+
+# Retrieval Configuration
+RETRIEVAL_TOP_K=5
+GRAPH_HOP_COUNT=1
+
+# LLM Provider (azure_openai or vllm)
+LLM_PROVIDER=azure_openai
+
+# VLLM Configuration (LLM_PROVIDER=vllm の場合)
+VLLM_ENDPOINT=https://your-vllm-server.example.com/v1
+VLLM_TEMPERATURE=0.0
+VLLM_MAX_TOKENS=4096
 ```
-
-**グラフバックエンドの選択**:
-- **`GRAPH_BACKEND=networkx`** (デフォルト):
-  - Neo4jのインストール・設定不要
-  - グラフデータは`graph.pkl`に保存
-  - 小〜中規模データに最適
-  - 1-2 hop近傍探索をサポート
-
-- **`GRAPH_BACKEND=neo4j`**:
-  - Neo4j Auraまたはローカルインスタンスが必要
-  - 高度なCypherクエリに対応
-  - 大規模データ・複雑なクエリに最適
 
 ### 3. アプリケーションの起動
 
@@ -126,11 +152,12 @@ streamlit run app.py
 
 1. **PDFまたはテキストファイルをアップロード**
    - 複数ファイルの同時アップロード可能
-   - サポート形式: PDF (PyMuPDF), TXT
+   - サポート形式: PDF, TXT
+   - オプション: edges.csv（関係データのインポート）
 
 2. **「🚀 ナレッジグラフを構築」をクリック**
    - 自動的にエンティティとリレーションを抽出
-   - Neo4jとPGVectorに保存
+   - グラフバックエンドとPGVectorに保存
 
 3. **質問を入力**
    - グラフとベクトル検索を組み合わせた高精度な回答
@@ -138,7 +165,7 @@ streamlit run app.py
 
 4. **グラフを探索**
    - **🕸️ グラフ可視化**: インタラクティブにノードとエッジを探索
-   - **📊 データテーブル**: ノード・エッジ一覧をCSV出力
+   - **📊 データテーブル**: ノード・エッジ一覧をCSV出力、編集
    - **🔍 Cypherクエリ検索**: 自然言語で質問→Cypher自動生成
 
 ### 2回目以降
@@ -148,27 +175,42 @@ streamlit run app.py
 - **「🔄 既存グラフを読み込む」をクリック**するだけで即座に利用可能
 - 再構築不要！
 
-### バックエンドの切り替え
-
-`.env`ファイルの`GRAPH_BACKEND`を変更するだけ:
-
-```bash
-# NetworkXに切り替え (Neo4j不要)
-GRAPH_BACKEND=networkx
-
-# Neo4jに切り替え (高度なクエリ用)
-GRAPH_BACKEND=neo4j
-```
-
-**注意**: バックエンドを切り替えた場合、既存のグラフデータは引き継がれません。必要に応じてデータベースをクリアして再構築してください。
-
 ## 🎯 サイドバー機能
 
 ### 📊 グラフ可視化設定
 - **可視化エンジン選択**: Pyvis (推奨) / Agraph
 - **最大表示ノード数**: 50〜500個
 
+### 🔍 検索設定
+- **TopK**: 検索で取得するチャンク数（1〜20）
+- **ホップ数**: グラフ探索の深さ（1〜3）
+- **エンティティベクトル検索**: ON/OFF、類似度閾値
+- **日本語ハイブリッド検索**: ハイブリッド/ベクトル/キーワード
+
 ## 🔧 高度な機能
+
+### Azure Document Intelligence
+
+高精度なPDF解析が必要な場合:
+- テーブル構造の保持
+- 複雑なレイアウトのMarkdown変換
+- OCR対応
+- `.env`に`AZURE_DI_ENDPOINT`と`AZURE_DI_API_KEY`を設定
+
+### CSVエッジインポート
+
+外部の関係データを取り込む場合:
+```csv
+source,target,label
+エンティティA,エンティティB,RELATED_TO
+```
+- `edges.csv`をアップロードするだけで自動取り込み
+
+### クロスドキュメント推論
+
+複数ドキュメント間の関連性を自動検出:
+- 共通エンティティを2つ以上持つドキュメント間に`SHARES_TOPICS_WITH`リレーションを作成
+- Neo4j / NetworkX両対応
 
 ### カスタムKG抽出プロンプト
 
@@ -204,24 +246,10 @@ GRAPH_BACKEND=neo4j
 - `SAME_AS`: 完全同義
 - `ALIAS_OF`: エイリアス・略称
 
-### 自然言語→Cypherクエリ変換
-
-**例**:
-```
-入力: 「桃太郎に関するすべての関係を表示して」
-↓
-自動生成されたCypherクエリ:
-MATCH (n {id: "桃太郎"})-[r]-(m)
-WHERE type(r) <> 'MENTIONS'
-AND NOT n.id =~ '[0-9a-f]{32}'
-RETURN n.id AS source, type(r) AS relation, m.id AS target
-LIMIT 50
-```
-
 ## 🏗️ アーキテクチャ
 
 ```
-PDF/Text → PyMuPDF/TextLoader → SemanticChunker
+PDF/Text → Azure DI / PyMuPDF → RecursiveCharacterTextSplitter
                                        ↓
                          LLMGraphTransformer (カスタムプロンプト)
                                        ↓
@@ -230,18 +258,23 @@ PDF/Text → PyMuPDF/TextLoader → SemanticChunker
                     Graph Backend            PGVector
                   (Neo4j/NetworkX)         (ベクトルDB)
                             ↓                     ↓
-                   1. エンティティ抽出       VectorRetriever
-                   2. 1-hop双方向検索              ↓
-                   3. LLMリランキング      (フォールバック)
+              クロスドキュメント推論      エンティティベクトル化
+                            ↓                     ↓
                             └──────────┬──────────┘
                                        ↓
-                          関連チャンクをグラフから取得
+                              質問応答フロー
                                        ↓
-                               Context Merge
+                   エンティティ抽出 + ベクトル検索
                                        ↓
-                                Azure OpenAI
+                          1-3 hop グラフ探索
                                        ↓
-                                   回答生成
+                             LLMリランキング
+                                       ↓
+                    関連チャンク取得 (MENTIONS)
+                                       ↓
+               フォールバック: 日本語ハイブリッド検索
+                                       ↓
+                        Context Merge + 回答生成
 ```
 
 **グラフバックエンド比較**:
@@ -251,47 +284,11 @@ PDF/Text → PyMuPDF/TextLoader → SemanticChunker
 | セットアップ | 不要（すぐ使える） | Neo4j Aura/Server必要 |
 | データ規模 | 小〜中規模 | 大規模対応 |
 | 永続化 | pickle/JSON | サーバーDB |
-| クエリ | 1-2 hop探索 | 高度なCypher |
+| クエリ | 1-3 hop探索 | 高度なCypher |
+| クロスドキュメント推論 | ✅ 対応 | ✅ 対応 |
+| グラフ編集 | ✅ 対応 | ✅ 対応 |
 | パフォーマンス | メモリ依存 | スケーラブル |
 | コスト | 無料 | Aura有料/自前サーバー |
-
-## 🔧 技術的な詳細
-
-### Neo4j Cypherクエリ
-
-Neo4j 5.x以降の新しい構文に対応:
-```cypher
-MATCH (n)-[r]-(m)
-WHERE type(r) <> 'MENTIONS'
-AND NOT n.id =~ '[0-9a-f]{32}'
-AND NOT m.id =~ '[0-9a-f]{32}'
-WITH n, r, m, labels(n) as source_labels, labels(m) as target_labels
-RETURN
-  n.id AS source,
-  type(r) AS relation,
-  m.id AS target,
-  COUNT { (n)--() } AS source_degree,
-  COUNT { (m)--() } AS target_degree
-LIMIT 200
-```
-
-### PyMuPDF高精度抽出
-
-```python
-pdf_doc = fitz.open(tmp_path)
-for page in pdf_doc:
-    text = page.get_text("text", sort=True)  # レイアウト保持・ソート
-```
-
-**メリット**:
-- pypdfより2-3倍高速
-- 複雑なレイアウト対応
-- 日本語PDF高精度読み取り
-
-### 可視化の特徴
-- **ノードサイズ**: 接続数に応じて自動調整（Pyvis: 最小12、最大30）
-- **カラーコード**: ノードタイプ別に色分け
-- **物理エンジン**: Pyvisの高度な物理演算
 
 ## 📦 主要な依存ライブラリ
 
@@ -300,12 +297,16 @@ streamlit>=1.28.0
 langchain-core>=0.1.0
 langchain-openai>=0.1.0
 langchain-experimental>=0.1.0
+langchain-postgres>=0.0.14
 neo4j>=5.20.0
 pymupdf>=1.24.0
+azure-ai-documentintelligence>=1.0.0
 streamlit-agraph>=0.0.45
 pyvis>=0.3.2
 networkx>=3.0
 psycopg[binary]>=3.1.19
+sudachipy>=0.6.8
+sudachidict_core>=20240716
 ```
 
 ## 🐛 トラブルシューティング
@@ -332,29 +333,26 @@ psycopg[binary]>=3.1.19
   ```
 - `PG_CONN`の接続文字列が正しいか確認
 
-### PyMuPDF関連エラー
-- `pymupdf>=1.24.0`がインストールされているか確認
-  ```bash
-  pip install pymupdf>=1.24.0
-  ```
+### Azure Document Intelligence エラー
+- `AZURE_DI_ENDPOINT`と`AZURE_DI_API_KEY`が正しいか確認
+- 未設定の場合はPyMuPDFにフォールバック
 
-### LLMリランキングのコスト
-- デフォルトで30件→15件に絞り込み
-- 約¥0.6/クエリ（Azure OpenAI GPT-4使用時）
-- `top_k`パラメータで調整可能
+### コンテンツフィルターエラー
+- Azure OpenAIのコンテンツフィルターに引っかかった場合
+- ドキュメントの内容によっては回避不可
+- 該当ドキュメントを除外して再処理
+
+### 日本語検索が機能しない
+- `sudachipy`と`sudachidict_core`がインストールされているか確認
+  ```bash
+  pip install sudachipy sudachidict_core
+  ```
 
 ## 💡 カスタマイズ
 
 ### プロンプトのカスタマイズ
 
 `app.py`の`kg_system_prompt`を編集することで、抽出ルールをカスタマイズできます。
-
-```python
-kg_system_prompt = """
-あなたはテキストから専門用語とその関係性を抽出する専門家です。
-...
-"""
-```
 
 ### 関係タイプの追加
 
@@ -388,9 +386,8 @@ MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照してくださ�
 
 ## 📚 関連ドキュメント
 
-- [課題メモ.md](課題メモ.md): 実装の詳細とトラブルシューティング
-- [.env.sample](.env.sample): 環境変数の設定例
+- [.env.sample](.env.sample): 環境変数の設定例（全オプション記載）
 
 ---
 
-**⚡ Built with LangChain, Neo4j, PGVector, PyMuPDF & Azure OpenAI**
+**⚡ Built with LangChain, Neo4j/NetworkX, PGVector, Azure OpenAI & Sudachi**
