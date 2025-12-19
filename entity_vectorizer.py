@@ -29,7 +29,7 @@ class EntityVectorizer:
             embeddings: 埋め込みモデル（省略時はAzureOpenAIEmbeddings使用）
         """
         self.connection_string = connection_string
-        self.collection_name = "graphrag_entities"
+        self.collection_name = os.getenv("PG_COLLECTION", "graphrag") + "_entities"
 
         if embeddings is None:
             self.embeddings = AzureOpenAIEmbeddings(

@@ -104,6 +104,7 @@ with st.sidebar:
     NEO4J_USER = os.getenv("NEO4J_USER")
     NEO4J_PW = os.getenv("NEO4J_PW")
     PG_CONN = os.getenv("PG_CONN")
+    PG_COLLECTION = os.getenv("PG_COLLECTION", "graphrag")
     if PG_CONN and not os.getenv("PGVECTOR_CONNECTION_STRING"):
         # Keep PGVector's expected env var in sync with the existing PG_CONN setting
         os.environ["PGVECTOR_CONNECTION_STRING"] = PG_CONN
@@ -748,7 +749,7 @@ def restore_from_existing_graph():
                 # ハイブリッド検索を使用（有効な場合）
                 if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
                     try:
-                        hybrid_retriever = HybridRetriever(PG_CONN, collection_name="graphrag")
+                        hybrid_retriever = HybridRetriever(PG_CONN, collection_name=PG_COLLECTION)
                         query_embedding = embeddings.embed_query(question)
                         search_type = st.session_state.get('search_mode', 'hybrid')
 
@@ -1373,7 +1374,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             chunks,
             embeddings,
             connection=PG_CONN,
-            collection_name="graphrag",
+            collection_name=PG_COLLECTION,
             pre_delete_collection=True,  # 既存コレクション削除（ON CONFLICT不使用）
             use_jsonb=True,
         )
@@ -1697,7 +1698,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             # ハイブリッド検索を使用（有効な場合）
             if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
                 try:
-                    hybrid_retriever = HybridRetriever(PG_CONN, collection_name="graphrag")
+                    hybrid_retriever = HybridRetriever(PG_CONN, collection_name=PG_COLLECTION)
                     query_embedding = embeddings.embed_query(question)
                     search_type = st.session_state.get('search_mode', 'hybrid')
 

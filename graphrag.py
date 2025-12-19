@@ -126,6 +126,7 @@ NEO4J_PW = os.getenv("NEO4J_PW")
 PG_CONN = os.getenv("PG_CONN")
 if not PG_CONN:
     raise ValueError("PG_CONN 環境変数が未設定です。")
+PG_COLLECTION = os.getenv("PG_COLLECTION", "graphrag")
 
 # バックエンド検証
 if GRAPH_BACKEND not in ["neo4j", "networkx"]:
@@ -182,12 +183,12 @@ def clear_vector_store() -> None:
     store = PGVector(
         embeddings=_DummyEmbeddings(),
         connection=PG_CONN,
-        collection_name="graphrag",
+        collection_name=PG_COLLECTION,
         embedding_length=1536,
         use_jsonb=True,
     )
     store.delete_collection()
-    print("✅ Vector store collection 'graphrag' を削除しました")
+    print(f"✅ Vector store collection '{PG_COLLECTION}' を削除しました")
 
 
 def maybe_handle_control_mode() -> None:
@@ -266,7 +267,7 @@ else:
         chunks,
         embeddings,
         connection=PG_CONN,
-        collection_name="graphrag",
+        collection_name=PG_COLLECTION,
         pre_delete_collection=True,  # 再実行時に既存コレクションを削除して重複を防止（ON CONFLICT不使用）
         use_jsonb=True,
     )
