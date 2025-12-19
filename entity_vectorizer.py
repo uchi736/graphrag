@@ -134,8 +134,7 @@ class EntityVectorizer:
                 self.embeddings,
                 connection=self.connection_string,
                 collection_name=self.collection_name,  # "graphrag_entities"
-                pre_delete_collection=True,  # graphrag_entities のみ削除・再作成
-                ids=ids,
+                pre_delete_collection=True,  # graphrag_entities のみ削除・再作成（ON CONFLICT不使用）
                 use_jsonb=True
             )
 

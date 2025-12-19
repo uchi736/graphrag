@@ -1374,8 +1374,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             embeddings,
             connection=PG_CONN,
             collection_name="graphrag",
-            pre_delete_collection=True,  # 既存コレクション削除
-            ids=ids,  # ID指定で重複防止
+            pre_delete_collection=True,  # 既存コレクション削除（ON CONFLICT不使用）
             use_jsonb=True,
         )
 

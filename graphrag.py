@@ -267,8 +267,7 @@ else:
         embeddings,
         connection=PG_CONN,
         collection_name="graphrag",
-        pre_delete_collection=True,  # 再実行時に既存コレクションを削除して重複を防止
-        ids=ids,  # 同一IDの再登録を防ぐ
+        pre_delete_collection=True,  # 再実行時に既存コレクションを削除して重複を防止（ON CONFLICT不使用）
         use_jsonb=True,
     )
 
