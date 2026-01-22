@@ -36,8 +36,8 @@ def create_chat_llm(
     llm_provider = os.getenv("LLM_PROVIDER", "azure_openai").lower()
 
     if llm_provider == "vllm":
-        # Use VLLM
-        from vllm_client import VLLMChatClient
+        # Use VLLM via ChatOpenAI (OpenAI互換API経由)
+        from langchain_openai import ChatOpenAI
 
         endpoint = os.getenv("VLLM_ENDPOINT")
         if not endpoint:
@@ -45,25 +45,19 @@ def create_chat_llm(
             raise ValueError("VLLM_ENDPOINT environment variable is required when LLM_PROVIDER=vllm")
 
         # Get VLLM-specific settings
+        vllm_model = os.getenv("VLLM_MODEL", "openai/gpt-oss-20b")
         vllm_temperature = temperature if temperature is not None else float(os.getenv("VLLM_TEMPERATURE", "0.0"))
-        vllm_top_p = float(os.getenv("VLLM_TOP_P", "0.7"))
-        vllm_top_k = int(os.getenv("VLLM_TOP_K", "5"))
-        vllm_min_p = float(os.getenv("VLLM_MIN_P", "0.0"))
-        vllm_max_tokens = max_tokens if max_tokens is not None else int(os.getenv("VLLM_MAX_TOKENS", "4096"))
-        vllm_reasoning_effort = os.getenv("VLLM_REASONING_EFFORT", "medium")
-        vllm_timeout = int(os.getenv("VLLM_TIMEOUT", "60"))
+        vllm_max_tokens = max_tokens if max_tokens is not None else int(os.getenv("VLLM_MAX_TOKENS", "131072"))
+        vllm_api_key = os.getenv("VLLM_API_KEY", "EMPTY")
 
-        logger.info(f"Using VLLM at {endpoint}")
+        logger.info(f"Using VLLM at {endpoint} with model {vllm_model}")
 
-        return VLLMChatClient(
-            endpoint=endpoint,
+        return ChatOpenAI(
+            base_url=endpoint,
+            api_key=vllm_api_key,
+            model=vllm_model,
             temperature=vllm_temperature,
-            top_p=vllm_top_p,
-            top_k=vllm_top_k,
-            min_p=vllm_min_p,
             max_tokens=vllm_max_tokens,
-            reasoning_effort=vllm_reasoning_effort,
-            timeout=vllm_timeout
         )
 
     else:
@@ -115,8 +109,8 @@ def create_standard_llm(
     llm_provider = os.getenv("LLM_PROVIDER", "azure_openai").lower()
 
     if llm_provider == "vllm":
-        # Use VLLM (ignore model parameter as VLLM serves single model)
-        from vllm_client import VLLMClient
+        # Use VLLM via ChatOpenAI (OpenAI互換API経由)
+        from langchain_openai import ChatOpenAI
 
         endpoint = os.getenv("VLLM_ENDPOINT")
         if not endpoint:
@@ -124,25 +118,19 @@ def create_standard_llm(
             raise ValueError("VLLM_ENDPOINT environment variable is required when LLM_PROVIDER=vllm")
 
         # Get VLLM-specific settings
+        vllm_model = os.getenv("VLLM_MODEL", "openai/gpt-oss-20b")
         vllm_temperature = temperature if temperature is not None else float(os.getenv("VLLM_TEMPERATURE", "0.0"))
-        vllm_top_p = float(os.getenv("VLLM_TOP_P", "0.7"))
-        vllm_top_k = int(os.getenv("VLLM_TOP_K", "5"))
-        vllm_min_p = float(os.getenv("VLLM_MIN_P", "0.0"))
-        vllm_max_tokens = int(os.getenv("VLLM_MAX_TOKENS", "4096"))
-        vllm_reasoning_effort = os.getenv("VLLM_REASONING_EFFORT", "medium")
-        vllm_timeout = int(os.getenv("VLLM_TIMEOUT", "60"))
+        vllm_max_tokens = int(os.getenv("VLLM_MAX_TOKENS", "131072"))
+        vllm_api_key = os.getenv("VLLM_API_KEY", "EMPTY")
 
-        logger.info(f"Using VLLM at {endpoint} (model param ignored)")
+        logger.info(f"Using VLLM at {endpoint} with model {vllm_model}")
 
-        return VLLMClient(
-            endpoint=endpoint,
+        return ChatOpenAI(
+            base_url=endpoint,
+            api_key=vllm_api_key,
+            model=vllm_model,
             temperature=vllm_temperature,
-            top_p=vllm_top_p,
-            top_k=vllm_top_k,
-            min_p=vllm_min_p,
             max_tokens=vllm_max_tokens,
-            reasoning_effort=vllm_reasoning_effort,
-            timeout=vllm_timeout
         )
 
     else:

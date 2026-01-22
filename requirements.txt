@@ -19,3 +19,4 @@ streamlit-agraph>=0.0.45
 networkx>=3.0
 sudachipy>=0.6.8
 sudachidict_core>=20240716
+json-repair>=0.25.0

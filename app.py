@@ -42,7 +42,7 @@ from langchain_postgres import PGVector
 # 日本語ハイブリッド検索
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
 from hybrid_retriever import HybridRetriever
-from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, ensure_hnsw_index
+from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, ensure_hnsw_index, ensure_embedding_id_unique, ensure_schema_compatibility
 
 # エンティティベクトル化
 from entity_vectorizer import EntityVectorizer
@@ -1063,131 +1063,104 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         st.info("🕸️ ナレッジグラフ生成中...")
 
         # GraphDocument化
-        llm = create_chat_llm(temperature=0)
+        llm_provider = os.getenv("LLM_PROVIDER", "azure_openai").lower()
 
-        # カスタムKG抽出プロンプト（専門用語＋包括的な関係タイプ）
-        kg_system_prompt = """
-あなたはテキストから専門用語とその関係性を抽出する専門家です。
-以下のルールに従って、テキストから専門用語ノードと関係性を抽出してください。
+        # VLLMの場合はカスタムプロンプトなし（デフォルトプロンプト使用）
+        if llm_provider == "vllm":
+            llm = create_chat_llm(temperature=0)
+            transformer = LLMGraphTransformer(
+                llm=llm,
+                allowed_nodes=["Term"],
+                allowed_relationships=[
+                    "IS_A", "BELONGS_TO_CATEGORY", "PART_OF", "HAS_STEP",
+                    "HAS_ATTRIBUTE", "RELATED_TO", "AFFECTS", "CAUSES",
+                    "DEPENDS_ON", "APPLIES_TO", "OWNED_BY", "SAME_AS"
+                ],
+                strict_mode=False,
+            )
+        else:
+            # Azure OpenAI の場合はカスタムプロンプト使用
+            llm = create_chat_llm(temperature=0)
 
-【ノード抽出ルール】
-- 専門用語（Term）のみを抽出してください
-- 専門用語の例:
-  - 技術用語: API、データベース、アルゴリズム、機械学習
-  - 医療用語: 疾患名、薬剤名、治療法
-  - 法律用語: 法令名、契約条項、法的概念
-  - ビジネス用語: KPI、ROI、サプライチェーン
-  - 学術用語: 理論名、方法論、概念
-  - プロセス・手順: 工程名、ステップ、フェーズ
-- 一般的な名詞や動詞は無視してください（「人」「物」「する」「行う」など）
-- 固有名詞は専門用語として扱ってください
+            kg_system_prompt = """あなたはテキストから専門用語とその関係性を抽出する専門家です。
+専門用語（Term）のみをノードとして抽出し、関係性を特定してください。
+一般的な名詞や動詞は無視してください。出力は簡潔に。"""
 
-【表記ゆれの統一】
-- 同じ概念を指す異なる表記は同一ノードとして扱ってください
-  例: 「AI」「人工知能」「Artificial Intelligence」→「AI」
-  例: 「DB」「データベース」→「データベース」
-  例: 「ML」「機械学習」「Machine Learning」→「機械学習」
-
-【リレーションシップ抽出ルール】
-以下のカテゴリの関係性を抽出してください：
-
-**1. 階層・分類関係**
-- IS_A: 上位下位関係（具体→抽象）
-  例: 「MySQL」-[IS_A]->「データベース」
-- BELONGS_TO_CATEGORY: カテゴリ所属
-  例: 「決算書」-[BELONGS_TO_CATEGORY]->「財務書類」
-- PART_OF: 部分構成関係
-  例: 「エンジン」-[PART_OF]->「自動車」
-- HAS_STEP: プロセスのステップ
-  例: 「要件定義」-[HAS_STEP]->「システム開発」
-
-**2. 属性・特性関係**
-- HAS_ATTRIBUTE: 属性保持
-  例: 「データベース」-[HAS_ATTRIBUTE]->「ACID特性」
-- RELATED_TO: 一般的な関連性
-  例: 「セキュリティ」-[RELATED_TO]->「認証」
-
-**3. 因果・依存関係**
-- AFFECTS: 影響関係
-  例: 「金利」-[AFFECTS]->「住宅ローン」
-- CAUSES: 原因結果
-  例: 「メモリリーク」-[CAUSES]->「システムダウン」
-- DEPENDS_ON: 依存関係
-  例: 「デプロイ」-[DEPENDS_ON]->「テスト完了」
-
-**4. 適用・制約関係**
-- APPLIES_TO: 適用対象
-  例: 「GDPR」-[APPLIES_TO]->「個人情報」
-- APPLIES_WHEN: 適用条件
-  例: 「緊急対応手順」-[APPLIES_WHEN]->「障害発生時」
-- REQUIRES_QUALITY_GATE: 品質ゲート要求
-  例: 「本番リリース」-[REQUIRES_QUALITY_GATE]->「セキュリティ監査」
-- REQUIRES_APPROVAL_FROM: 承認要求
-  例: 「予算執行」-[REQUIRES_APPROVAL_FROM]->「取締役会」
-
-**5. 所有・責任関係**
-- OWNED_BY: 所有者
-  例: 「認証サービス」-[OWNED_BY]->「セキュリティチーム」
-
-**6. 同義語関係**
-- SAME_AS: 完全同義
-  例: 「AI」-[SAME_AS]->「人工知能」
-- ALIAS_OF: エイリアス・略称
-  例: 「DB」-[ALIAS_OF]->「データベース」
-
-【重要な注意事項】
-- 明確な関係性のみを抽出し、推測や曖昧な関係は含めないでください
-- 関係の方向性に注意してください（特にIS_A、PART_OFなど）
-- テキスト中に明示されている関係を優先してください
-"""
-
-        kg_user_prompt = """
-以下のテキストから、上記ルールに従って専門用語とその関係性を抽出してください。
+            kg_user_prompt = """テキストから専門用語とその関係性を抽出してください。
 
 テキスト:
 {input}
 """
 
-        kg_prompt = ChatPromptTemplate.from_messages([
-            ("system", kg_system_prompt),
-            ("user", kg_user_prompt)
-        ])
+            kg_prompt = ChatPromptTemplate.from_messages([
+                ("system", kg_system_prompt),
+                ("user", kg_user_prompt)
+            ])
 
-        transformer = LLMGraphTransformer(
-            llm=llm,
-            prompt=kg_prompt,
-            allowed_nodes=["Term"],
-            allowed_relationships=[
-                # 階層・分類関係
-                "IS_A", "BELONGS_TO_CATEGORY", "PART_OF", "HAS_STEP",
-                # 属性・特性関係
-                "HAS_ATTRIBUTE", "RELATED_TO",
-                # 因果・依存関係
-                "AFFECTS", "CAUSES", "DEPENDS_ON",
-                # 適用・制約関係
-                "APPLIES_TO", "APPLIES_WHEN", "REQUIRES_QUALITY_GATE", "REQUIRES_APPROVAL_FROM",
-                # 所有・責任関係
-                "OWNED_BY",
-                # 同義語関係
-                "SAME_AS", "ALIAS_OF"
-            ],
-            strict_mode=True
-        )
-        graph_docs = transformer.convert_to_graph_documents(chunks)
-
-        # グラフバックエンドにロード
+            transformer = LLMGraphTransformer(
+                llm=llm,
+                prompt=kg_prompt,
+                allowed_nodes=["Term"],
+                allowed_relationships=[
+                    "IS_A", "BELONGS_TO_CATEGORY", "PART_OF", "HAS_STEP",
+                    "HAS_ATTRIBUTE", "RELATED_TO", "AFFECTS", "CAUSES",
+                    "DEPENDS_ON", "APPLIES_TO", "OWNED_BY", "SAME_AS"
+                ],
+                strict_mode=False,
+            )
+        # グラフバックエンド初期化（処理済みハッシュ取得のため先に初期化）
         if st.session_state.graph_backend == "neo4j":
             graph = Neo4jGraph(
                 url=NEO4J_URI,
                 username=NEO4J_USER,
                 password=NEO4J_PW,
-                enhanced_schema=True  # APOCを使用
+                enhanced_schema=True
             )
-            graph.add_graph_documents(graph_docs, include_source=True)
+            # 処理済みハッシュを取得
+            try:
+                processed = graph.query("MATCH (c:ProcessedChunk) RETURN c.hash AS hash")
+                processed_hashes = {r['hash'] for r in processed} if processed else set()
+            except Exception:
+                processed_hashes = set()
         else:  # networkx
             from networkx_graph import NetworkXGraph
             graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
-            graph.add_graph_documents(graph_docs, include_source=True)
+            processed_hashes = graph.get_processed_hashes()
+
+        # 未処理チャンクをフィルタ
+        pending_chunks = [c for c in chunks if c.metadata.get("id") not in processed_hashes]
+        skipped_count = len(chunks) - len(pending_chunks)
+        if skipped_count > 0:
+            st.info(f"📋 処理対象: {len(pending_chunks)}/{len(chunks)} チャンク（{skipped_count}件は処理済みのためスキップ）")
+
+        # チャンクごとに処理 + 即座にDB保存
+        if pending_chunks:
+            progress_bar = st.progress(0, text="ナレッジグラフ生成中...")
+            for i, chunk in enumerate(pending_chunks):
+                progress_bar.progress((i + 1) / len(pending_chunks), text=f"ナレッジグラフ生成中... {i+1}/{len(pending_chunks)}")
+                try:
+                    chunk_docs = transformer.convert_to_graph_documents([chunk])
+
+                    # 即座にDB保存
+                    graph.add_graph_documents(chunk_docs, include_source=True)
+
+                    # 処理済みマーク
+                    chunk_hash = chunk.metadata.get("id")
+                    if chunk_hash:
+                        if st.session_state.graph_backend == "neo4j":
+                            graph.query(
+                                "MERGE (c:ProcessedChunk {hash: $hash}) SET c.processed_at = datetime()",
+                                {"hash": chunk_hash}
+                            )
+                        else:
+                            graph.mark_chunk_processed(chunk_hash)
+
+                except Exception as e:
+                    st.warning(f"チャンク {i+1} の処理でエラー: {e}")
+                    continue
+            progress_bar.empty()
+        else:
+            st.success("✅ すべてのチャンクは処理済みです")
 
         # CSVエッジ取り込み（source,target,label のシンプル形式）
         if csv_edges:
@@ -1369,6 +1342,8 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                 raise ValueError("Chunk metadata に id がありません")
             ids.append(cid)
 
+        ensure_embedding_id_unique(PG_CONN)  # ON CONFLICT用ユニーク制約
+        ensure_schema_compatibility(PG_CONN)  # 他プログラムが追加したカラムの互換性確保
         ensure_hnsw_index(PG_CONN)
         vector_store = PGVector.from_documents(
             chunks,
@@ -2415,7 +2390,7 @@ def edit_node_dialog(graph, node_info=None):
                 value=json.dumps(node_info.get('properties', {}), ensure_ascii=False, indent=2)
             )
         else:
-            node_id = st.text_input("ノードID", placeholder="例: 桃太郎")
+            node_id = st.text_input("ノードID", placeholder="例: API")
             node_type = st.text_input("タイプ", value="Unknown", placeholder="例: Person")
             properties_str = st.text_area("プロパティ (JSON形式)", value="{}")
 
@@ -2490,10 +2465,10 @@ def edit_edge_dialog(graph, edge_info=None, all_nodes=None):
                 source = st.selectbox("始点ノード", options=all_nodes)
                 target = st.selectbox("終点ノード", options=all_nodes)
             else:
-                source = st.text_input("始点ノード", placeholder="例: 桃太郎")
-                target = st.text_input("終点ノード", placeholder="例: 鬼")
+                source = st.text_input("始点ノード", placeholder="例: API")
+                target = st.text_input("終点ノード", placeholder="例: データベース")
             edge_key = 0
-            rel_type = st.text_input("リレーションタイプ", value="RELATED", placeholder="例: 倒した")
+            rel_type = st.text_input("リレーションタイプ", value="RELATED", placeholder="例: USES")
             properties_str = st.text_area("プロパティ (JSON形式)", value="{}")
 
         col1, col2 = st.columns(2)
@@ -2642,7 +2617,32 @@ if has_csv:
 
 # ナレッジグラフ構築ボタン（ドキュメントまたはCSVがあれば表示）
 if has_docs or has_csv:
-    if st.button("🚀 ナレッジグラフを構築", type="primary"):
+    col1, col2 = st.columns(2)
+    with col1:
+        new_build = st.button("🚀 新規構築", type="primary", help="処理済みデータをクリアして最初から構築")
+    with col2:
+        resume_build = st.button("▶️ 続きから再開", help="処理済みチャンクをスキップして続きから構築")
+
+    if new_build or resume_build:
+        # 新規構築の場合は処理済みハッシュをクリア
+        if new_build:
+            try:
+                if st.session_state.graph_backend == "neo4j":
+                    from langchain_community.graphs import Neo4jGraph
+                    temp_graph = Neo4jGraph(
+                        url=NEO4J_URI,
+                        username=NEO4J_USER,
+                        password=NEO4J_PW
+                    )
+                    temp_graph.query("MATCH (c:ProcessedChunk) DELETE c")
+                else:
+                    from networkx_graph import NetworkXGraph
+                    temp_graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
+                    temp_graph.clear_processed_hashes()
+                st.info("🗑️ 処理済みデータをクリアしました")
+            except Exception as e:
+                st.warning(f"クリア処理でエラー（続行します）: {e}")
+
         source_docs = []
         if has_docs:
             with st.spinner("ドキュメント読み込み中..."):
@@ -2801,7 +2801,7 @@ with tab2:
                         # 検索ボックス
                         search_query = st.text_input(
                             "🔍 ノード検索（部分一致）",
-                            placeholder="例: 桃太郎",
+                            placeholder="例: API",
                             help="検索したノードとその周辺を表示します"
                         )
 
@@ -2993,7 +2993,7 @@ with tab2:
         # モード3: Cypherクエリ検索
         elif display_mode == "🔍 Cypherクエリ検索":
             st.markdown("### 自然言語でグラフを検索")
-            st.info("例: 「桃太郎に関するグラフを見たい」「おじいさんと関係のあるエンティティを表示」")
+            st.info("例: 「APIに関するグラフを見たい」「認証と関係のあるエンティティを表示」")
 
             # クエリテンプレート選択（オプション）
             with st.expander("📋 クエリテンプレート"):
@@ -3008,7 +3008,7 @@ with tab2:
                 )
 
                 if template == "特定エンティティに関連するすべての関係を表示":
-                    entity_name = st.text_input("エンティティ名を入力:", placeholder="例: 桃太郎")
+                    entity_name = st.text_input("エンティティ名を入力:", placeholder="例: API")
                     if entity_name:
                         nl_query = f"{entity_name}に関連するすべての関係を表示"
                     else:
@@ -3025,7 +3025,7 @@ with tab2:
                 "自然言語クエリ:",
                 value=nl_query,
                 height=100,
-                placeholder="例: 桃太郎に関するグラフを見たい"
+                placeholder="例: APIに関するグラフを見たい"
             )
 
             col1, col2 = st.columns([1, 4])

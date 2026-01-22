@@ -372,6 +372,27 @@ class NetworkXGraph:
             except Exception:
                 pass
 
+    # ==================== 処理済みチャンク管理 ====================
+
+    def get_processed_hashes(self) -> set:
+        """処理済みチャンクハッシュを取得"""
+        return set(self.graph.graph.get("processed_hashes", []))
+
+    def mark_chunk_processed(self, hash_id: str) -> None:
+        """チャンクを処理済みとしてマーク"""
+        if "processed_hashes" not in self.graph.graph:
+            self.graph.graph["processed_hashes"] = []
+        if hash_id not in self.graph.graph["processed_hashes"]:
+            self.graph.graph["processed_hashes"].append(hash_id)
+        if self.auto_save:
+            self.save()
+
+    def clear_processed_hashes(self) -> None:
+        """処理済みハッシュをクリア（新規構築時）"""
+        self.graph.graph["processed_hashes"] = []
+        if self.auto_save:
+            self.save()
+
     # ==================== 手動編集用CRUD操作 ====================
 
     def add_node_manual(

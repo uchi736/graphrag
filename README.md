@@ -70,6 +70,47 @@
 - **RecursiveCharacterTextSplitter**: 重複を防ぐ確実なテキスト分割
 - **LCEL**: ハイブリッド検索チェイン
 
+## 📁 ファイル構成
+
+```
+graphrag/
+├── app.py                      # メインアプリケーション（Streamlit UI）
+├── llm_factory.py              # LLMプロバイダー切り替え（Azure/VLLM）
+├── graphrag.py                 # Graph-RAG コア検索ロジック
+├── networkx_graph.py           # NetworkXバックエンド実装
+├── hybrid_retriever.py         # 日本語ハイブリッド検索（RRF統合）
+├── japanese_text_processor.py  # Sudachi形態素解析
+├── entity_vectorizer.py        # エンティティベクトル化
+├── azure_di_processor.py       # Azure Document Intelligence処理
+├── db_utils.py                 # PostgreSQL接続・インデックス管理
+├── vllm_client.py              # VLLMクライアント
+├── test_vllm.py                # VLLM接続テスト
+├── init_japanese_search.py     # 日本語検索初期化スクリプト
+├── reset_pgvector_tables.py    # PGVectorテーブルリセット
+├── migrate_to_jsonb.sql        # JSONB移行SQL
+├── requirements.txt            # Python依存関係
+├── .env.sample                 # 環境変数テンプレート
+├── README.md                   # メインドキュメント
+├── VLLM_Integration_Guide.md   # VLLM統合ガイド
+├── graph.pkl                   # NetworkXグラフデータ（自動生成）
+└── graph.json                  # グラフデータJSON形式（自動生成）
+```
+
+### 📄 主要ファイル詳細
+
+| ファイル | 説明 |
+|---------|------|
+| `app.py` | Streamlit UI、グラフ構築、質問応答、可視化すべてを統合 |
+| `llm_factory.py` | Azure OpenAI / VLLM を環境変数で切り替え |
+| `graphrag.py` | エンティティ抽出→グラフ検索→コンテキスト構築 |
+| `networkx_graph.py` | Neo4j互換APIをNetworkXで実装 |
+| `hybrid_retriever.py` | ベクトル検索 + キーワード検索をRRFで統合 |
+| `japanese_text_processor.py` | Sudachi + トークン正規化 |
+| `entity_vectorizer.py` | エンティティ名をベクトル化してPGVectorに保存 |
+| `azure_di_processor.py` | PDF→Markdown変換（テーブル・OCR対応） |
+| `db_utils.py` | 接続文字列正規化、インデックス作成 |
+| `vllm_client.py` | OpenAI互換APIでVLLMサーバーと通信 |
+
 ## 📋 必要な環境
 
 - Python 3.8以上

@@ -59,6 +59,111 @@ def ensure_tokenized_schema(conn_string: str) -> None:
         conn.commit()
 
 
+def ensure_embedding_id_unique(conn_string: str) -> None:
+    """langchain_pg_embedding の id カラムにユニーク制約を保証する（冪等）。
+
+    langchain-postgres は内部で ON CONFLICT (id) を使用するため、
+    id カラムにユニーク制約がないとエラーになる。
+    """
+    raw_conn = normalize_pg_connection_string(conn_string)
+    with psycopg.connect(raw_conn) as conn:
+        with conn.cursor() as cur:
+            # テーブルが存在するか確認
+            cur.execute(
+                """
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables
+                    WHERE table_name = 'langchain_pg_embedding'
+                )
+                """
+            )
+            if not cur.fetchone()[0]:
+                # テーブルがまだない場合はスキップ
+                return
+
+            # ユニークインデックスを作成（存在しなければ）
+            cur.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_langchain_pg_embedding_id_unique
+                ON langchain_pg_embedding (id)
+                """
+            )
+        conn.commit()
+
+
+def ensure_schema_compatibility(conn_string: str) -> None:
+    """他プログラムが追加したカラムの互換性を確保する（冪等）。
+
+    langchain-postgres は uuid 等のカラムを使用しないため、
+    他プログラムがNOT NULL制約付きで追加した場合にINSERTが失敗する。
+    uuid がプライマリキーの場合は DEFAULT 値を設定して自動生成させる。
+    """
+    raw_conn = normalize_pg_connection_string(conn_string)
+    with psycopg.connect(raw_conn) as conn:
+        with conn.cursor() as cur:
+            # テーブルが存在するか確認
+            cur.execute(
+                """
+                SELECT EXISTS (
+                    SELECT FROM information_schema.tables
+                    WHERE table_name = 'langchain_pg_embedding'
+                )
+                """
+            )
+            if not cur.fetchone()[0]:
+                return
+
+            # uuid カラムが存在するか確認
+            cur.execute(
+                """
+                SELECT column_name, is_nullable, column_default
+                FROM information_schema.columns
+                WHERE table_name = 'langchain_pg_embedding'
+                AND column_name = 'uuid'
+                """
+            )
+            row = cur.fetchone()
+            if not row:
+                return
+
+            col_name, is_nullable, col_default = row
+
+            # uuid がプライマリキーの一部かチェック
+            cur.execute(
+                """
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.key_column_usage kcu
+                    JOIN information_schema.table_constraints tc
+                      ON kcu.constraint_name = tc.constraint_name
+                    WHERE tc.table_name = 'langchain_pg_embedding'
+                      AND tc.constraint_type = 'PRIMARY KEY'
+                      AND kcu.column_name = 'uuid'
+                )
+                """
+            )
+            is_primary_key = cur.fetchone()[0]
+
+            if is_primary_key:
+                # プライマリキーの場合はデフォルト値を設定（NOT NULLは外せない）
+                if col_default is None:
+                    cur.execute(
+                        """
+                        ALTER TABLE langchain_pg_embedding
+                        ALTER COLUMN uuid SET DEFAULT gen_random_uuid()
+                        """
+                    )
+            else:
+                # プライマリキーでない場合は NOT NULL を外す
+                if is_nullable == 'NO':
+                    cur.execute(
+                        """
+                        ALTER TABLE langchain_pg_embedding
+                        ALTER COLUMN uuid DROP NOT NULL
+                        """
+                    )
+        conn.commit()
+
+
 def ensure_hnsw_index(conn_string: str) -> None:
     """コサイン距離用の HNSW インデックスを保証する（冪等）。"""
     raw_conn = normalize_pg_connection_string(conn_string)
