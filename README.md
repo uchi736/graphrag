@@ -9,11 +9,19 @@
 ## 🌟 主な機能
 
 ### ✨ Streamlit WebUI
-- 📁 **PDF/テキストファイルアップロード**: ドラッグ&ドロップで簡単アップロード
+- 📁 **PDF/テキスト/Markdownファイルアップロード**: ドラッグ&ドロップで簡単アップロード
   - **Azure Document Intelligence**: 高精度PDF解析（テーブル・レイアウト保持、OCR対応）
   - **PyMuPDF**: 軽量PDF解析（フォールバック）
+  - **Azure DI出力キャッシュ**: 処理結果を.mdファイルとして保存、再利用可能
 - 🚀 **ワンクリックでナレッジグラフ構築**: LLMが自動的にエンティティとリレーションを抽出
 - 🔄 **既存グラフの自動検出**: Neo4j/NetworkXに既にデータがあれば即座に復元
+- ▶️ **再開機能**: 処理が中断しても続きから再開可能（チャンクハッシュで管理）
+
+### 🖥️ CLIツール
+- **build_kg.py**: Streamlitを使わずにナレッジグラフを構築
+  - フォルダ指定で複数ファイルを一括処理
+  - 長時間処理でもタイムアウトなし
+  - 再開機能対応
 - 💬 **対話型質問応答**: Graph-First RAGによる高精度な回答生成
 - 🎯 **LLMリランキング**: 質問の意図に応じた関係性フィルタリング
 - 📥 **CSVエッジインポート**: 外部関係データの取り込み対応
@@ -75,6 +83,7 @@
 ```
 graphrag/
 ├── app.py                      # メインアプリケーション（Streamlit UI）
+├── build_kg.py                 # CLIナレッジグラフ構築ツール
 ├── llm_factory.py              # LLMプロバイダー切り替え（Azure/VLLM）
 ├── graphrag.py                 # Graph-RAG コア検索ロジック
 ├── networkx_graph.py           # NetworkXバックエンド実装
@@ -83,7 +92,6 @@ graphrag/
 ├── entity_vectorizer.py        # エンティティベクトル化
 ├── azure_di_processor.py       # Azure Document Intelligence処理
 ├── db_utils.py                 # PostgreSQL接続・インデックス管理
-├── vllm_client.py              # VLLMクライアント
 ├── test_vllm.py                # VLLM接続テスト
 ├── init_japanese_search.py     # 日本語検索初期化スクリプト
 ├── reset_pgvector_tables.py    # PGVectorテーブルリセット
@@ -93,7 +101,8 @@ graphrag/
 ├── README.md                   # メインドキュメント
 ├── VLLM_Integration_Guide.md   # VLLM統合ガイド
 ├── graph.pkl                   # NetworkXグラフデータ（自動生成）
-└── graph.json                  # グラフデータJSON形式（自動生成）
+├── graph.json                  # グラフデータJSON形式（自動生成）
+└── output/                     # Azure DI処理結果（.md形式、自動生成）
 ```
 
 ### 📄 主要ファイル詳細
@@ -101,15 +110,15 @@ graphrag/
 | ファイル | 説明 |
 |---------|------|
 | `app.py` | Streamlit UI、グラフ構築、質問応答、可視化すべてを統合 |
+| `build_kg.py` | CLIナレッジグラフ構築（フォルダ一括処理、再開機能） |
 | `llm_factory.py` | Azure OpenAI / VLLM を環境変数で切り替え |
 | `graphrag.py` | エンティティ抽出→グラフ検索→コンテキスト構築 |
-| `networkx_graph.py` | Neo4j互換APIをNetworkXで実装 |
+| `networkx_graph.py` | Neo4j互換APIをNetworkXで実装、処理済みハッシュ管理 |
 | `hybrid_retriever.py` | ベクトル検索 + キーワード検索をRRFで統合 |
 | `japanese_text_processor.py` | Sudachi + トークン正規化 |
 | `entity_vectorizer.py` | エンティティ名をベクトル化してPGVectorに保存 |
 | `azure_di_processor.py` | PDF→Markdown変換（テーブル・OCR対応） |
 | `db_utils.py` | 接続文字列正規化、インデックス作成 |
-| `vllm_client.py` | OpenAI互換APIでVLLMサーバーと通信 |
 
 ## 📋 必要な環境
 
@@ -193,7 +202,7 @@ streamlit run app.py
 
 1. **PDFまたはテキストファイルをアップロード**
    - 複数ファイルの同時アップロード可能
-   - サポート形式: PDF, TXT
+   - サポート形式: PDF, TXT, MD
    - オプション: edges.csv（関係データのインポート）
 
 2. **「🚀 ナレッジグラフを構築」をクリック**
@@ -216,6 +225,48 @@ streamlit run app.py
 - **「🔄 既存グラフを読み込む」をクリック**するだけで即座に利用可能
 - 再構築不要！
 
+### 再開機能
+
+大量のドキュメントを処理する場合、途中で中断しても続きから再開できます:
+
+**Streamlit UI**:
+- **「🚀 新規構築」**: 処理済みデータをクリアして最初から構築
+- **「▶️ 続きから再開」**: 未処理のチャンクのみ処理
+
+**仕組み**:
+- 各チャンクにSHA256ハッシュIDを付与
+- 処理済みハッシュをgraph.pklに保存
+- 再開時は処理済みハッシュと照合してスキップ
+
+### CLI版 (build_kg.py)
+
+Streamlitのセッションタイムアウトを回避したい場合や、大量のドキュメントを処理する場合はCLI版を使用:
+
+```bash
+# フォルダ内の全ファイルを処理
+python build_kg.py --input ./docs
+
+# 新規構築（処理済みをクリア）
+python build_kg.py --input ./docs --fresh
+
+# 特定の拡張子のみ
+python build_kg.py --input ./docs --ext pdf,md
+```
+
+**オプション**:
+| オプション | 説明 | デフォルト |
+|-----------|------|-----------|
+| `--input`, `-i` | 入力フォルダのパス | (必須) |
+| `--ext`, `-e` | 処理する拡張子（カンマ区切り） | pdf,txt,md |
+| `--fresh`, `-f` | 新規構築（処理済みデータをクリア） | false |
+
+**CLI版の特徴**:
+- セッションタイムアウトなし
+- フォルダ内のファイルを再帰的に処理
+- 再開機能対応（--freshなしで実行すると続きから）
+- PGVectorへの自動保存
+- エンティティベクトル化対応
+
 ## 🎯 サイドバー機能
 
 ### 📊 グラフ可視化設定
@@ -237,6 +288,11 @@ streamlit run app.py
 - 複雑なレイアウトのMarkdown変換
 - OCR対応
 - `.env`に`AZURE_DI_ENDPOINT`と`AZURE_DI_API_KEY`を設定
+
+**出力キャッシュ**:
+- Azure DIで処理したPDFは`output/`フォルダに`{ファイル名}_azure_di.md`として保存
+- 次回は.mdファイルを直接アップロードすることでAzure DI呼び出しをスキップ可能
+- コスト削減と処理時間短縮に有効
 
 ### CSVエッジインポート
 

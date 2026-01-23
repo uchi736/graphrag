@@ -5,6 +5,60 @@ PostgreSQL 接続ユーティリティ
 """
 
 import psycopg
+import time
+from typing import Callable, TypeVar
+
+T = TypeVar('T')
+
+
+def add_connection_timeout(conn_string: str, timeout: int = 30) -> str:
+    """接続文字列にタイムアウトを追加する。
+
+    Args:
+        conn_string: 接続文字列
+        timeout: 接続タイムアウト秒数（デフォルト: 30秒）
+
+    Returns:
+        タイムアウト付きの接続文字列
+    """
+    if not conn_string:
+        return conn_string
+    if "connect_timeout" in conn_string:
+        return conn_string  # 既にタイムアウト設定済み
+    if "?" in conn_string:
+        return f"{conn_string}&connect_timeout={timeout}"
+    return f"{conn_string}?connect_timeout={timeout}"
+
+
+def retry_on_timeout(func: Callable[[], T], max_retries: int = 3, delay: float = 2.0) -> T:
+    """タイムアウト時にリトライするラッパー。
+
+    Args:
+        func: 実行する関数
+        max_retries: 最大リトライ回数
+        delay: リトライ間隔（秒）
+
+    Returns:
+        関数の戻り値
+
+    Raises:
+        最後の試行で発生した例外
+    """
+    last_exception = None
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except Exception as e:
+            last_exception = e
+            error_str = str(e).lower()
+            # タイムアウト関連のエラーのみリトライ
+            if "timeout" in error_str or "connection" in error_str:
+                if attempt < max_retries - 1:
+                    print(f"接続リトライ中... ({attempt + 1}/{max_retries})")
+                    time.sleep(delay)
+                continue
+            raise  # タイムアウト以外のエラーは即座に再送出
+    raise last_exception
 
 
 def normalize_pg_connection_string(conn_string: str) -> str:

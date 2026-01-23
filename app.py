@@ -42,7 +42,7 @@ from langchain_postgres import PGVector
 # 日本語ハイブリッド検索
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
 from hybrid_retriever import HybridRetriever
-from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, ensure_hnsw_index, ensure_embedding_id_unique, ensure_schema_compatibility
+from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, ensure_hnsw_index, ensure_embedding_id_unique, ensure_schema_compatibility, add_connection_timeout, retry_on_timeout
 
 # エンティティベクトル化
 from entity_vectorizer import EntityVectorizer
@@ -86,6 +86,8 @@ st.set_page_config(
 # セッションステートでバックエンド管理（早期初期化）
 if "graph_backend" not in st.session_state:
     st.session_state.graph_backend = os.getenv("GRAPH_BACKEND", "networkx").lower()
+if "max_nodes" not in st.session_state:
+    st.session_state.max_nodes = 200
 
 # タイトルをバックエンドに応じて動的に変更
 st.title(f"🔗 Graph-RAG with {st.session_state.graph_backend.upper()} & PGVector")
@@ -211,7 +213,13 @@ with st.sidebar:
     show_graph = st.checkbox("ナレッジグラフを表示", value=True)
 
     if show_graph:
-        max_nodes = st.slider("最大表示ノード数", 50, 500, 200, 50)
+        max_nodes = st.slider("最大表示ノード数", 50, 100000, st.session_state.max_nodes, 50)
+        # 変更検知してキャッシュクリア
+        if max_nodes != st.session_state.max_nodes:
+            st.session_state.max_nodes = max_nodes
+            st.session_state.graph_data_cache = None
+            if 'all_node_list' in st.session_state:
+                del st.session_state.all_node_list
 
     st.markdown("---")
     st.markdown("### 🔍 検索設定")
@@ -446,17 +454,22 @@ def restore_from_existing_graph():
             from networkx_graph import NetworkXGraph
             graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
 
-        # PGVector接続
+        # PGVector接続（タイムアウト設定 + リトライ）
         embeddings = AzureOpenAIEmbeddings(
             azure_deployment=AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
             openai_api_version=AZURE_OPENAI_API_VERSION,
             azure_endpoint=AZURE_OPENAI_ENDPOINT,
             api_key=AZURE_OPENAI_API_KEY
         )
-        vector_store = PGVector(
-            connection=PG_CONN,
-            embeddings=embeddings
-        )
+        pg_conn_with_timeout = add_connection_timeout(PG_CONN, timeout=30)
+
+        def create_vector_store():
+            return PGVector(
+                connection=pg_conn_with_timeout,
+                embeddings=embeddings
+            )
+
+        vector_store = retry_on_timeout(create_vector_store, max_retries=3, delay=2.0)
 
         # Vector Retriever構築
         # TopK値を取得（デフォルト: 5）
@@ -906,10 +919,15 @@ def load_documents(uploaded_files) -> list:
                             text_parts.append(text)
                     pdf_doc.close()
                     text_content = "\n\n".join(text_parts)
-            elif uploaded_file.name.endswith('.txt'):
+            elif uploaded_file.name.endswith('.txt') or uploaded_file.name.endswith('.md'):
+                # .txt または .md ファイル
                 loader = TextLoader(tmp_path, encoding='utf-8')
                 docs = loader.load()
                 text_content = "\n".join([doc.page_content for doc in docs])
+
+                # _azure_di.md はAzure DI処理済みファイルなのでスキップ情報を表示
+                if uploaded_file.name.endswith('_azure_di.md'):
+                    st.info(f"📄 Azure DI処理済みファイルを読み込み: {file_name}")
             else:
                 # その他のテキストファイル
                 text_content = uploaded_file.getvalue().decode('utf-8')
@@ -1345,14 +1363,19 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         ensure_embedding_id_unique(PG_CONN)  # ON CONFLICT用ユニーク制約
         ensure_schema_compatibility(PG_CONN)  # 他プログラムが追加したカラムの互換性確保
         ensure_hnsw_index(PG_CONN)
-        vector_store = PGVector.from_documents(
-            chunks,
-            embeddings,
-            connection=PG_CONN,
-            collection_name=PG_COLLECTION,
-            pre_delete_collection=True,  # 既存コレクション削除（ON CONFLICT不使用）
-            use_jsonb=True,
-        )
+        pg_conn_with_timeout = add_connection_timeout(PG_CONN, timeout=30)
+
+        def create_vector_store_from_docs():
+            return PGVector.from_documents(
+                chunks,
+                embeddings,
+                connection=pg_conn_with_timeout,
+                collection_name=PG_COLLECTION,
+                pre_delete_collection=True,  # 既存コレクション削除（ON CONFLICT不使用）
+                use_jsonb=True,
+            )
+
+        vector_store = retry_on_timeout(create_vector_store_from_docs, max_retries=3, delay=2.0)
 
     # トークン化データをDBに反映
     if vector_store and japanese_processor and st.session_state.get('enable_japanese_search', True):
@@ -2591,10 +2614,10 @@ if not st.session_state.existing_graph_loaded and not st.session_state.initializ
         pass
 
 uploaded_files = st.file_uploader(
-    "PDF/テキストファイルをアップロード",
-    type=["pdf", "txt"],
+    "PDF/テキスト/Markdownファイルをアップロード",
+    type=["pdf", "txt", "md"],
     accept_multiple_files=True,
-    help="複数ファイルをアップロード可能です"
+    help="複数ファイルをアップロード可能。Azure DI処理済みの_azure_di.mdファイルも再利用可能"
 )
 csv_edges_file = st.file_uploader(
     "edges.csv (source,target,label)",
