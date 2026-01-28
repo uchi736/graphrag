@@ -901,13 +901,38 @@ def restore_from_existing_graph():
                 triples = graph_result.get("triples", [])
                 extracted_entities = graph_result.get("extracted_entities", {})
 
-            # 2. グラフ検索結果があればそれを使用、なければベクトル検索を補助的に使用
+            # 2. ドキュメント検索（常に実行）
+            from langchain_core.documents import Document
             docs = []
-            if triples:
-                # グラフから関連エンティティを取得し、それに関連するドキュメントチャンクを取得
-                entity_names = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
+            if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
+                try:
+                    hybrid_retriever = HybridRetriever(PG_CONN, collection_name=PG_COLLECTION)
+                    query_embedding = embeddings.embed_query(question)
+                    search_type = st.session_state.get('search_mode', 'hybrid')
+                    retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
 
-                # エンティティに関連するチャンクを取得
+                    hybrid_results = hybrid_retriever.search(
+                        query_text=question,
+                        query_vector=query_embedding,
+                        k=retrieval_top_k,
+                        search_type=search_type
+                    )
+
+                    docs = [
+                        Document(
+                            page_content=r['text'],
+                            metadata=r['metadata']
+                        ) for r in hybrid_results
+                    ]
+                except Exception as e:
+                    st.warning(f"ハイブリッド検索エラー（ベクトル検索にフォールバック）: {e}")
+                    docs = vector_retriever.invoke(question)
+            else:
+                docs = vector_retriever.invoke(question)
+
+            # 3. グラフからソースチャンクも取得してマージ
+            if triples:
+                entity_names = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
                 if entity_names:
                     chunk_query = """
                     UNWIND $entity_names AS entity_name
@@ -919,46 +944,12 @@ def restore_from_existing_graph():
                     try:
                         chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
                         if chunk_results:
-                            # グラフから取得したチャンクをドキュメントとして追加
-                            from langchain_core.documents import Document
-                            docs = [Document(page_content=r.get('text', ''), metadata={'id': r.get('chunk_id')})
-                                   for r in chunk_results if r.get('text')]
+                            existing_texts = {d.page_content for d in docs}
+                            for r in chunk_results:
+                                if r.get('text') and r['text'] not in existing_texts:
+                                    docs.append(Document(page_content=r['text'], metadata={'id': r.get('chunk_id')}))
                     except Exception:
                         pass
-
-            # 3. グラフからドキュメントが取得できない場合はベクトル検索を使用
-            if not docs:
-                # ハイブリッド検索を使用（有効な場合）
-                if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
-                    try:
-                        hybrid_retriever = HybridRetriever(PG_CONN, collection_name=PG_COLLECTION)
-                        query_embedding = embeddings.embed_query(question)
-                        search_type = st.session_state.get('search_mode', 'hybrid')
-
-                        # TopK値を取得
-                        retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
-
-                        hybrid_results = hybrid_retriever.search(
-                            query_text=question,
-                            query_vector=query_embedding,
-                            k=retrieval_top_k,
-                            search_type=search_type
-                        )
-
-                        # LangChain Document形式に変換
-                        from langchain_core.documents import Document
-                        docs = [
-                            Document(
-                                page_content=r['text'],
-                                metadata=r['metadata']
-                            ) for r in hybrid_results
-                        ]
-                    except Exception as e:
-                        st.warning(f"ハイブリッド検索エラー（ベクトル検索にフォールバック）: {e}")
-                        docs = vector_retriever.invoke(question)
-                else:
-                    # 従来のベクトル検索
-                    docs = vector_retriever.invoke(question)
 
             graph_lines = [
                 f"{t.get('start')} -[{t.get('type')}]→ {t.get('end')}"
@@ -1829,13 +1820,38 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             triples = graph_result.get("triples", [])
             extracted_entities = graph_result.get("extracted_entities", {})
 
-        # 2. グラフ検索結果があればそれを使用、なければベクトル検索を補助的に使用
+        # 2. ドキュメント検索（常に実行）
+        from langchain_core.documents import Document
         docs = []
-        if triples:
-            # グラフから関連エンティティを取得し、それに関連するドキュメントチャンクを取得
-            entity_names = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
+        if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
+            try:
+                hybrid_retriever = HybridRetriever(PG_CONN, collection_name=PG_COLLECTION)
+                query_embedding = embeddings.embed_query(question)
+                search_type = st.session_state.get('search_mode', 'hybrid')
+                retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
 
-            # エンティティに関連するチャンクを取得（ドキュメント情報付き）
+                hybrid_results = hybrid_retriever.search(
+                    query_text=question,
+                    query_vector=query_embedding,
+                    k=retrieval_top_k,
+                    search_type=search_type
+                )
+
+                docs = [
+                    Document(
+                        page_content=r['text'],
+                        metadata=r['metadata']
+                    ) for r in hybrid_results
+                ]
+            except Exception as e:
+                st.warning(f"ハイブリッド検索エラー（ベクトル検索にフォールバック）: {e}")
+                docs = vector_retriever.invoke(question)
+        else:
+            docs = vector_retriever.invoke(question)
+
+        # 3. グラフからソースチャンクも取得してマージ
+        if triples:
+            entity_names = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
             if entity_names:
                 chunk_query = """
                 UNWIND $entity_names AS entity_name
@@ -1848,51 +1864,17 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                 try:
                     chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
                     if chunk_results:
-                        # グラフから取得したチャンクをドキュメントとして追加（ソース情報付き）
-                        from langchain_core.documents import Document
-                        docs = [Document(
-                            page_content=r.get('text', ''),
-                            metadata={
-                                'id': r.get('chunk_id'),
-                                'source': r.get('source', 'Unknown')
-                            })
-                            for r in chunk_results if r.get('text')]
+                        existing_texts = {d.page_content for d in docs}
+                        for r in chunk_results:
+                            if r.get('text') and r['text'] not in existing_texts:
+                                docs.append(Document(
+                                    page_content=r['text'],
+                                    metadata={
+                                        'id': r.get('chunk_id'),
+                                        'source': r.get('source', 'Unknown')
+                                    }))
                 except Exception:
                     pass
-
-        # 3. グラフからドキュメントが取得できない場合はベクトル検索を使用
-        if not docs:
-            # ハイブリッド検索を使用（有効な場合）
-            if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
-                try:
-                    hybrid_retriever = HybridRetriever(PG_CONN, collection_name=PG_COLLECTION)
-                    query_embedding = embeddings.embed_query(question)
-                    search_type = st.session_state.get('search_mode', 'hybrid')
-
-                    # TopK値を取得
-                    retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
-
-                    hybrid_results = hybrid_retriever.search(
-                        query_text=question,
-                        query_vector=query_embedding,
-                        k=retrieval_top_k,
-                        search_type=search_type
-                    )
-
-                    # LangChain Document形式に変換
-                    from langchain_core.documents import Document
-                    docs = [
-                        Document(
-                            page_content=r['text'],
-                            metadata=r['metadata']
-                        ) for r in hybrid_results
-                    ]
-                except Exception as e:
-                    st.warning(f"ハイブリッド検索エラー（ベクトル検索にフォールバック）: {e}")
-                    docs = vector_retriever.invoke(question)
-            else:
-                # 従来のベクトル検索
-                docs = vector_retriever.invoke(question)
 
         graph_lines = [
             f"{t.get('start')} -[{t.get('type')}]→ {t.get('end')}"
