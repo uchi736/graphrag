@@ -89,12 +89,8 @@ class HybridRetriever:
                     WHERE c.name = %s
                       AND to_tsvector('simple', COALESCE(e.tokenized_content, ''))
                           @@ to_tsquery('simple', %s)
-                    ORDER BY ts_rank(
-                        to_tsvector('simple', COALESCE(e.tokenized_content, '')),
-                        to_tsquery('simple', %s)
-                    ) DESC
                     LIMIT %s
-                """, (self.collection_name, tsquery_str, tsquery_str, limit))
+                """, (self.collection_name, tsquery_str, limit))
 
                 results = []
                 for row in cur.fetchall():
