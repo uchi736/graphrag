@@ -149,11 +149,14 @@ class HybridRetriever:
         rrf_k: int
     ) -> List[Dict[str, Any]]:
         """RRF方式のハイブリッド検索（BM25 + ベクトル）"""
+        # 内部取得件数: top_k * 10（最大100件）
+        internal_k = min(k * 10, 100)
+
         # ベクトル検索結果
-        vector_results = self._vector_search(query_vector, k=100)
+        vector_results = self._vector_search(query_vector, k=internal_k)
 
         # BM25検索結果
-        bm25_results = self._bm25_search(query_text, k=100)
+        bm25_results = self._bm25_search(query_text, k=internal_k)
 
         if not bm25_results:
             return vector_results[:k]

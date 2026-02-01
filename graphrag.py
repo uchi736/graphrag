@@ -62,6 +62,8 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 # LLM Factory for provider selection
 from llm_factory import create_standard_llm
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from chunk_utils import create_markdown_chunks
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_community.graphs import Neo4jGraph
 try:
@@ -91,6 +93,7 @@ except ImportError:
         HAS_PARENT = False  # fallback to simple retriever
 
 from langchain_core.prompts import PromptTemplate
+from prompt import QA_PROMPT
 try:
     # langchain>=0.2
     from langchain_core.output_parsers import StrOutputParser
@@ -141,15 +144,11 @@ if not Path(DOC_PATH).is_file():
     raise FileNotFoundError(f"{DOC_PATH} が見つかりません")
 raw_text = Path(DOC_PATH).read_text(encoding="utf-8")
 
-# ── 1. チャンク分割 (RecursiveCharacterTextSplitter) ─────────────────────────────
+# ── 1. チャンク分割 (2段階Markdownチャンキング) ─────────────────────────────
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-chunker = RecursiveCharacterTextSplitter(
-    chunk_size=500,           # 500文字ごとに分割
-    chunk_overlap=100,        # 100文字オーバーラップ（文脈保持）
-    separators=["\n\n", "\n", "。", "、", " ", ""],  # 日本語対応
-    length_function=len
-)
-chunks = chunker.create_documents([raw_text])
+# raw_textをDocumentとしてラップして2段階Markdownチャンキング
+source_doc = Document(page_content=raw_text, metadata={"source": DOC_PATH})
+chunks = create_markdown_chunks([source_doc], chunk_size=1024, chunk_overlap=100)
 
 # 重複チャンクを内容ハッシュで除去し、ハッシュをIDとして付与
 deduped = []
@@ -327,9 +326,7 @@ def merge_ctx(data: Dict[str, Any]) -> Dict[str, Any]:
     )
     return {"context": context, "question": data["question"]}
 
-prompt = PromptTemplate.from_template(
-    """あなたはドキュメントの専門家です。\n質問: {question}\n\n{context}\n\n---\n上記情報のみを根拠に、日本語で網羅的かつ正確に回答してください。必要に応じて関連チャンクやエンティティを指摘してください。"""
-)
+prompt = PromptTemplate.from_template(QA_PROMPT)
 
 chain = (
     {"question": RunnablePassthrough()}

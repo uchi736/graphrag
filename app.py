@@ -30,6 +30,7 @@ from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 # LLM Factory for provider selection
 from llm_factory import create_chat_llm, get_llm_provider_info
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from chunk_utils import create_markdown_chunks
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_community.graphs import Neo4jGraph
 from langchain_community.document_loaders import TextLoader
@@ -46,6 +47,16 @@ from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, en
 
 # エンティティベクトル化
 from entity_vectorizer import EntityVectorizer
+
+# プロンプト
+from prompt import (
+    ENTITY_EXTRACTION_PROMPT,
+    RELATION_RANKING_PROMPT,
+    QA_PROMPT,
+    KG_SYSTEM_PROMPT,
+    KG_USER_PROMPT,
+    NL_TO_CYPHER_PROMPT
+)
 
 try:
     from langchain_community.retrievers.graph import GraphRetriever
@@ -327,7 +338,7 @@ with st.sidebar:
 
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("✅ 切り替える", type="primary", use_container_width=True, key="switch_backend"):
+            if st.button("✅ 切り替える", type="primary", width="stretch", key="switch_backend"):
                 # データクリア
                 st.session_state.chain = None
                 st.session_state.graph = None
@@ -339,7 +350,7 @@ with st.sidebar:
                 st.success(f"✅ {new_backend.upper()}に切り替えました")
                 st.rerun()
         with col2:
-            if st.button("❌ キャンセル", use_container_width=True, key="cancel_switch"):
+            if st.button("❌ キャンセル", width="stretch", key="cancel_switch"):
                 st.rerun()
         st.stop()  # 切り替え確認中は以降の処理を停止
 
@@ -484,6 +495,14 @@ with st.sidebar:
         st.session_state.search_mode = "vector"
         st.session_state.enable_japanese_search = False
 
+    # KGソースチャンク設定
+    include_kg_chunks = st.checkbox(
+        "KGソースチャンクを含める",
+        value=True,
+        help="グラフトリプルの出典チャンクをコンテキストに含めます"
+    )
+    st.session_state.include_kg_source_chunks = include_kg_chunks
+
     st.markdown("---")
     st.markdown("### 🗑️ データベース管理")
 
@@ -491,14 +510,14 @@ with st.sidebar:
         st.session_state.confirm_delete = False
 
     if not st.session_state.confirm_delete:
-        if st.button("🗑️ データベースをクリア", use_container_width=True):
+        if st.button("🗑️ データベースをクリア", width="stretch"):
             st.session_state.confirm_delete = True
             st.rerun()
     else:
         st.warning("⚠️ 本当にすべてのデータを削除しますか？")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("✅ はい、削除", type="primary", use_container_width=True):
+            if st.button("✅ はい、削除", type="primary", width="stretch"):
                 with st.spinner("データベースをクリア中..."):
                     try:
                         # グラフバックエンドクリア
@@ -518,18 +537,23 @@ with st.sidebar:
                             temp_graph.edge_metadata.clear()
                             temp_graph.save()
 
-                        # PGVectorクリア
-                        from langchain_community.vectorstores import PGVector
+                        # PGVectorクリア（コレクション単位で削除）
                         try:
-                            # PGVectorのテーブルを削除
-                            import psycopg2
-                            conn = psycopg2.connect(PG_CONN)
-                            cur = conn.cursor()
-                            cur.execute("DROP TABLE IF EXISTS langchain_pg_collection CASCADE")
-                            cur.execute("DROP TABLE IF EXISTS langchain_pg_embedding CASCADE")
-                            conn.commit()
-                            cur.close()
-                            conn.close()
+                            import psycopg
+                            raw_conn = normalize_pg_connection_string(PG_CONN)
+                            with psycopg.connect(raw_conn) as conn:
+                                with conn.cursor() as cur:
+                                    # コレクションに属するembeddingを削除
+                                    cur.execute("""
+                                        DELETE FROM langchain_pg_embedding e
+                                        USING langchain_pg_collection c
+                                        WHERE e.collection_id = c.uuid AND c.name = %s
+                                    """, (PG_COLLECTION,))
+                                    # コレクション自体を削除
+                                    cur.execute("""
+                                        DELETE FROM langchain_pg_collection WHERE name = %s
+                                    """, (PG_COLLECTION,))
+                                conn.commit()
                         except Exception as e:
                             st.warning(f"PGVectorクリアで警告: {e}")
 
@@ -548,7 +572,7 @@ with st.sidebar:
                         st.error(f"クリアエラー: {e}")
                         st.session_state.confirm_delete = False
         with col2:
-            if st.button("❌ キャンセル", use_container_width=True):
+            if st.button("❌ キャンセル", width="stretch"):
                 st.session_state.confirm_delete = False
                 st.rerun()
 
@@ -635,7 +659,8 @@ def restore_from_existing_graph():
         def create_vector_store():
             return PGVector(
                 connection=pg_conn_with_timeout,
-                embeddings=embeddings
+                embeddings=embeddings,
+                collection_name=PG_COLLECTION
             )
 
         vector_store = retry_on_timeout(create_vector_store, max_retries=3, delay=2.0)
@@ -667,12 +692,7 @@ def restore_from_existing_graph():
             entities = []
 
             # 1. LLMによるエンティティ抽出
-            extraction_prompt = f"""以下の質問文から、固有名詞や重要なエンティティ（人物、場所、物）を抽出してください。
-エンティティのみをカンマ区切りで出力してください。説明は不要です。
-
-質問: {question}
-
-エンティティ:"""
+            extraction_prompt = ENTITY_EXTRACTION_PROMPT.format(question=question)
             try:
                 llm = create_chat_llm(temperature=0)
                 response = llm.invoke(extraction_prompt)
@@ -722,7 +742,7 @@ def restore_from_existing_graph():
             return result
 
         def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
-            """LLMを使って関係性の質問への関連度をスコアリング"""
+            """LLMを使って関係性から質問に関連する上位top_k件を選択"""
             if not relations:
                 return []
 
@@ -732,50 +752,30 @@ def restore_from_existing_graph():
                 for i, r in enumerate(relations)
             ])
 
-            ranking_prompt = f"""以下の質問に対して、各グラフ関係性の関連度を0-10でスコアリングしてください。
-
-【質問】
-{question}
-
-【グラフ関係性】
-{relations_text}
-
-【指示】
-- 各行の番号と関連度スコア（0-10）を「番号:スコア」形式で出力
-- 質問に直接関連する関係性は高スコア（8-10）
-- 間接的に関連する関係性は中スコア（4-7）
-- 無関係な関係性は低スコア（0-3）
-- 説明不要、スコアのみ出力
-
-【出力例】
-1:9
-2:3
-3:7
-
-【出力】"""
+            ranking_prompt = RELATION_RANKING_PROMPT.format(
+                question=question,
+                relations_text=relations_text,
+                top_k=top_k
+            )
 
             try:
                 llm = create_chat_llm(temperature=0)
                 response = llm.invoke(ranking_prompt)
 
-                # スコアをパース
-                scores = {}
-                for line in response.content.strip().split('\n'):
-                    if ':' in line:
-                        try:
-                            idx, score = line.split(':')
-                            scores[int(idx.strip())] = float(score.strip())
-                        except:
-                            continue
+                # ID選択をパース（カンマ区切り）
+                output = response.content.strip()
+                if not output:
+                    return []  # 空出力 = 該当なし
 
-                # スコアでソートして上位top_k件を返す
-                ranked_relations = []
-                for i, relation in enumerate(relations, 1):
-                    score = scores.get(i, 0)
-                    ranked_relations.append((score, relation))
+                # 数字のみ抽出してリスト化
+                selected_ids = []
+                for x in output.split(','):
+                    x = x.strip()
+                    if x.isdigit():
+                        selected_ids.append(int(x))
 
-                ranked_relations.sort(reverse=True, key=lambda x: x[0])
-                return [rel for score, rel in ranked_relations[:top_k]]
+                # 選択されたIDに対応する関係性を返す（順序維持）
+                return [relations[i-1] for i in selected_ids if 1 <= i <= len(relations)]
 
             except Exception as e:
                 # LLMリランキング失敗時は元のリストをそのまま返す
@@ -930,47 +930,77 @@ def restore_from_existing_graph():
             else:
                 docs = vector_retriever.invoke(question)
 
-            # 3. グラフからソースチャンクも取得してマージ
-            if triples:
+            # 3. グラフからソースチャンクを取得（分離）
+            kg_chunks = []
+            if triples and st.session_state.get('include_kg_source_chunks', True):
                 entity_names = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
                 if entity_names:
-                    chunk_query = """
-                    UNWIND $entity_names AS entity_name
-                    MATCH (e {id: entity_name})<-[:MENTIONS]-(chunk)
-                    WHERE chunk.id =~ '[0-9a-f]{32}'
-                    RETURN DISTINCT chunk.id AS chunk_id, chunk.text AS text
-                    LIMIT 5
-                    """
                     try:
-                        chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
-                        if chunk_results:
-                            existing_texts = {d.page_content for d in docs}
+                        existing_texts = {d.page_content for d in docs}
+                        # NetworkXGraph: 専用メソッドを使用
+                        if hasattr(graph, 'get_source_chunks_list'):
+                            chunk_results = graph.get_source_chunks_list(entity_names, limit=5)
                             for r in chunk_results:
                                 if r.get('text') and r['text'] not in existing_texts:
-                                    docs.append(Document(page_content=r['text'], metadata={'id': r.get('chunk_id')}))
+                                    kg_chunks.append(Document(page_content=r['text'], metadata={'id': r.get('chunk_id'), 'source': r.get('source', 'KG')}))
+                                    existing_texts.add(r['text'])
+                        else:
+                            # Neo4j: Cypherクエリを使用
+                            chunk_query = """
+                            UNWIND $entity_names AS entity_name
+                            MATCH (e {id: entity_name})<-[:MENTIONS]-(chunk)
+                            WHERE chunk.id =~ '[0-9a-f]{32}'
+                            RETURN DISTINCT chunk.id AS chunk_id, chunk.text AS text
+                            LIMIT 5
+                            """
+                            chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
+                            if chunk_results:
+                                for r in chunk_results:
+                                    if r.get('text') and r['text'] not in existing_texts:
+                                        kg_chunks.append(Document(page_content=r['text'], metadata={'id': r.get('chunk_id'), 'source': 'KG'}))
+                                        existing_texts.add(r['text'])
                     except Exception:
                         pass
 
-            graph_lines = [
-                f"{t.get('start')} -[{t.get('type')}]→ {t.get('end')}"
-                for t in triples
-            ] if triples else ["(グラフデータなし)"]
+            # トリプルに出典情報を付与
+            graph_lines = []
+            if triples:
+                # ソースチャンク情報を取得（NetworkXGraphの場合）
+                source_chunks = {}
+                if hasattr(graph, 'get_source_chunks_for_entities'):
+                    entity_ids = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
+                    source_chunks = graph.get_source_chunks_for_entities(entity_ids)
+
+                for t in triples:
+                    start, rel, end = t.get('start', ''), t.get('type', ''), t.get('end', '')
+                    # start/endどちらかの出典を取得
+                    src = source_chunks.get(start, {}).get('source') or source_chunks.get(end, {}).get('source') or ''
+                    if src:
+                        graph_lines.append(f"{start} -[{rel}]→ {end} [出典: {src}]")
+                    else:
+                        graph_lines.append(f"{start} -[{rel}]→ {end}")
+            else:
+                graph_lines = ["(グラフデータなし)"]
+
+            # KGチャンクをコンテキストに含めるかどうか
+            all_docs = docs.copy()
+            if st.session_state.get('include_kg_source_chunks', True):
+                all_docs.extend(kg_chunks)
 
             context = (
                 "<GRAPH_CONTEXT>\n" + "\n".join(graph_lines) + "\n</GRAPH_CONTEXT>\n\n" +
-                "<DOCUMENT_CONTEXT>\n" + "\n---\n".join(d.page_content for d in docs) + "\n</DOCUMENT_CONTEXT>"
+                "<DOCUMENT_CONTEXT>\n" + "\n---\n".join(d.page_content for d in all_docs) + "\n</DOCUMENT_CONTEXT>"
             )
             return {
                 "context": context,
                 "question": question,
                 "vector_sources": docs,
+                "kg_source_chunks": kg_chunks,
                 "graph_sources": triples,
                 "extracted_entities": extracted_entities
             }
 
-        prompt = PromptTemplate.from_template(
-            """あなたはドキュメントの専門家です。\n質問: {question}\n\n{context}\n\n---\n上記情報のみを根拠に、日本語で網羅的かつ正確に回答してください。"""
-        )
+        prompt = PromptTemplate.from_template(QA_PROMPT)
 
         # LLM呼び出し部分
         llm_chain = (
@@ -985,6 +1015,7 @@ def restore_from_existing_graph():
             return {
                 "answer": answer,
                 "vector_sources": data["vector_sources"],
+                "kg_source_chunks": data.get("kg_source_chunks", []),
                 "graph_sources": data["graph_sources"],
                 "extracted_entities": data.get("extracted_entities", {})
             }
@@ -1204,22 +1235,8 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         azure_endpoint=AZURE_OPENAI_ENDPOINT,
         api_key=AZURE_OPENAI_API_KEY
     )
-    chunker = RecursiveCharacterTextSplitter(
-        chunk_size=500,           # 500文字ごとに分割
-        chunk_overlap=100,        # 100文字オーバーラップ（文脈保持）
-        separators=["\n\n", "\n", "。", "、", " ", ""],  # 日本語対応
-        length_function=len
-    )
-
-    # ドキュメントごとにチャンク分割し、メタデータを保持
-    all_chunks = []
-    for doc in source_docs:
-        doc_chunks = chunker.create_documents([doc.page_content])
-        # 各チャンクにソースメタデータを付与
-        for chunk in doc_chunks:
-            chunk.metadata.update(doc.metadata)
-        all_chunks.extend(doc_chunks)
-
+    # 2段階Markdownチャンキング（##, ### で分割 → 1024文字で再分割）
+    all_chunks = create_markdown_chunks(source_docs, chunk_size=1024, chunk_overlap=100)
     chunks = all_chunks
 
     # チャンク重複除去（ハッシュベース）
@@ -1260,19 +1277,9 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             # Azure OpenAI の場合はカスタムプロンプト使用
             llm = create_chat_llm(temperature=0)
 
-            kg_system_prompt = """あなたはテキストから専門用語とその関係性を抽出する専門家です。
-専門用語（Term）のみをノードとして抽出し、関係性を特定してください。
-一般的な名詞や動詞は無視してください。出力は簡潔に。"""
-
-            kg_user_prompt = """テキストから専門用語とその関係性を抽出してください。
-
-テキスト:
-{input}
-"""
-
             kg_prompt = ChatPromptTemplate.from_messages([
-                ("system", kg_system_prompt),
-                ("user", kg_user_prompt)
+                ("system", KG_SYSTEM_PROMPT),
+                ("user", KG_USER_PROMPT)
             ])
 
             transformer = LLMGraphTransformer(
@@ -1312,6 +1319,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             st.info(f"📋 処理対象: {len(pending_chunks)}/{len(chunks)} チャンク（{skipped_count}件は処理済みのためスキップ）")
 
         # チャンクごとに処理 + 即座にDB保存
+        graph_docs = []  # チャンクごとのグラフドキュメントを収集
         if pending_chunks:
             progress_bar = st.progress(0, text="ナレッジグラフ生成中...")
             for i, chunk in enumerate(pending_chunks):
@@ -1321,6 +1329,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
 
                     # 即座にDB保存
                     graph.add_graph_documents(chunk_docs, include_source=True)
+                    graph_docs.extend(chunk_docs)
 
                     # 処理済みマーク
                     chunk_hash = chunk.metadata.get("id")
@@ -1587,12 +1596,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         entities = []
 
         # 1. LLMによるエンティティ抽出
-        extraction_prompt = f"""以下の質問文から、固有名詞や重要なエンティティ（人物、場所、物）を抽出してください。
-エンティティのみをカンマ区切りで出力してください。説明は不要です。
-
-質問: {question}
-
-エンティティ:"""
+        extraction_prompt = ENTITY_EXTRACTION_PROMPT.format(question=question)
         try:
             response = llm.invoke(extraction_prompt)
             llm_entities = [e.strip() for e in response.content.split(',') if e.strip()]
@@ -1641,7 +1645,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         return result
 
     def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
-        """LLMを使って関係性の質問への関連度をスコアリング"""
+        """LLMを使って関係性から質問に関連する上位top_k件を選択"""
         if not relations:
             return []
 
@@ -1651,49 +1655,29 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             for i, r in enumerate(relations)
         ])
 
-        ranking_prompt = f"""以下の質問に対して、各グラフ関係性の関連度を0-10でスコアリングしてください。
-
-【質問】
-{question}
-
-【グラフ関係性】
-{relations_text}
-
-【指示】
-- 各行の番号と関連度スコア（0-10）を「番号:スコア」形式で出力
-- 質問に直接関連する関係性は高スコア（8-10）
-- 間接的に関連する関係性は中スコア（4-7）
-- 無関係な関係性は低スコア（0-3）
-- 説明不要、スコアのみ出力
-
-【出力例】
-1:9
-2:3
-3:7
-
-【出力】"""
+        ranking_prompt = RELATION_RANKING_PROMPT.format(
+            question=question,
+            relations_text=relations_text,
+            top_k=top_k
+        )
 
         try:
             response = llm.invoke(ranking_prompt)
 
-            # スコアをパース
-            scores = {}
-            for line in response.content.strip().split('\n'):
-                if ':' in line:
-                    try:
-                        idx, score = line.split(':')
-                        scores[int(idx.strip())] = float(score.strip())
-                    except:
-                        continue
+            # ID選択をパース（カンマ区切り）
+            output = response.content.strip()
+            if not output:
+                return []  # 空出力 = 該当なし
 
-            # スコアでソートして上位top_k件を返す
-            ranked_relations = []
-            for i, relation in enumerate(relations, 1):
-                score = scores.get(i, 0)
-                ranked_relations.append((score, relation))
+            # 数字のみ抽出してリスト化
+            selected_ids = []
+            for x in output.split(','):
+                x = x.strip()
+                if x.isdigit():
+                    selected_ids.append(int(x))
 
-            ranked_relations.sort(reverse=True, key=lambda x: x[0])
-            return [rel for score, rel in ranked_relations[:top_k]]
+            # 選択されたIDに対応する関係性を返す（順序維持）
+            return [relations[i-1] for i in selected_ids if 1 <= i <= len(relations)]
 
         except Exception as e:
             # LLMリランキング失敗時は元のリストをそのまま返す
@@ -1849,41 +1833,77 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         else:
             docs = vector_retriever.invoke(question)
 
-        # 3. グラフからソースチャンクも取得してマージ
-        if triples:
+        # 3. グラフからソースチャンクを取得（分離）
+        kg_chunks = []
+        if triples and st.session_state.get('include_kg_source_chunks', True):
             entity_names = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
             if entity_names:
-                chunk_query = """
-                UNWIND $entity_names AS entity_name
-                MATCH (e {id: entity_name})<-[:MENTIONS]-(chunk)
-                WHERE chunk.id =~ '[0-9a-f]{32}'
-                OPTIONAL MATCH (chunk)-[:FROM_DOCUMENT]->(doc:Document)
-                RETURN DISTINCT chunk.id AS chunk_id, chunk.text AS text, doc.name AS source
-                LIMIT 5
-                """
                 try:
-                    chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
-                    if chunk_results:
-                        existing_texts = {d.page_content for d in docs}
+                    existing_texts = {d.page_content for d in docs}
+                    # NetworkXGraph: 専用メソッドを使用
+                    if hasattr(graph, 'get_source_chunks_list'):
+                        chunk_results = graph.get_source_chunks_list(entity_names, limit=5)
                         for r in chunk_results:
                             if r.get('text') and r['text'] not in existing_texts:
-                                docs.append(Document(
+                                kg_chunks.append(Document(
                                     page_content=r['text'],
                                     metadata={
                                         'id': r.get('chunk_id'),
-                                        'source': r.get('source', 'Unknown')
+                                        'source': r.get('source', 'KG')
                                     }))
+                                existing_texts.add(r['text'])
+                    else:
+                        # Neo4j: Cypherクエリを使用
+                        chunk_query = """
+                        UNWIND $entity_names AS entity_name
+                        MATCH (e {id: entity_name})<-[:MENTIONS]-(chunk)
+                        WHERE chunk.id =~ '[0-9a-f]{32}'
+                        OPTIONAL MATCH (chunk)-[:FROM_DOCUMENT]->(doc:Document)
+                        RETURN DISTINCT chunk.id AS chunk_id, chunk.text AS text, doc.name AS source
+                        LIMIT 5
+                        """
+                        chunk_results = graph.query(chunk_query, params={"entity_names": entity_names})
+                        if chunk_results:
+                            for r in chunk_results:
+                                if r.get('text') and r['text'] not in existing_texts:
+                                    kg_chunks.append(Document(
+                                        page_content=r['text'],
+                                        metadata={
+                                            'id': r.get('chunk_id'),
+                                            'source': r.get('source', 'KG')
+                                        }))
+                                    existing_texts.add(r['text'])
                 except Exception:
                     pass
 
-        graph_lines = [
-            f"{t.get('start')} -[{t.get('type')}]→ {t.get('end')}"
-            for t in triples
-        ] if triples else ["(グラフデータなし)"]
+        # トリプルに出典情報を付与
+        graph_lines = []
+        if triples:
+            # ソースチャンク情報を取得（NetworkXGraphの場合）
+            source_chunks = {}
+            if hasattr(graph, 'get_source_chunks_for_entities'):
+                entity_ids = list(set([t.get('start') for t in triples] + [t.get('end') for t in triples]))
+                source_chunks = graph.get_source_chunks_for_entities(entity_ids)
+
+            for t in triples:
+                start, rel, end = t.get('start', ''), t.get('type', ''), t.get('end', '')
+                # start/endどちらかの出典を取得
+                src = source_chunks.get(start, {}).get('source') or source_chunks.get(end, {}).get('source') or ''
+                if src:
+                    graph_lines.append(f"{start} -[{rel}]→ {end} [出典: {src}]")
+                else:
+                    graph_lines.append(f"{start} -[{rel}]→ {end}")
+        else:
+            graph_lines = ["(グラフデータなし)"]
+
+        # KGチャンクをコンテキストに含めるかどうか
+        all_docs = docs.copy()
+        if st.session_state.get('include_kg_source_chunks', True):
+            all_docs.extend(kg_chunks)
 
         # ドキュメントコンテキストにソース情報を含める
         doc_contexts = []
-        for d in docs:
+        for d in all_docs:
             source = d.metadata.get('source', 'Unknown')
             doc_contexts.append(f"[出典: {source}]\n{d.page_content}")
 
@@ -1895,14 +1915,12 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             "context": context,
             "question": question,
             "vector_sources": docs,
+            "kg_source_chunks": kg_chunks,
             "graph_sources": triples,
             "extracted_entities": extracted_entities
         }
 
-    prompt = PromptTemplate.from_template(
-        """あなたはドキュメントの専門家です。\n質問: {question}\n\n{context}\n\n---\n上記情報のみを根拠に、日本語で網羅的かつ正確に回答してください。
-複数のドキュメントから情報を取得した場合は、それぞれの出典を明示してください。"""
-    )
+    prompt = PromptTemplate.from_template(QA_PROMPT)
 
     # LLM呼び出し部分
     llm_chain = (
@@ -1917,6 +1935,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         return {
             "answer": answer,
             "vector_sources": data["vector_sources"],
+            "kg_source_chunks": data.get("kg_source_chunks", []),
             "graph_sources": data["graph_sources"],
             "extracted_entities": data.get("extracted_entities", {})
         }
@@ -2277,26 +2296,7 @@ def natural_language_to_cypher(query: str) -> str:
     try:
         llm = create_chat_llm(temperature=0)
 
-        prompt = f"""あなたはNeo4jのCypherクエリエキスパートです。
-以下の自然言語をCypherクエリに変換してください。
-
-【グラフスキーマ情報】
-- ノード: プロパティは `id` (エンティティ名を格納)
-- リレーションシップ: 動的（MENTIONS以外のすべての関係タイプ）
-- 除外条件: チャンクノード（id =~ '[0-9a-f]{{32}}'）は除外すること
-- MENTIONS関係は除外すること
-
-【クエリ作成ルール】
-1. RETURN句で必ず以下を返すこと:
-   - ノード間の関係の場合: n.id AS source, type(r) AS relation, m.id AS target
-   - ノードのみの場合: n.id AS node_id, labels(n) AS labels
-2. チャンクノードを除外: WHERE NOT n.id =~ '[0-9a-f]{{32}}'
-3. MENTIONS関係を除外: WHERE type(r) <> 'MENTIONS'
-4. LIMIT句を必ず付与（デフォルト50）
-
-自然言語クエリ: {query}
-
-Cypherクエリ（クエリのみ出力、説明不要）:"""
+        prompt = NL_TO_CYPHER_PROMPT.format(query=query)
 
         response = llm.invoke(prompt)
         cypher_query = response.content.strip()
@@ -2847,7 +2847,7 @@ if has_docs or has_csv:
 st.markdown("---")
 
 # タブ形式UI
-tab1, tab2 = st.tabs(["💬 質問応答", "🕸️ グラフ探索"])
+tab1, tab2, tab3 = st.tabs(["💬 質問応答", "🕸️ グラフ探索", "📄 登録ドキュメント"])
 
 with tab1:
     st.header("💬 質問応答")
@@ -2866,19 +2866,44 @@ with tab1:
                         st.markdown("### 📝 回答")
                         st.markdown(result["answer"])
 
-                        # 引用元: Vector RAG
-                        with st.expander("📚 参照ドキュメント (Vector RAG)", expanded=False):
+                        # 引用元: 検索結果（検索モードに応じたラベル）
+                        search_mode = st.session_state.get('search_mode', 'hybrid')
+                        mode_labels = {
+                            'hybrid': 'ハイブリッド検索',
+                            'vector': 'ベクトル検索',
+                            'keyword': 'キーワード検索'
+                        }
+                        doc_label = mode_labels.get(search_mode, 'ベクトル検索')
+
+                        with st.expander(f"📚 参照ドキュメント ({doc_label})", expanded=False):
                             vector_sources = result.get("vector_sources", [])
                             if vector_sources:
                                 for i, doc in enumerate(vector_sources, 1):
                                     st.markdown(f"**チャンク {i}:**")
+                                    source = doc.metadata.get('source', '')
+                                    if source:
+                                        st.caption(f"出典: {source}")
                                     st.text(doc.page_content)
                                     if i < len(vector_sources):
                                         st.divider()
                             else:
-                                st.info("ベクトル検索結果なし")
+                                st.info("ドキュメント検索結果なし")
 
-                        # 引用元: Graph RAG
+                        # 引用元: KGソースチャンク
+                        with st.expander("📄 KGソースチャンク (Graph RAG)", expanded=False):
+                            kg_chunks = result.get("kg_source_chunks", [])
+                            if kg_chunks:
+                                for i, doc in enumerate(kg_chunks, 1):
+                                    st.markdown(f"**チャンク {i}:**")
+                                    source = doc.metadata.get('source', 'KG')
+                                    st.caption(f"出典: {source}")
+                                    st.text(doc.page_content)
+                                    if i < len(kg_chunks):
+                                        st.divider()
+                            else:
+                                st.info("KGからの追加チャンクなし")
+
+                        # 引用元: Graph RAG（トリプル）
                         with st.expander("🕸️ ナレッジグラフ (Graph RAG)", expanded=False):
                             graph_sources = result.get("graph_sources", [])
                             if graph_sources:
@@ -3274,6 +3299,51 @@ with tab2:
 
     else:
         st.info("まずRAGシステムを初期化してください")
+
+with tab3:
+    st.header("📄 登録ドキュメント")
+
+    if PG_CONN:
+        try:
+            import psycopg
+            raw_conn = normalize_pg_connection_string(PG_CONN)
+            with psycopg.connect(raw_conn) as conn:
+                with conn.cursor() as cur:
+                    # ソース別チャンク数を取得
+                    cur.execute("""
+                        SELECT
+                            COALESCE(e.cmetadata->>'source', '(unknown)') as source,
+                            COUNT(*) as chunk_count
+                        FROM langchain_pg_embedding e
+                        JOIN langchain_pg_collection c ON e.collection_id = c.uuid
+                        WHERE c.name = %s
+                        GROUP BY e.cmetadata->>'source'
+                        ORDER BY chunk_count DESC
+                    """, (PG_COLLECTION,))
+                    rows = cur.fetchall()
+
+            if rows:
+                # メトリクス表示
+                total_chunks = sum(r[1] for r in rows)
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("総チャンク数", f"{total_chunks:,}")
+                with col2:
+                    st.metric("ドキュメント数", len(rows))
+
+                # テーブル表示
+                st.markdown("### ソースファイル一覧")
+                import pandas as pd
+                df = pd.DataFrame(rows, columns=["ソースファイル", "チャンク数"])
+                st.dataframe(df, width="stretch", hide_index=True)
+            else:
+                st.info("登録されたドキュメントはありません")
+        except Exception as e:
+            st.error(f"DB接続エラー: {e}")
+            import traceback
+            st.code(traceback.format_exc())
+    else:
+        st.warning("PG_CONNが設定されていません")
 
 # フッター
 st.markdown("---")

@@ -25,6 +25,8 @@ try:
 except ImportError:
     from langchain_community.graphs import GraphDocument
 
+from prompt import ENTITY_EXTRACTION_PROMPT
+
 
 class NetworkXGraph:
     """Neo4jGraph互換のNetworkXグラフラッパー"""
@@ -321,6 +323,84 @@ class NetworkXGraph:
             except ValueError:
                 pass
         return False
+
+    def get_source_chunks_for_entities(self, entity_ids: List[str]) -> Dict[str, Dict]:
+        """エンティティのソースチャンクを取得（MENTIONS逆引き）
+
+        Args:
+            entity_ids: エンティティIDのリスト
+
+        Returns:
+            {entity_id: {'chunk_id': str, 'source': str}} の辞書
+        """
+        result = {}
+        for entity_id in entity_ids:
+            if entity_id not in self.graph:
+                continue
+            # 入方向エッジ（Chunk -> Entity）を探索
+            for pred in self.graph.predecessors(entity_id):
+                if not self._is_chunk_node(pred):
+                    continue
+                edges = self.graph.get_edge_data(pred, entity_id)
+                if edges is None:
+                    continue
+                for key, data in edges.items():
+                    if data.get('type') == 'MENTIONS':
+                        chunk_data = self.node_metadata.get(pred, {})
+                        source = chunk_data.get('properties', {}).get('source', '')
+                        if entity_id not in result:
+                            result[entity_id] = {'chunk_id': pred, 'source': source}
+                        break
+        return result
+
+    def get_source_chunks_list(self, entity_ids: List[str], limit: int = 5) -> List[Dict[str, Any]]:
+        """エンティティに関連するソースチャンクをリスト形式で取得（MENTIONS逆引き）
+
+        Args:
+            entity_ids: エンティティIDのリスト
+            limit: 最大取得件数
+
+        Returns:
+            [{'chunk_id': str, 'text': str, 'source': str}, ...] のリスト
+        """
+        result = []
+        seen_chunks = set()
+
+        for entity_id in entity_ids:
+            if entity_id not in self.graph:
+                continue
+            # 入方向エッジ（Chunk -> Entity）を探索
+            for pred in self.graph.predecessors(entity_id):
+                if pred in seen_chunks:
+                    continue
+                if not self._is_chunk_node(pred):
+                    continue
+
+                edges = self.graph.get_edge_data(pred, entity_id)
+                if edges is None:
+                    continue
+
+                for key, data in edges.items():
+                    if data.get('type') == 'MENTIONS':
+                        chunk_data = self.node_metadata.get(pred, {})
+                        props = chunk_data.get('properties', {})
+                        text = props.get('text', '')
+                        source = props.get('source', '')
+                        if text:
+                            result.append({
+                                'chunk_id': pred,
+                                'text': text,
+                                'source': source
+                            })
+                            seen_chunks.add(pred)
+                        break
+
+                if len(result) >= limit:
+                    break
+            if len(result) >= limit:
+                break
+
+        return result[:limit]
 
     def refresh_schema(self) -> None:
         """スキーマ更新（Neo4jGraph互換、NetworkXでは不要）"""
@@ -859,12 +939,7 @@ class NetworkXGraphRetriever:
         if self.llm:
             try:
                 # LLMを使った高精度抽出
-                extraction_prompt = f"""以下の質問文から、固有名詞や重要なエンティティを抽出してください。
-エンティティのみをカンマ区切りで出力してください。説明は不要です。
-
-質問: {question}
-
-エンティティ:"""
+                extraction_prompt = ENTITY_EXTRACTION_PROMPT.format(question=question)
                 response = self.llm.invoke(extraction_prompt)
                 entities = [e.strip() for e in response.content.split(',') if e.strip()]
                 return entities

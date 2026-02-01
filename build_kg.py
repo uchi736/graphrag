@@ -26,7 +26,10 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from chunk_utils import create_markdown_chunks
 from tqdm import tqdm
+
+from prompt import KG_SYSTEM_PROMPT, KG_USER_PROMPT
 
 # 環境変数読み込み
 load_dotenv()
@@ -162,19 +165,8 @@ def build_knowledge_graph(
     print("✂️ チャンク分割中...")
     print(f"{'='*50}")
 
-    chunker = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=100,
-        separators=["\n\n", "\n", "。", "、", " ", ""],
-        length_function=len
-    )
-
-    all_chunks = []
-    for doc in source_docs:
-        doc_chunks = chunker.create_documents([doc.page_content])
-        for chunk in doc_chunks:
-            chunk.metadata.update(doc.metadata)
-        all_chunks.extend(doc_chunks)
+    # 2段階Markdownチャンキング（##, ### で分割 → 1024文字で再分割）
+    all_chunks = create_markdown_chunks(source_docs, chunk_size=1024, chunk_overlap=100)
 
     # 重複除去
     deduped = []
@@ -236,19 +228,9 @@ def build_knowledge_graph(
         from langchain_core.prompts import ChatPromptTemplate
         llm = create_chat_llm(temperature=0)
 
-        kg_system_prompt = """あなたはテキストから専門用語とその関係性を抽出する専門家です。
-専門用語（Term）のみをノードとして抽出し、関係性を特定してください。
-一般的な名詞や動詞は無視してください。出力は簡潔に。"""
-
-        kg_user_prompt = """テキストから専門用語とその関係性を抽出してください。
-
-テキスト:
-{input}
-"""
-
         kg_prompt = ChatPromptTemplate.from_messages([
-            ("system", kg_system_prompt),
-            ("user", kg_user_prompt)
+            ("system", KG_SYSTEM_PROMPT),
+            ("user", KG_USER_PROMPT)
         ])
 
         transformer = LLMGraphTransformer(
