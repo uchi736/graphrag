@@ -4,9 +4,24 @@ chunk_utils.py - Markdown対応2段階チャンキング
 Stage 1: MarkdownHeaderTextSplitter (##, ### で分割)
 Stage 2: RecursiveCharacterTextSplitter (500文字で再分割)
 """
+import re
 from typing import List
 from langchain_core.documents import Document
 from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
+
+
+def _normalize_markdown_headers(text: str) -> str:
+    """Markdownヘッダーを正規化（##の後にスペースがない場合を修正）
+
+    例: "##ガス軸受" → "## ガス軸受"
+    """
+    # ### の後にスペースがない場合（###の後が日本語や英字で始まる）
+    text = re.sub(r'^(###)([^\s#])', r'\1 \2', text, flags=re.MULTILINE)
+    # ## の後にスペースがない場合（##の後が日本語や英字で始まる、###は除外）
+    text = re.sub(r'^(##)([^#\s])', r'\1 \2', text, flags=re.MULTILINE)
+    # # の後にスペースがない場合（#の後が日本語や英字で始まる、##は除外）
+    text = re.sub(r'^(#)([^#\s])', r'\1 \2', text, flags=re.MULTILINE)
+    return text
 
 
 def create_markdown_chunks(
@@ -19,7 +34,7 @@ def create_markdown_chunks(
 
     Args:
         docs: 入力ドキュメントリスト
-        chunk_size: 最大チャンクサイズ（デフォルト: 500文字）
+        chunk_size: 最大チャンクサイズ（デフォルト: 1024文字）
         chunk_overlap: オーバーラップ（デフォルト: 100文字）
 
     Returns:
@@ -46,11 +61,14 @@ def create_markdown_chunks(
 
     all_chunks = []
     for doc in docs:
+        # Markdownヘッダーを正規化（##の後にスペースがない場合を修正）
+        normalized_content = _normalize_markdown_headers(doc.page_content)
+
         # # (H1) を抽出してメタデータに追加
-        h1_title = _extract_h1_title(doc.page_content)
+        h1_title = _extract_h1_title(normalized_content)
 
         # Stage 1: Markdown分割
-        md_chunks = md_splitter.split_text(doc.page_content)
+        md_chunks = md_splitter.split_text(normalized_content)
 
         for md_chunk in md_chunks:
             # md_chunkはDocumentオブジェクト（metadataにh2, h3が入る）
@@ -76,9 +94,10 @@ def create_markdown_chunks(
 
 
 def _extract_h1_title(text: str) -> str:
-    """テキストから # (H1) タイトルを抽出"""
+    """テキストから # (H1) タイトルを抽出（正規化済みテキストを想定）"""
     for line in text.split("\n"):
         line = line.strip()
+        # 正規化済みなので "# " で始まるはず
         if line.startswith("# ") and not line.startswith("## "):
             return line[2:].strip()
     return ""

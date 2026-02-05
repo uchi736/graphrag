@@ -42,7 +42,7 @@ from langchain_postgres import PGVector
 
 # 日本語ハイブリッド検索
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
-from hybrid_retriever import HybridRetriever
+from hybrid_retriever import HybridRetriever, rerank_with_llm
 from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, ensure_hnsw_index, ensure_embedding_id_unique, ensure_schema_compatibility, add_connection_timeout, retry_on_timeout
 
 # エンティティベクトル化
@@ -503,6 +503,14 @@ with st.sidebar:
     )
     st.session_state.include_kg_source_chunks = include_kg_chunks
 
+    # LLMリランキング設定
+    enable_rerank = st.checkbox(
+        "LLMリランキング",
+        value=False,
+        help="LLMで検索結果を再ランキング（精度向上、速度低下）"
+    )
+    st.session_state.enable_rerank = enable_rerank
+
     st.markdown("---")
     st.markdown("### 🗑️ データベース管理")
 
@@ -917,6 +925,13 @@ def restore_from_existing_graph():
                         k=retrieval_top_k,
                         search_type=search_type
                     )
+
+                    # LLMリランキング（有効な場合）
+                    if st.session_state.get('enable_rerank', False) and hybrid_results:
+                        rerank_llm = create_chat_llm(temperature=0)
+                        hybrid_results = rerank_with_llm(
+                            question, hybrid_results, rerank_llm, k=retrieval_top_k
+                        )
 
                     docs = [
                         Document(
@@ -1803,6 +1818,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             graph_result = get_graph_context(question)
             triples = graph_result.get("triples", [])
             extracted_entities = graph_result.get("extracted_entities", {})
+            print(f"[DEBUG] triples: {len(triples)}, extracted_entities: {extracted_entities.get('merged_entities', [])[:3]}")
 
         # 2. ドキュメント検索（常に実行）
         from langchain_core.documents import Document
@@ -1820,6 +1836,13 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                     k=retrieval_top_k,
                     search_type=search_type
                 )
+
+                # LLMリランキング（有効な場合）
+                if st.session_state.get('enable_rerank', False) and hybrid_results:
+                    rerank_llm = create_chat_llm(temperature=0)
+                    hybrid_results = rerank_with_llm(
+                        question, hybrid_results, rerank_llm, k=retrieval_top_k
+                    )
 
                 docs = [
                     Document(
@@ -1843,6 +1866,8 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                     # NetworkXGraph: 専用メソッドを使用
                     if hasattr(graph, 'get_source_chunks_list'):
                         chunk_results = graph.get_source_chunks_list(entity_names, limit=5)
+                        print(f"[DEBUG KG] entity_names: {len(entity_names)}, chunk_results: {len(chunk_results)}, existing_texts: {len(existing_texts)}")
+                        skipped_duplicates = 0
                         for r in chunk_results:
                             if r.get('text') and r['text'] not in existing_texts:
                                 kg_chunks.append(Document(
@@ -1852,6 +1877,9 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                                         'source': r.get('source', 'KG')
                                     }))
                                 existing_texts.add(r['text'])
+                            elif r.get('text'):
+                                skipped_duplicates += 1
+                        print(f"[DEBUG KG] kg_chunks: {len(kg_chunks)}, skipped_duplicates: {skipped_duplicates}")
                     else:
                         # Neo4j: Cypherクエリを使用
                         chunk_query = """
@@ -1947,6 +1975,97 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
     )
 
     return chain, graph
+
+
+def update_chunks_only(source_docs: list):
+    """チャンクのみ更新（グラフ再構築スキップ）
+
+    - LLMによるエンティティ抽出をスキップ
+    - PGVectorのチャンクのみ更新
+    - 既存のグラフ構造は維持
+    """
+    embeddings = AzureOpenAIEmbeddings(
+        azure_deployment=AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
+        openai_api_version=AZURE_OPENAI_API_VERSION,
+        azure_endpoint=AZURE_OPENAI_ENDPOINT,
+        api_key=AZURE_OPENAI_API_KEY
+    )
+
+    # 2段階Markdownチャンキング
+    all_chunks = create_markdown_chunks(source_docs, chunk_size=1024, chunk_overlap=100)
+
+    # チャンク重複除去（ハッシュベース）
+    deduped = []
+    seen_hashes = set()
+    for chunk in all_chunks:
+        digest = hashlib.sha256(chunk.page_content.encode("utf-8")).hexdigest()
+        if digest in seen_hashes:
+            continue
+        seen_hashes.add(digest)
+        chunk.metadata["id"] = digest
+        deduped.append(chunk)
+    chunks = deduped
+
+    st.info(f"📄 {len(chunks)}個のチャンクを生成しました")
+
+    # 日本語トークン化（有効な場合）
+    japanese_processor = get_japanese_processor()
+    if japanese_processor and st.session_state.get('enable_japanese_search', True):
+        with st.spinner("日本語トークン化中..."):
+            for chunk in chunks:
+                try:
+                    tokenized = japanese_processor.tokenize(chunk.page_content)
+                    chunk.metadata['tokenized_content'] = tokenized
+                except Exception:
+                    chunk.metadata['tokenized_content'] = None
+
+    # PGVector保存
+    if not chunks:
+        st.warning("チャンクが0件のためスキップしました")
+        return None
+
+    ensure_embedding_id_unique(PG_CONN)
+    ensure_schema_compatibility(PG_CONN)
+    ensure_hnsw_index(PG_CONN)
+    pg_conn_with_timeout = add_connection_timeout(PG_CONN, timeout=30)
+
+    def create_vector_store_from_docs():
+        return PGVector.from_documents(
+            chunks,
+            embeddings,
+            connection=pg_conn_with_timeout,
+            collection_name=PG_COLLECTION,
+            pre_delete_collection=True,  # 既存コレクション削除
+            use_jsonb=True,
+        )
+
+    vector_store = retry_on_timeout(create_vector_store_from_docs, max_retries=3, delay=2.0)
+
+    # トークン化データをDBに反映
+    if vector_store and japanese_processor and st.session_state.get('enable_japanese_search', True):
+        try:
+            ensure_tokenized_schema(PG_CONN)
+            import psycopg
+            raw_pg_conn = normalize_pg_connection_string(PG_CONN)
+            with psycopg.connect(raw_pg_conn) as conn:
+                with conn.cursor() as cur:
+                    for chunk in chunks:
+                        tokenized = chunk.metadata.get('tokenized_content')
+                        if tokenized:
+                            cur.execute("""
+                                UPDATE langchain_pg_embedding
+                                SET tokenized_content = %s
+                                WHERE cmetadata->>'id' = %s
+                            """, (tokenized, chunk.metadata['id']))
+                conn.commit()
+        except Exception as e:
+            st.warning(f"トークン化データのDB保存エラー: {e}")
+
+    st.success("✅ チャンクのみ更新完了（グラフは既存を維持）")
+    st.warning("⚠️ KGソースチャンクは古いMENTIONSエッジを参照するため、完全再構築を推奨します")
+
+    return vector_store
+
 
 # グラフ取得関数（改善版・バックエンド共通）
 def get_enhanced_graph_data(graph, limit=200):
@@ -2797,6 +2916,10 @@ if has_docs or has_csv:
     with col2:
         resume_build = st.button("▶️ 続きから再開", help="処理済みチャンクをスキップして続きから構築")
 
+    # 高速オプション: チャンクのみ更新
+    st.caption("⚡ 高速オプション")
+    chunks_only = st.button("📄 チャンクのみ更新", help="グラフ再構築をスキップしてPGVectorのチャンクのみ更新（高速）")
+
     if new_build or resume_build:
         # 新規構築の場合は処理済みハッシュをクリア
         if new_build:
@@ -2843,6 +2966,36 @@ if has_docs or has_csv:
                 st.error(f"構築エラー: {e}")
                 import traceback
                 st.code(traceback.format_exc())
+
+    # チャンクのみ更新ハンドラー
+    if chunks_only:
+        if not has_docs:
+            st.error("ドキュメントをアップロードしてください")
+        else:
+            with st.spinner("ドキュメント読み込み中..."):
+                try:
+                    source_docs = load_documents(uploaded_files)
+                    total_chars = sum(len(doc.page_content) for doc in source_docs)
+                    st.info(f"📄 {len(source_docs)} ファイル読み込み完了（総文字数: {total_chars:,} 文字）")
+                except Exception as e:
+                    st.error(f"ファイル読み込みエラー: {e}")
+                    st.stop()
+
+            with st.spinner("チャンクを更新中..."):
+                try:
+                    vector_store = update_chunks_only(source_docs)
+                    if vector_store:
+                        # 既存グラフがあれば維持、なければセッション状態を更新
+                        if st.session_state.get('graph') is None:
+                            # グラフがない場合は読み込みを試みる
+                            if st.session_state.graph_backend == "networkx":
+                                from networkx_graph import NetworkXGraph
+                                st.session_state.graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
+                        st.session_state.uploaded_files = [f.name for f in uploaded_files]
+                except Exception as e:
+                    st.error(f"チャンク更新エラー: {e}")
+                    import traceback
+                    st.code(traceback.format_exc())
 
 st.markdown("---")
 

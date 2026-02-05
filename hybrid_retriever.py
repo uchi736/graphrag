@@ -7,6 +7,7 @@ import psycopg
 from rank_bm25 import BM25Okapi
 from japanese_text_processor import get_japanese_processor
 from db_utils import normalize_pg_connection_string, ensure_tokenized_schema
+from prompt import RERANK_PROMPT
 
 
 class HybridRetriever:
@@ -190,3 +191,61 @@ class HybridRetriever:
             })
 
         return results
+
+
+def rerank_with_llm(
+    query: str,
+    docs: List[Dict[str, Any]],
+    llm,
+    k: int
+) -> List[Dict[str, Any]]:
+    """
+    LLMでリランキング
+
+    Args:
+        query: 検索クエリ
+        docs: 検索結果のリスト
+        llm: LangChainのChatModel
+        k: 返す件数
+
+    Returns:
+        リランキング後の検索結果
+    """
+    if not docs or len(docs) <= 1:
+        return docs[:k]
+
+    # ドキュメントリスト作成（先頭500文字のみ）
+    doc_texts = []
+    for i, doc in enumerate(docs):
+        text = doc.get('text', '')[:500]
+        doc_texts.append(f"{i+1}. {text}")
+
+    prompt = RERANK_PROMPT.format(
+        question=query,
+        documents="\n\n".join(doc_texts)
+    )
+
+    try:
+        response = llm.invoke(prompt)
+        content = response.content if hasattr(response, 'content') else str(response)
+
+        # "3,1,5,2,4" → [3,1,5,2,4]
+        order = [int(x.strip()) for x in content.split(',') if x.strip().isdigit()]
+
+        # 並び替え
+        reranked = []
+        seen = set()
+        for idx in order:
+            if 1 <= idx <= len(docs) and idx not in seen:
+                reranked.append(docs[idx - 1])
+                seen.add(idx)
+
+        # 漏れたドキュメントを追加
+        for i, doc in enumerate(docs):
+            if (i + 1) not in seen:
+                reranked.append(doc)
+
+        return reranked[:k]
+    except Exception as e:
+        print(f"[Rerank] Error: {e}")
+        return docs[:k]  # エラー時は元の順序

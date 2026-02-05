@@ -315,8 +315,8 @@ class NetworkXGraph:
 
     def _is_chunk_node(self, node_id: str) -> bool:
         """ChunkノードかどうかをIDパターンで判定"""
-        # 32文字の16進数ハッシュならChunk
-        if isinstance(node_id, str) and len(node_id) == 32:
+        # 32文字（MD5）または64文字（SHA-256）の16進数ハッシュならChunk
+        if isinstance(node_id, str) and len(node_id) in (32, 64):
             try:
                 int(node_id, 16)
                 return True
@@ -411,7 +411,7 @@ class NetworkXGraph:
         save_path = Path(path) if path else self.storage_path
 
         data = {
-            'graph': nx.node_link_data(self.graph),
+            'graph': nx.node_link_data(self.graph, edges="edges"),
             'node_metadata': self.node_metadata,
             'edge_metadata': {str(k): v for k, v in self.edge_metadata.items()}
         }
@@ -439,7 +439,18 @@ class NetworkXGraph:
         with open(load_path, 'rb') as f:
             data = pickle.load(f)
 
-        self.graph = nx.node_link_graph(data['graph'], multigraph=True)
+        # NetworkX 3.5+: edges="edges" を明示指定（旧形式 "links" との互換性のため自動検出）
+        graph_data = data['graph']
+        if 'edges' in graph_data:
+            self.graph = nx.node_link_graph(graph_data, multigraph=True, edges="edges")
+        elif 'links' in graph_data:
+            self.graph = nx.node_link_graph(graph_data, multigraph=True, edges="links")
+        else:
+            # エッジデータがない場合は空のMultiDiGraphを作成
+            self.graph = nx.MultiDiGraph()
+            for node_data in graph_data.get('nodes', []):
+                self.graph.add_node(node_data.get('id'))
+
         self.node_metadata = data['node_metadata']
 
         # edge_metadataのキーを復元

@@ -62,7 +62,7 @@ def migrate_existing_data():
                 # tokenized_contentがNULLのレコードを取得
                 # cmetadata->>'id' を使用してチャンクIDを取得
                 cur.execute("""
-                    SELECT e.uuid, e.document, e.cmetadata->>'id' as chunk_id
+                    SELECT e.id, e.document, e.cmetadata->>'id' as chunk_id
                     FROM langchain_pg_embedding e
                     JOIN langchain_pg_collection c ON e.collection_id = c.uuid
                     WHERE c.name = %s
@@ -78,7 +78,7 @@ def migrate_existing_data():
 
                 print(f"📊 {total}件のレコードを処理します...")
 
-                for idx, (record_uuid, text, chunk_id) in enumerate(rows, 1):
+                for idx, (record_id, text, chunk_id) in enumerate(rows, 1):
                     if idx % 10 == 0 or idx == total:
                         print(f"  処理中: {idx}/{total} ({idx*100//total}%)")
 
@@ -86,8 +86,8 @@ def migrate_existing_data():
                     cur.execute("""
                         UPDATE langchain_pg_embedding
                         SET tokenized_content = %s
-                        WHERE uuid = %s
-                    """, (tokenized, record_uuid))
+                        WHERE id = %s
+                    """, (tokenized, record_id))
 
             conn.commit()
         print("✅ 既存データの移行完了")
