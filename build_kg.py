@@ -187,7 +187,7 @@ def build_knowledge_graph(
     print("🕸️ ナレッジグラフ構築中...")
     print(f"{'='*50}")
 
-    graph = NetworkXGraph(storage_path="graph.pkl", auto_save=True)
+    graph = NetworkXGraph(storage_path="graph.pkl", auto_save=False)
 
     # 新規構築の場合は処理済みクリア
     if fresh:
@@ -245,7 +245,8 @@ def build_knowledge_graph(
             strict_mode=False,
         )
 
-    # チャンクごとに処理
+    # チャンクごとに処理（100チャンクごとに定期保存）
+    SAVE_INTERVAL = 100
     success_count = 0
     error_count = 0
 
@@ -256,14 +257,22 @@ def build_knowledge_graph(
 
             chunk_hash = chunk.metadata.get("id")
             if chunk_hash:
-                graph.mark_chunk_processed(chunk_hash)
+                graph.mark_chunk_processed(chunk_hash, save=False)
 
             success_count += 1
+
+            # 定期保存（進捗を失わないため）
+            if success_count % SAVE_INTERVAL == 0:
+                graph.save()
 
         except Exception as e:
             error_count += 1
             tqdm.write(f"  ⚠️ エラー: {e}")
+            graph.save()
             continue
+
+    # 最終保存
+    graph.save()
 
     # グラフ統計
     node_count = graph.graph.number_of_nodes()

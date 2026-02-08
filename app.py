@@ -1715,8 +1715,20 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
 
         # 2. ホップ数を取得
         hop_count = st.session_state.get('graph_hop_count', 1)
+        top_k_map = {1: 15, 2: 20, 3: 25}
 
-        # 3. ホップ数に応じたクエリを実行
+        # 3. NetworkX: 直接 N-hop 検索（Cypherをスキップ）
+        if st.session_state.graph_backend == "networkx":
+            top_k = top_k_map.get(hop_count, 15)
+            try:
+                result = graph.query(params={"entities": entities, "hop": hop_count})
+                if result:
+                    result = rank_relations_by_relevance(question, result, top_k=top_k)
+                return {"triples": result if result else [], "extracted_entities": entity_result}
+            except Exception:
+                return {"triples": [], "extracted_entities": entity_result}
+
+        # 4. Neo4j: ホップ数に応じたCypherクエリを実行
         if hop_count == 1:
             # 1-hop: 直接関係のみ
             query = """

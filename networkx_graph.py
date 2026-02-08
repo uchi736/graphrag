@@ -123,7 +123,8 @@ class NetworkXGraph:
         """
         # パラメータベースのクエリ（主にエンティティ検索用）
         if params and 'entities' in params:
-            return self._search_by_entities(params['entities'])
+            hop = params.get('hop', 1)
+            return self._search_by_entities(params['entities'], hop=hop)
 
         # Cypherクエリの簡易パース（限定的）
         if query_str:
@@ -131,59 +132,58 @@ class NetworkXGraph:
 
         return []
 
-    def _search_by_entities(self, entities: List[str]) -> List[Dict[str, Any]]:
-        """エンティティ名から1-hop近傍を検索"""
-        results = []
+    def _search_by_entities(self, entities: List[str], hop: int = 1) -> List[Dict[str, Any]]:
+        """エンティティ名からN-hop近傍を検索
 
+        Args:
+            entities: 検索エンティティ名のリスト
+            hop: 探索するホップ数（1-3推奨）
+        """
+        # 1. 部分一致でマッチノードを収集
+        matched_nodes = set()
         for entity in entities:
-            # 部分一致でノード検索
-            matched_nodes = [
-                n for n in self.graph.nodes()
-                if entity.lower() in str(n).lower()
-                and not self._is_chunk_node(n)
-            ]
+            for n in self.graph.nodes():
+                if entity.lower() in str(n).lower() and not self._is_chunk_node(n):
+                    matched_nodes.add(n)
 
-            # 各マッチノードの1-hop近傍を取得
-            for node in matched_nodes:
-                # 出力エッジ（双方向）
-                for neighbor in self.graph.neighbors(node):
-                    if self._is_chunk_node(neighbor):
-                        continue
+        if not matched_nodes:
+            return []
 
-                    # エッジ情報取得
-                    edges = self.graph.get_edge_data(node, neighbor)
-                    for key, edge_data in edges.items():
-                        if edge_data.get('type') != 'MENTIONS':
-                            results.append({
-                                'start': node,
-                                'type': edge_data.get('type', 'RELATED'),
-                                'end': neighbor
-                            })
+        # 2. BFSでN-hop以内のノードを収集
+        visited_nodes = set(matched_nodes)
+        current_layer = set(matched_nodes)
 
-                # 入力エッジ
-                for predecessor in self.graph.predecessors(node):
-                    if self._is_chunk_node(predecessor):
-                        continue
+        for _ in range(hop):
+            next_layer = set()
+            for node in current_layer:
+                if node not in self.graph.nodes():
+                    continue
+                neighbors = set(self.graph.neighbors(node)) | set(self.graph.predecessors(node))
+                neighbors = {n for n in neighbors if not self._is_chunk_node(n)}
+                next_layer.update(neighbors - visited_nodes)
+            visited_nodes.update(next_layer)
+            current_layer = next_layer
 
-                    edges = self.graph.get_edge_data(predecessor, node)
-                    for key, edge_data in edges.items():
-                        if edge_data.get('type') != 'MENTIONS':
-                            results.append({
-                                'start': predecessor,
-                                'type': edge_data.get('type', 'RELATED'),
-                                'end': node
-                            })
-
-        # 重複除去
+        # 3. visited_nodes内のエッジをトリプル形式で返す
+        results = []
         seen = set()
-        unique_results = []
-        for r in results:
-            key = (r['start'], r['type'], r['end'])
-            if key not in seen:
-                seen.add(key)
-                unique_results.append(r)
+        for u, v, key, data in self.graph.edges(keys=True, data=True):
+            if u not in visited_nodes or v not in visited_nodes:
+                continue
+            if self._is_chunk_node(u) or self._is_chunk_node(v):
+                continue
+            if data.get('type') == 'MENTIONS':
+                continue
+            triple_key = (u, data.get('type', 'RELATED'), v)
+            if triple_key not in seen:
+                seen.add(triple_key)
+                results.append({
+                    'start': u,
+                    'type': data.get('type', 'RELATED'),
+                    'end': v
+                })
 
-        return unique_results
+        return results
 
     def _parse_and_execute_cypher(self, cypher: str, params: Dict) -> List[Dict[str, Any]]:
         """限定的なCypherクエリをパースして実行"""
@@ -469,13 +469,19 @@ class NetworkXGraph:
         """処理済みチャンクハッシュを取得"""
         return set(self.graph.graph.get("processed_hashes", []))
 
-    def mark_chunk_processed(self, hash_id: str) -> None:
-        """チャンクを処理済みとしてマーク"""
+    def mark_chunk_processed(self, hash_id: str, save: bool = None) -> None:
+        """チャンクを処理済みとしてマーク
+
+        Args:
+            hash_id: チャンクのハッシュID
+            save: 即座に保存するか（Noneならauto_saveに従う）
+        """
         if "processed_hashes" not in self.graph.graph:
             self.graph.graph["processed_hashes"] = []
         if hash_id not in self.graph.graph["processed_hashes"]:
             self.graph.graph["processed_hashes"].append(hash_id)
-        if self.auto_save:
+        should_save = save if save is not None else self.auto_save
+        if should_save:
             self.save()
 
     def clear_processed_hashes(self) -> None:
