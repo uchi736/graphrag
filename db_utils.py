@@ -2,11 +2,12 @@
 PostgreSQL 接続ユーティリティ
 - SQLAlchemy 形式の接続文字列を psycopg/psycopg2 で使える形に正規化
 - tokenized_content カラムと GIN インデックスを自動で保証
+- PGVector バッチ分割ユーティリティ
 """
 
 import psycopg
 import time
-from typing import Callable, TypeVar
+from typing import Callable, List, Optional, TypeVar
 
 T = TypeVar('T')
 
@@ -216,6 +217,90 @@ def ensure_schema_compatibility(conn_string: str) -> None:
                         """
                     )
         conn.commit()
+
+
+def batch_pgvector_from_documents(
+    chunks,
+    embeddings,
+    connection: str,
+    collection_name: str,
+    pre_delete_collection: bool = False,
+    batch_size: int = 500,
+    use_jsonb: bool = True,
+    progress_callback: Optional[Callable] = None,
+):
+    """PGVector.from_documents をバッチ分割で実行する。
+
+    PostgreSQLのbindパラメータ上限（~32,767）を超えないよう、
+    チャンクを batch_size 件ずつ分割して処理する。
+
+    Args:
+        chunks: Documentのリスト
+        embeddings: Embeddingsインスタンス
+        connection: 接続文字列
+        collection_name: コレクション名
+        pre_delete_collection: 初回バッチでコレクションを削除するか
+        batch_size: 1バッチあたりの件数（デフォルト: 500）
+        use_jsonb: JSONBを使用するか
+        progress_callback: 進捗コールバック fn(processed, total, batch_size)
+
+    Returns:
+        PGVector インスタンス
+    """
+    from langchain_postgres import PGVector
+
+    vector_store = None
+    total = len(chunks)
+
+    for i in range(0, total, batch_size):
+        batch = chunks[i:i + batch_size]
+        if progress_callback:
+            progress_callback(i, total, len(batch))
+        vector_store = PGVector.from_documents(
+            batch,
+            embeddings,
+            connection=connection,
+            collection_name=collection_name,
+            pre_delete_collection=(pre_delete_collection and i == 0),
+            use_jsonb=use_jsonb,
+        )
+
+    return vector_store
+
+
+def batch_update_tokenized(conn_string: str, chunks, batch_size: int = 500) -> int:
+    """tokenized_content を一括UPDATEする。
+
+    Args:
+        conn_string: 接続文字列
+        chunks: Documentのリスト（metadata に tokenized_content と id を含む）
+        batch_size: 1バッチあたりの件数
+
+    Returns:
+        更新した件数
+    """
+    params = [
+        (c.metadata.get('tokenized_content'), c.metadata['id'])
+        for c in chunks
+        if c.metadata.get('tokenized_content') and c.metadata.get('id')
+    ]
+    if not params:
+        return 0
+
+    raw_conn = normalize_pg_connection_string(conn_string)
+    updated = 0
+    with psycopg.connect(raw_conn) as conn:
+        with conn.cursor() as cur:
+            for i in range(0, len(params), batch_size):
+                batch = params[i:i + batch_size]
+                cur.executemany("""
+                    UPDATE langchain_pg_embedding
+                    SET tokenized_content = %s
+                    WHERE cmetadata->>'id' = %s
+                """, batch)
+                updated += len(batch)
+        conn.commit()
+    return updated
 
 
 def ensure_hnsw_index(conn_string: str) -> None:

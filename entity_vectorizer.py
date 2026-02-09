@@ -123,35 +123,48 @@ class EntityVectorizer:
 
         logger.info(f"Created {len(documents)} documents for vectorization")
 
-        try:
-            # エンティティコレクションのみを再作成
-            # pre_delete_collection=True は collection_name で指定したコレクションのみを削除
-            # （graphragコレクションには影響しない）
-            logger.info(f"Creating/updating entity vector collection: {self.collection_name}")
+        # エンティティコレクションのみを再作成
+        # pre_delete_collection=True は collection_name で指定したコレクションのみを削除
+        # （graphragコレクションには影響しない）
+        logger.info(f"Creating/updating entity vector collection: {self.collection_name}")
 
-            self.vector_store = PGVector.from_documents(
-                documents,
-                self.embeddings,
-                connection=self.connection_string,
-                collection_name=self.collection_name,  # "graphrag_entities"
-                pre_delete_collection=True,  # graphrag_entities のみ削除・再作成（ON CONFLICT不使用）
-                use_jsonb=True
-            )
+        # バッチ分割（PostgreSQLのbindパラメータ上限対策）
+        BATCH_SIZE = 500
+        total_batches = (len(documents) + BATCH_SIZE - 1) // BATCH_SIZE
+        saved_count = 0
+        error_count = 0
 
-            logger.info(f"Successfully added {len(documents)} entities to vector store '{self.collection_name}'")
-            return len(documents)
+        for i in range(0, len(documents), BATCH_SIZE):
+            batch = documents[i:i + BATCH_SIZE]
+            batch_num = i // BATCH_SIZE + 1
+            logger.info(f"Batch {batch_num}/{total_batches}: {len(batch)} entities")
 
-        except Exception as e:
-            logger.error(f"Failed to add entities to vector store: {e}")
-            if 'column "id" of relation "langchain_pg_embedding" does not exist' in str(e):
-                logger.error(
-                    "The existing langchain_pg_embedding table uses an old schema (missing id column). "
-                    "Drop the langchain_pg_embedding and langchain_pg_collection tables so "
-                    "langchain-postgres can recreate them with the current schema."
+            try:
+                self.vector_store = PGVector.from_documents(
+                    batch,
+                    self.embeddings,
+                    connection=self.connection_string,
+                    collection_name=self.collection_name,  # "graphrag_entities"
+                    pre_delete_collection=(i == 0),  # 初回バッチのみ削除・再作成
+                    use_jsonb=True
                 )
-            import traceback
-            logger.error(traceback.format_exc())
-            return 0
+                saved_count += len(batch)
+            except Exception as e:
+                error_count += len(batch)
+                logger.error(f"Batch {batch_num}/{total_batches} failed: {e}")
+                if 'column "id" of relation "langchain_pg_embedding" does not exist' in str(e):
+                    logger.error(
+                        "The existing langchain_pg_embedding table uses an old schema (missing id column). "
+                        "Drop the langchain_pg_embedding and langchain_pg_collection tables so "
+                        "langchain-postgres can recreate them with the current schema."
+                    )
+
+        if saved_count > 0:
+            logger.info(f"Successfully added {saved_count} entities to vector store '{self.collection_name}'"
+                        + (f" ({error_count} failed)" if error_count else ""))
+        else:
+            logger.error(f"All {error_count} entities failed to save")
+        return saved_count
 
     def search_similar_entities(
         self,

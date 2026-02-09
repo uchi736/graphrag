@@ -286,9 +286,8 @@ def build_knowledge_graph(
     print(f"{'='*50}")
 
     try:
-        from langchain_postgres import PGVector
         from langchain_openai import AzureOpenAIEmbeddings
-        from db_utils import ensure_embedding_id_unique, ensure_schema_compatibility, ensure_hnsw_index, add_connection_timeout, retry_on_timeout
+        from db_utils import ensure_embedding_id_unique, ensure_schema_compatibility, ensure_hnsw_index, add_connection_timeout, batch_pgvector_from_documents
 
         PG_CONN = os.getenv("PG_CONN")
         PG_COLLECTION = os.getenv("PG_COLLECTION", "graphrag")
@@ -312,20 +311,18 @@ def build_knowledge_graph(
             ensure_schema_compatibility(PG_CONN)
             ensure_hnsw_index(PG_CONN)
 
-            # タイムアウト設定 + リトライ
+            # タイムアウト設定
             pg_conn_with_timeout = add_connection_timeout(PG_CONN, timeout=30)
 
-            def create_vector_store():
-                return PGVector.from_documents(
-                    chunks,
-                    embeddings,
-                    connection=pg_conn_with_timeout,
-                    collection_name=PG_COLLECTION,
-                    pre_delete_collection=fresh,  # 新規構築時のみ削除
-                    use_jsonb=True,
-                )
-
-            vector_store = retry_on_timeout(create_vector_store, max_retries=3, delay=2.0)
+            # バッチ分割でPGVector保存（bindパラメータ上限対策）
+            vector_store = batch_pgvector_from_documents(
+                chunks,
+                embeddings,
+                connection=pg_conn_with_timeout,
+                collection_name=PG_COLLECTION,
+                pre_delete_collection=fresh,  # 新規構築時のみ削除
+                progress_callback=lambda i, total, n: print(f"  PGVector: {i+n}/{total}チャンク"),
+            )
             print(f"✅ PGVector保存完了: {len(chunks)}チャンク")
 
             # エンティティベクトル化
@@ -343,6 +340,7 @@ def build_knowledge_graph(
                     graph,
                     graph_backend="networkx"
                 )
+                print(f"  抽出エンティティ数: {len(entities)}")
 
                 # エンティティをベクトル化して保存
                 # graph_docsは空でもOK（エンティティIDだけ保存）
@@ -350,8 +348,10 @@ def build_knowledge_graph(
 
                 if num_saved > 0:
                     print(f"✅ {num_saved}個のエンティティをベクトル化しました")
+                elif len(entities) == 0:
+                    print("⚠️ グラフにエンティティが見つかりません")
                 else:
-                    print("⚠️ ベクトル化するエンティティがありません")
+                    print(f"⚠️ {len(entities)}個のエンティティの保存に失敗しました（ログを確認してください）")
 
             except ImportError:
                 print("⚠️ EntityVectorizerが見つかりません（スキップ）")

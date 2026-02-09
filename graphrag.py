@@ -55,7 +55,7 @@ from dotenv import load_dotenv
 # ── 日本語ハイブリッド検索 ──────────────────────────────────────────
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
 from hybrid_retriever import HybridRetriever
-from db_utils import normalize_pg_connection_string, ensure_tokenized_schema
+from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, batch_pgvector_from_documents, batch_update_tokenized
 
 # ── LangChain / OpenAI ─────────────────────────────────────────────
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
@@ -262,32 +262,22 @@ else:
             raise ValueError("Chunk metadata に id がありません")
         ids.append(cid)
 
-    vector_store = PGVector.from_documents(
+    # バッチ分割でPGVector保存（bindパラメータ上限対策）
+    vector_store = batch_pgvector_from_documents(
         chunks,
         embeddings,
         connection=PG_CONN,
         collection_name=PG_COLLECTION,
-        pre_delete_collection=True,  # 再実行時に既存コレクションを削除して重複を防止（ON CONFLICT不使用）
-        use_jsonb=True,
+        pre_delete_collection=True,
+        progress_callback=lambda i, total, n: print(f"  PGVector: {i+n}/{total}チャンク"),
     )
 
 # トークン化データをDBに反映
 if vector_store and japanese_processor and enable_japanese_search:
     try:
-        import psycopg
-        raw_pg_conn = normalize_pg_connection_string(PG_CONN)
-        with psycopg.connect(raw_pg_conn) as conn:
-            with conn.cursor() as cur:
-                for chunk in chunks:
-                    tokenized = chunk.metadata.get('tokenized_content')
-                    if tokenized:
-                        cur.execute("""
-                            UPDATE langchain_pg_embedding
-                            SET tokenized_content = %s
-                            WHERE cmetadata->>'id' = %s
-                        """, (tokenized, chunk.metadata['id']))
-            conn.commit()
-        print("✅ 日本語トークン化データをDBに保存しました")
+        ensure_tokenized_schema(PG_CONN)
+        updated = batch_update_tokenized(PG_CONN, chunks)
+        print(f"✅ 日本語トークン化データをDBに保存しました ({updated}件)")
     except Exception as e:
         print(f"⚠️ トークン化データのDB保存エラー: {e}")
 

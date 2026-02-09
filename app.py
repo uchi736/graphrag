@@ -43,7 +43,7 @@ from langchain_postgres import PGVector
 # 日本語ハイブリッド検索
 from japanese_text_processor import get_japanese_processor, SUDACHI_AVAILABLE
 from hybrid_retriever import HybridRetriever, rerank_with_llm
-from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, ensure_hnsw_index, ensure_embedding_id_unique, ensure_schema_compatibility, add_connection_timeout, retry_on_timeout
+from db_utils import normalize_pg_connection_string, ensure_tokenized_schema, ensure_hnsw_index, ensure_embedding_id_unique, ensure_schema_compatibility, add_connection_timeout, retry_on_timeout, batch_pgvector_from_documents, batch_update_tokenized
 
 # エンティティベクトル化
 from entity_vectorizer import EntityVectorizer
@@ -749,7 +749,7 @@ def restore_from_existing_graph():
             result["merged_entities"] = entities
             return result
 
-        def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
+        def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15, doc_context: str = "") -> list:
             """LLMを使って関係性から質問に関連する上位top_k件を選択"""
             if not relations:
                 return []
@@ -763,7 +763,8 @@ def restore_from_existing_graph():
             ranking_prompt = RELATION_RANKING_PROMPT.format(
                 question=question,
                 relations_text=relations_text,
-                top_k=top_k
+                top_k=top_k,
+                document_context=doc_context if doc_context else "(なし)"
             )
 
             try:
@@ -773,7 +774,8 @@ def restore_from_existing_graph():
                 # ID選択をパース（カンマ区切り）
                 output = response.content.strip()
                 if not output:
-                    return []  # 空出力 = 該当なし
+                    # 空出力でもフォールバック（リランキングは並び替えのみ、全滅させない）
+                    return relations[:top_k]
 
                 # 数字のみ抽出してリスト化
                 selected_ids = []
@@ -783,14 +785,18 @@ def restore_from_existing_graph():
                         selected_ids.append(int(x))
 
                 # 選択されたIDに対応する関係性を返す（順序維持）
-                return [relations[i-1] for i in selected_ids if 1 <= i <= len(relations)]
+                ranked = [relations[i-1] for i in selected_ids if 1 <= i <= len(relations)]
+                # リランキングで全滅した場合は元リストを返す
+                if not ranked:
+                    return relations[:top_k]
+                return ranked
 
             except Exception as e:
                 # LLMリランキング失敗時は元のリストをそのまま返す
                 return relations[:top_k]
 
         # グラフ検索関数（N-hopトラバーサル対応）
-        def get_graph_context(question: str) -> Dict[str, Any]:
+        def get_graph_context(question: str, doc_context: str = "") -> Dict[str, Any]:
             """質問からエンティティを抽出し、N-hopトラバーサルでサブグラフを取得
 
             Returns:
@@ -876,7 +882,7 @@ def restore_from_existing_graph():
                 result = graph.query(query, params={"entities": entities})
                 if result:
                     # 4. LLMリランキングで関連度の高い関係性のみに絞る
-                    result = rank_relations_by_relevance(question, result, top_k=top_k)
+                    result = rank_relations_by_relevance(question, result, top_k=top_k, doc_context=doc_context)
                 return {"triples": result if result else [], "extracted_entities": entity_result}
             except Exception as e:
                 # フォールバック: 単純な1-hopマッチング
@@ -894,22 +900,14 @@ def restore_from_existing_graph():
                 try:
                     result = graph.query(fallback_query, params={"entities": entities})
                     if result:
-                        result = rank_relations_by_relevance(question, result, top_k=15)
+                        result = rank_relations_by_relevance(question, result, top_k=15, doc_context=doc_context)
                     return {"triples": result if result else [], "extracted_entities": entity_result}
                 except Exception:
                     return {"triples": [], "extracted_entities": entity_result}
 
-        # チェイン構築（Graph-First Retrieval）
+        # チェイン構築（Doc-First → Graph Reranking）
         def retriever_and_merge(question: str):
-            # 1. グラフにデータがあれば検索を実行（enable_knowledge_graphに関係なく）
-            triples = []
-            extracted_entities = {}
-            if graph is not None:
-                graph_result = get_graph_context(question)
-                triples = graph_result.get("triples", [])
-                extracted_entities = graph_result.get("extracted_entities", {})
-
-            # 2. ドキュメント検索（常に実行）
+            # 1. ドキュメント検索（先に実行し、リランキングのコンテキストに使用）
             from langchain_core.documents import Document
             docs = []
             if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
@@ -944,6 +942,15 @@ def restore_from_existing_graph():
                     docs = vector_retriever.invoke(question)
             else:
                 docs = vector_retriever.invoke(question)
+
+            # 2. グラフ検索（ドキュメントコンテキストでリランキング）
+            triples = []
+            extracted_entities = {}
+            if graph is not None:
+                doc_context = "\n---\n".join(d.page_content[:200] for d in docs[:5])
+                graph_result = get_graph_context(question, doc_context=doc_context)
+                triples = graph_result.get("triples", [])
+                extracted_entities = graph_result.get("extracted_entities", {})
 
             # 3. グラフからソースチャンクを取得（分離）
             kg_chunks = []
@@ -1549,35 +1556,20 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         ensure_hnsw_index(PG_CONN)
         pg_conn_with_timeout = add_connection_timeout(PG_CONN, timeout=30)
 
-        def create_vector_store_from_docs():
-            return PGVector.from_documents(
-                chunks,
-                embeddings,
-                connection=pg_conn_with_timeout,
-                collection_name=PG_COLLECTION,
-                pre_delete_collection=True,  # 既存コレクション削除（ON CONFLICT不使用）
-                use_jsonb=True,
-            )
-
-        vector_store = retry_on_timeout(create_vector_store_from_docs, max_retries=3, delay=2.0)
+        # バッチ分割でPGVector保存（bindパラメータ上限対策）
+        vector_store = batch_pgvector_from_documents(
+            chunks,
+            embeddings,
+            connection=pg_conn_with_timeout,
+            collection_name=PG_COLLECTION,
+            pre_delete_collection=True,
+        )
 
     # トークン化データをDBに反映
     if vector_store and japanese_processor and st.session_state.get('enable_japanese_search', True):
         try:
             ensure_tokenized_schema(PG_CONN)
-            import psycopg
-            raw_pg_conn = normalize_pg_connection_string(PG_CONN)
-            with psycopg.connect(raw_pg_conn) as conn:
-                with conn.cursor() as cur:
-                    for chunk in chunks:
-                        tokenized = chunk.metadata.get('tokenized_content')
-                        if tokenized:
-                            cur.execute("""
-                                UPDATE langchain_pg_embedding
-                                SET tokenized_content = %s
-                                WHERE cmetadata->>'id' = %s
-                            """, (tokenized, chunk.metadata['id']))
-                conn.commit()
+            batch_update_tokenized(PG_CONN, chunks)
         except Exception as e:
             st.warning(f"トークン化データのDB保存エラー: {e}")
 
@@ -1659,7 +1651,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         result["merged_entities"] = entities
         return result
 
-    def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15) -> list:
+    def rank_relations_by_relevance(question: str, relations: list, top_k: int = 15, doc_context: str = "") -> list:
         """LLMを使って関係性から質問に関連する上位top_k件を選択"""
         if not relations:
             return []
@@ -1673,7 +1665,8 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
         ranking_prompt = RELATION_RANKING_PROMPT.format(
             question=question,
             relations_text=relations_text,
-            top_k=top_k
+            top_k=top_k,
+            document_context=doc_context if doc_context else "(なし)"
         )
 
         try:
@@ -1682,7 +1675,8 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             # ID選択をパース（カンマ区切り）
             output = response.content.strip()
             if not output:
-                return []  # 空出力 = 該当なし
+                # 空出力でもフォールバック（リランキングは並び替えのみ、全滅させない）
+                return relations[:top_k]
 
             # 数字のみ抽出してリスト化
             selected_ids = []
@@ -1692,14 +1686,18 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                     selected_ids.append(int(x))
 
             # 選択されたIDに対応する関係性を返す（順序維持）
-            return [relations[i-1] for i in selected_ids if 1 <= i <= len(relations)]
+            ranked = [relations[i-1] for i in selected_ids if 1 <= i <= len(relations)]
+            # リランキングで全滅した場合は元リストを返す
+            if not ranked:
+                return relations[:top_k]
+            return ranked
 
         except Exception as e:
             # LLMリランキング失敗時は元のリストをそのまま返す
             return relations[:top_k]
 
     # グラフ検索関数（N-hopトラバーサル対応）
-    def get_graph_context(question: str) -> Dict[str, Any]:
+    def get_graph_context(question: str, doc_context: str = "") -> Dict[str, Any]:
         """質問からエンティティを抽出し、N-hopトラバーサルでサブグラフを取得
 
         Returns:
@@ -1723,7 +1721,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             try:
                 result = graph.query(params={"entities": entities, "hop": hop_count})
                 if result:
-                    result = rank_relations_by_relevance(question, result, top_k=top_k)
+                    result = rank_relations_by_relevance(question, result, top_k=top_k, doc_context=doc_context)
                 return {"triples": result if result else [], "extracted_entities": entity_result}
             except Exception:
                 return {"triples": [], "extracted_entities": entity_result}
@@ -1797,7 +1795,7 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             result = graph.query(query, params={"entities": entities})
             if result:
                 # 4. LLMリランキングで関連度の高い関係性のみに絞る
-                result = rank_relations_by_relevance(question, result, top_k=top_k)
+                result = rank_relations_by_relevance(question, result, top_k=top_k, doc_context=doc_context)
             return {"triples": result if result else [], "extracted_entities": entity_result}
         except Exception as e:
             # フォールバック: 単純な1-hopマッチング
@@ -1815,24 +1813,15 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
             try:
                 result = graph.query(fallback_query, params={"entities": entities})
                 if result:
-                    result = rank_relations_by_relevance(question, result, top_k=15)
+                    result = rank_relations_by_relevance(question, result, top_k=15, doc_context=doc_context)
                 return {"triples": result if result else [], "extracted_entities": entity_result}
             except Exception:
                 return {"triples": [], "extracted_entities": entity_result}
 
-    # LCELチェイン構築（Graph-First Retrieval）
+    # LCELチェイン構築（Doc-First → Graph Reranking）
     def retriever_and_merge(question: str):
-        """グラフ検索を優先し、補助的にベクトル検索を使用"""
-        # 1. グラフにデータがあれば検索を実行（enable_knowledge_graphに関係なく）
-        triples = []
-        extracted_entities = {}
-        if graph is not None:
-            graph_result = get_graph_context(question)
-            triples = graph_result.get("triples", [])
-            extracted_entities = graph_result.get("extracted_entities", {})
-            print(f"[DEBUG] triples: {len(triples)}, extracted_entities: {extracted_entities.get('merged_entities', [])[:3]}")
-
-        # 2. ドキュメント検索（常に実行）
+        """ドキュメント検索を先に実行し、そのコンテキストでグラフリランキング"""
+        # 1. ドキュメント検索（先に実行し、リランキングのコンテキストに使用）
         from langchain_core.documents import Document
         docs = []
         if st.session_state.get('enable_japanese_search', False) and SUDACHI_AVAILABLE:
@@ -1867,6 +1856,16 @@ def build_rag_system(source_docs: list, csv_edges: list | None = None):
                 docs = vector_retriever.invoke(question)
         else:
             docs = vector_retriever.invoke(question)
+
+        # 2. グラフ検索（ドキュメントコンテキストでリランキング）
+        triples = []
+        extracted_entities = {}
+        if graph is not None:
+            doc_context = "\n---\n".join(d.page_content[:200] for d in docs[:5])
+            graph_result = get_graph_context(question, doc_context=doc_context)
+            triples = graph_result.get("triples", [])
+            extracted_entities = graph_result.get("extracted_entities", {})
+            print(f"[DEBUG] triples: {len(triples)}, extracted_entities: {extracted_entities.get('merged_entities', [])[:3]}")
 
         # 3. グラフからソースチャンクを取得（分離）
         kg_chunks = []
@@ -2041,35 +2040,20 @@ def update_chunks_only(source_docs: list):
     ensure_hnsw_index(PG_CONN)
     pg_conn_with_timeout = add_connection_timeout(PG_CONN, timeout=30)
 
-    def create_vector_store_from_docs():
-        return PGVector.from_documents(
-            chunks,
-            embeddings,
-            connection=pg_conn_with_timeout,
-            collection_name=PG_COLLECTION,
-            pre_delete_collection=True,  # 既存コレクション削除
-            use_jsonb=True,
-        )
-
-    vector_store = retry_on_timeout(create_vector_store_from_docs, max_retries=3, delay=2.0)
+    # バッチ分割でPGVector保存（bindパラメータ上限対策）
+    vector_store = batch_pgvector_from_documents(
+        chunks,
+        embeddings,
+        connection=pg_conn_with_timeout,
+        collection_name=PG_COLLECTION,
+        pre_delete_collection=True,
+    )
 
     # トークン化データをDBに反映
     if vector_store and japanese_processor and st.session_state.get('enable_japanese_search', True):
         try:
             ensure_tokenized_schema(PG_CONN)
-            import psycopg
-            raw_pg_conn = normalize_pg_connection_string(PG_CONN)
-            with psycopg.connect(raw_pg_conn) as conn:
-                with conn.cursor() as cur:
-                    for chunk in chunks:
-                        tokenized = chunk.metadata.get('tokenized_content')
-                        if tokenized:
-                            cur.execute("""
-                                UPDATE langchain_pg_embedding
-                                SET tokenized_content = %s
-                                WHERE cmetadata->>'id' = %s
-                            """, (tokenized, chunk.metadata['id']))
-                conn.commit()
+            batch_update_tokenized(PG_CONN, chunks)
         except Exception as e:
             st.warning(f"トークン化データのDB保存エラー: {e}")
 
