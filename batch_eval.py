@@ -311,8 +311,6 @@ def run_single_question(
     doc_sources = list(set(
         d.metadata.get("source", "") for d in docs if d.metadata.get("source")
     ))
-    doc_chunks_text = "\n---\n".join(d.page_content for d in docs)
-    kg_chunks_text = "\n---\n".join(d.page_content for d in kg_chunks)
     triples_text = "\n".join(
         f"{t.get('start', '')} -[{t.get('type', '')}]-> {t.get('end', '')}"
         for t in triples
@@ -320,16 +318,20 @@ def run_single_question(
     llm_ents = extracted_entities.get("llm_entities", [])
     vec_ents = extracted_entities.get("vector_entities", [])
 
-    return {
+    result = {
         "question": question,
         "answer": answer,
         "doc_sources": ", ".join(doc_sources),
-        "doc_chunks": doc_chunks_text,
-        "kg_chunks": kg_chunks_text,
         "graph_triples": triples_text,
         "llm_entities": ", ".join(llm_ents),
         "vector_entities": ", ".join(f"{eid}:{score:.3f}" for eid, score in vec_ents),
     }
+    # 1チャンク1列
+    for i, d in enumerate(docs):
+        result[f"doc_chunk_{i+1}"] = d.page_content
+    for i, d in enumerate(kg_chunks):
+        result[f"kg_chunk_{i+1}"] = d.page_content
+    return result
 
 
 # ─── メイン ─────────────────────────────────────────────────────────
@@ -388,39 +390,54 @@ def main():
     print(f"バッチ評価開始: {len(questions)}問")
     print(f"{'='*50}")
 
+    # 全質問を処理してから列数を確定（チャンク数が質問ごとに異なるため）
+    results = []
+    max_doc_chunks = 0
+    max_kg_chunks = 0
+
+    for row in tqdm(questions, desc="評価中"):
+        question = row["question"]
+        try:
+            result = run_single_question(
+                question, graph, vector_retriever, embeddings, entity_vectorizer, config
+            )
+            # 入力CSVの追加列をマージ
+            for col in extra_columns:
+                result[col] = row.get(col, "")
+        except Exception as e:
+            result = {col: row.get(col, "") for col in extra_columns}
+            result.update({
+                "question": question,
+                "answer": f"[エラー] {e}",
+                "doc_sources": "", "graph_triples": "",
+                "llm_entities": "", "vector_entities": "",
+            })
+            tqdm.write(f"  エラー: {question[:30]}... -> {e}")
+
+        # 最大チャンク数を追跡
+        doc_n = max((int(k.split("_")[-1]) for k in result if k.startswith("doc_chunk_")), default=0)
+        kg_n = max((int(k.split("_")[-1]) for k in result if k.startswith("kg_chunk_")), default=0)
+        max_doc_chunks = max(max_doc_chunks, doc_n)
+        max_kg_chunks = max(max_kg_chunks, kg_n)
+        results.append(result)
+
+    # 列名確定（チャンク数は全質問の最大値に合わせる）
+    doc_chunk_cols = [f"doc_chunk_{i+1}" for i in range(max_doc_chunks)]
+    kg_chunk_cols = [f"kg_chunk_{i+1}" for i in range(max_kg_chunks)]
     output_columns = extra_columns + [
-        "question", "answer", "doc_sources", "doc_chunks",
-        "kg_chunks", "graph_triples", "llm_entities", "vector_entities",
+        "question", "answer", "doc_sources",
+    ] + doc_chunk_cols + kg_chunk_cols + [
+        "graph_triples", "llm_entities", "vector_entities",
     ]
 
     with open(output_path, "w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=output_columns)
+        writer = csv.DictWriter(f, fieldnames=output_columns, extrasaction="ignore")
         writer.writeheader()
-
-        for row in tqdm(questions, desc="評価中"):
-            question = row["question"]
-            try:
-                result = run_single_question(
-                    question, graph, vector_retriever, embeddings, entity_vectorizer, config
-                )
-                # 入力CSVの追加列をマージ
-                for col in extra_columns:
-                    result[col] = row.get(col, "")
-                writer.writerow(result)
-                f.flush()  # 1問ごとにフラッシュ（途中中断対策）
-            except Exception as e:
-                error_result = {col: row.get(col, "") for col in extra_columns}
-                error_result.update({
-                    "question": question,
-                    "answer": f"[エラー] {e}",
-                    "doc_sources": "", "doc_chunks": "", "kg_chunks": "",
-                    "graph_triples": "", "llm_entities": "", "vector_entities": "",
-                })
-                writer.writerow(error_result)
-                f.flush()
-                tqdm.write(f"  エラー: {question[:30]}... -> {e}")
+        for result in results:
+            writer.writerow(result)
 
     print(f"\n完了: {output_path}")
+    print(f"  doc_chunk列数: {max_doc_chunks}, kg_chunk列数: {max_kg_chunks}")
 
 
 if __name__ == "__main__":
