@@ -1,0 +1,773 @@
+{
+  "accepted_count": 95,
+  "rejected_count": 59,
+  "rejected_stats": {
+    "1char_suffix_diff": 26,
+    "substring_len_diff_1": 22,
+    "1char_model_variant": 11
+  },
+  "total_moved": 936,
+  "total_deleted": 95,
+  "applied": [
+    {
+      "canonical": "問題原因分析図のID",
+      "duplicates": [
+        "問題原因分析図の名称"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "コーポレートガバナンス",
+      "duplicates": [
+        "コーポレート・ガバナンス"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "データの共通理解",
+      "duplicates": [
+        "データ項目自体が同じものとして認識できるか"
+      ],
+      "moved": 3,
+      "deleted": 1
+    },
+    {
+      "canonical": "インストール",
+      "duplicates": [
+        "取り付け"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "優先順",
+      "duplicates": [
+        "要求の優先度"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "洗浄剤の残留",
+      "duplicates": [
+        "化学洗浄剤・殺菌剤の残存"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "B.Boehm",
+      "duplicates": [
+        "BarryBoehm"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "原料の入荷",
+      "duplicates": [
+        "原材料の入荷"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "対応責任者",
+      "duplicates": [
+        "対応担当者"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "問題や課題",
+      "duplicates": [
+        "問題点・課題"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "クラウドサービス提供側の対策",
+      "duplicates": [
+        "クラウドサービス利用側の対策"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "受入検査結果",
+      "duplicates": [
+        "検査結果の確認"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "使用基準のある添加物と使用基準",
+      "duplicates": [
+        "使用基準のある添加物とその使用基準"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "設定不備のリスク",
+      "duplicates": [
+        "設定不備によるリスク"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "洗浄・殺菌",
+      "duplicates": [
+        "洗浄殺菌"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "実施期間",
+      "duplicates": [
+        "実施時期"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "システム動作環境の設定の方法論",
+      "duplicates": [
+        "システム動作環境設定の方法論"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "支援ツール",
+      "duplicates": [
+        "利用者を支援するツール"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "CRUD図のID",
+      "duplicates": [
+        "CRUD図の名称"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "情報取扱規程",
+      "duplicates": [
+        "情報取扱方針"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "原因究明",
+      "duplicates": [
+        "原因調査"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "運用や移行、総合テスト",
+      "duplicates": [
+        "DD.13運用、移行、総合テスト"
+      ],
+      "moved": 5,
+      "deleted": 1
+    },
+    {
+      "canonical": "地域、設置者別学校数",
+      "duplicates": [
+        "地域、設置者程別学校数"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "システムアーキテクチャ設計",
+      "duplicates": [
+        "システムアーキテクチャ選定"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "ライフサイクルに合わせた総合的な金融商品・サービスの内訳",
+      "duplicates": [
+        "ライフサイクルに合わせた総合的な金融商品・サービスの取扱い状況"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "問題カテゴリ",
+      "duplicates": [
+        "問題分類"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "エンティティや機能の抜け漏れ",
+      "duplicates": [
+        "機能とエンティティの抜けや漏れ"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "システム化要求定義",
+      "duplicates": [
+        "システム要求仕様"
+      ],
+      "moved": 5,
+      "deleted": 1
+    },
+    {
+      "canonical": "組織全体での基本的方針",
+      "duplicates": [
+        "組織全体での基本的な方針"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "要件定義成果物",
+      "duplicates": [
+        "要件定義のアウトプット"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "優先順位付け",
+      "duplicates": [
+        "優先順位の判断"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "類別番号",
+      "duplicates": [
+        "類別区分番号"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "Number",
+      "duplicates": [
+        "番号"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "一般的衛生管理",
+      "duplicates": [
+        "一般的な衛生管理"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "クラウドサービス設定不備の抑止・防止に係る方針的事項",
+      "duplicates": [
+        "クラウドサービス提供における設定不備の抑止・防止のための組織的方針"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "システム開発プロセス",
+      "duplicates": [
+        "システム化プロセス"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "値の用語辞書",
+      "duplicates": [
+        "データ項目の用語辞書"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "小規模な営業者等",
+      "duplicates": [
+        "小規模営業者等"
+      ],
+      "moved": 4,
+      "deleted": 1
+    },
+    {
+      "canonical": "システム化対象業務",
+      "duplicates": [
+        "システム化するすべての業務"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "一般社団法人日本自動車リサイクル部品協議会",
+      "duplicates": [
+        "日本自動車リサイクル部品販売団体協議会"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "Processor",
+      "duplicates": [
+        "プロセッサー"
+      ],
+      "moved": 19,
+      "deleted": 1
+    },
+    {
+      "canonical": "役職",
+      "duplicates": [
+        "Officer"
+      ],
+      "moved": 3,
+      "deleted": 1
+    },
+    {
+      "canonical": "ディスプレイ",
+      "duplicates": [
+        "Display"
+      ],
+      "moved": 11,
+      "deleted": 1
+    },
+    {
+      "canonical": "ディスプレイ",
+      "duplicates": [
+        "Display"
+      ],
+      "moved": 0,
+      "deleted": 1
+    },
+    {
+      "canonical": "OS",
+      "duplicates": [
+        "OperatingSystem"
+      ],
+      "moved": 103,
+      "deleted": 1
+    },
+    {
+      "canonical": "Service",
+      "duplicates": [
+        "サービス"
+      ],
+      "moved": 20,
+      "deleted": 1
+    },
+    {
+      "canonical": "異物の混入",
+      "duplicates": [
+        "異物混入"
+      ],
+      "moved": 8,
+      "deleted": 1
+    },
+    {
+      "canonical": "BIOSセットアップ",
+      "duplicates": [
+        "BIOS設定"
+      ],
+      "moved": 48,
+      "deleted": 1
+    },
+    {
+      "canonical": "お客様",
+      "duplicates": [
+        "顧客"
+      ],
+      "moved": 65,
+      "deleted": 1
+    },
+    {
+      "canonical": "お客様",
+      "duplicates": [
+        "顧客"
+      ],
+      "moved": 0,
+      "deleted": 1
+    },
+    {
+      "canonical": "要求交渉",
+      "duplicates": [
+        "要求の交渉"
+      ],
+      "moved": 16,
+      "deleted": 1
+    },
+    {
+      "canonical": "無線通信",
+      "duplicates": [
+        "無線・通信"
+      ],
+      "moved": 3,
+      "deleted": 1
+    },
+    {
+      "canonical": "USBType-C",
+      "duplicates": [
+        "USB(Type-C)"
+      ],
+      "moved": 24,
+      "deleted": 1
+    },
+    {
+      "canonical": "設定不備",
+      "duplicates": [
+        "設定ミス"
+      ],
+      "moved": 10,
+      "deleted": 1
+    },
+    {
+      "canonical": "ソフトウェア",
+      "duplicates": [
+        "Software"
+      ],
+      "moved": 22,
+      "deleted": 1
+    },
+    {
+      "canonical": "情報漏えい",
+      "duplicates": [
+        "情報漏洩"
+      ],
+      "moved": 5,
+      "deleted": 1
+    },
+    {
+      "canonical": "無線WAN(LTE)搭載モデル",
+      "duplicates": [
+        "無線WAN(LTE)モデル"
+      ],
+      "moved": 83,
+      "deleted": 1
+    },
+    {
+      "canonical": "【Fn】キー",
+      "duplicates": [
+        "Fnキー"
+      ],
+      "moved": 18,
+      "deleted": 1
+    },
+    {
+      "canonical": "テスト",
+      "duplicates": [
+        "試験"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "システム要件",
+      "duplicates": [
+        "SystemRequirements"
+      ],
+      "moved": 3,
+      "deleted": 1
+    },
+    {
+      "canonical": "富士通グループ",
+      "duplicates": [
+        "FujitsuGroup"
+      ],
+      "moved": 20,
+      "deleted": 1
+    },
+    {
+      "canonical": "共通認識",
+      "duplicates": [
+        "共通理解"
+      ],
+      "moved": 13,
+      "deleted": 1
+    },
+    {
+      "canonical": "RemoteSetupAndConfiguration",
+      "duplicates": [
+        "RemoteConfiguration"
+      ],
+      "moved": 3,
+      "deleted": 1
+    },
+    {
+      "canonical": "出荷プロセス",
+      "duplicates": [
+        "出荷処理"
+      ],
+      "moved": 13,
+      "deleted": 1
+    },
+    {
+      "canonical": "社外取締役",
+      "duplicates": [
+        "社外監査役"
+      ],
+      "moved": 10,
+      "deleted": 1
+    },
+    {
+      "canonical": "社外取締役",
+      "duplicates": [
+        "社外監査役"
+      ],
+      "moved": 0,
+      "deleted": 1
+    },
+    {
+      "canonical": "管理計画作成",
+      "duplicates": [
+        "プロジェクト管理計画"
+      ],
+      "moved": 31,
+      "deleted": 1
+    },
+    {
+      "canonical": "病原微生物の生残",
+      "duplicates": [
+        "病原微生物の残存"
+      ],
+      "moved": 9,
+      "deleted": 1
+    },
+    {
+      "canonical": "国籍・地域別留学生数の割合の推移",
+      "duplicates": [
+        "分野・専攻分野別留学生数の割合の推移"
+      ],
+      "moved": 10,
+      "deleted": 1
+    },
+    {
+      "canonical": "改造型開発",
+      "duplicates": [
+        "改造開発型"
+      ],
+      "moved": 16,
+      "deleted": 1
+    },
+    {
+      "canonical": "ITシステムの機能",
+      "duplicates": [
+        "IT機能"
+      ],
+      "moved": 24,
+      "deleted": 1
+    },
+    {
+      "canonical": "フィルターの維持管理",
+      "duplicates": [
+        "フィルターを維持管理する"
+      ],
+      "moved": 8,
+      "deleted": 1
+    },
+    {
+      "canonical": "膨らむ要求の制御",
+      "duplicates": [
+        "膨らむ要求を制御したこと"
+      ],
+      "moved": 2,
+      "deleted": 1
+    },
+    {
+      "canonical": "データ表記",
+      "duplicates": [
+        "データ記法"
+      ],
+      "moved": 4,
+      "deleted": 1
+    },
+    {
+      "canonical": "予約資料を利用者に提示",
+      "duplicates": [
+        "予約資料の提示"
+      ],
+      "moved": 4,
+      "deleted": 1
+    },
+    {
+      "canonical": "実現性",
+      "duplicates": [
+        "実現可能性"
+      ],
+      "moved": 6,
+      "deleted": 1
+    },
+    {
+      "canonical": "ビジネス・モデル",
+      "duplicates": [
+        "ビジネスモデル"
+      ],
+      "moved": 16,
+      "deleted": 1
+    },
+    {
+      "canonical": "図書館システム",
+      "duplicates": [
+        "図書館情報システム"
+      ],
+      "moved": 4,
+      "deleted": 1
+    },
+    {
+      "canonical": "危害要因分析",
+      "duplicates": [
+        "危害要因の分析"
+      ],
+      "moved": 46,
+      "deleted": 1
+    },
+    {
+      "canonical": "週次のバックアップ",
+      "duplicates": [
+        "週次バックアップ"
+      ],
+      "moved": 4,
+      "deleted": 1
+    },
+    {
+      "canonical": "製作",
+      "duplicates": [
+        "作成"
+      ],
+      "moved": 27,
+      "deleted": 1
+    },
+    {
+      "canonical": "1年目翌営業日以降訪問修理",
+      "duplicates": [
+        "4年間翌営業日以降訪問修理"
+      ],
+      "moved": 20,
+      "deleted": 1
+    },
+    {
+      "canonical": "約29.0時間",
+      "duplicates": [
+        "約9.0時間"
+      ],
+      "moved": 7,
+      "deleted": 1
+    },
+    {
+      "canonical": "ナレッジ",
+      "duplicates": [
+        "知識"
+      ],
+      "moved": 4,
+      "deleted": 1
+    },
+    {
+      "canonical": "クラウドサービス提供",
+      "duplicates": [
+        "クラウドサービス利用"
+      ],
+      "moved": 9,
+      "deleted": 1
+    },
+    {
+      "canonical": "金属異物の残存",
+      "duplicates": [
+        "金属片の残存"
+      ],
+      "moved": 5,
+      "deleted": 1
+    },
+    {
+      "canonical": "コスト削減",
+      "duplicates": [
+        "コストダウン"
+      ],
+      "moved": 14,
+      "deleted": 1
+    },
+    {
+      "canonical": "商品を登録する",
+      "duplicates": [
+        "商品登録"
+      ],
+      "moved": 19,
+      "deleted": 1
+    },
+    {
+      "canonical": "To-Be",
+      "duplicates": [
+        "ToBe"
+      ],
+      "moved": 6,
+      "deleted": 1
+    },
+    {
+      "canonical": "液晶ディスプレイを暗くする",
+      "duplicates": [
+        "液晶ディスプレイを明るくする"
+      ],
+      "moved": 3,
+      "deleted": 1
+    },
+    {
+      "canonical": "金属探知機",
+      "duplicates": [
+        "金属検出機"
+      ],
+      "moved": 7,
+      "deleted": 1
+    },
+    {
+      "canonical": "AsIs",
+      "duplicates": [
+        "As-Is"
+      ],
+      "moved": 5,
+      "deleted": 1
+    },
+    {
+      "canonical": "貸出",
+      "duplicates": [
+        "貸し出し"
+      ],
+      "moved": 4,
+      "deleted": 1
+    },
+    {
+      "canonical": "Technology",
+      "duplicates": [
+        "技術"
+      ],
+      "moved": 9,
+      "deleted": 1
+    },
+    {
+      "canonical": "左リアキャリパー",
+      "duplicates": [
+        "左フロントキャリパー"
+      ],
+      "moved": 2,
+      "deleted": 1
+    }
+  ]
+}

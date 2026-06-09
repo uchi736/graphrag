@@ -1,0 +1,5049 @@
+{
+  "pattern_dist": {
+    "present": 7,
+    "split": 50,
+    "coref_miss": 8,
+    "extraction_miss": 1
+  },
+  "entity_dist": {
+    "present": 70,
+    "split": 178,
+    "coref_miss": 59,
+    "extraction_miss": 15
+  },
+  "results": [
+    {
+      "qn": 4,
+      "question": "オーストラリアでは、HACCPはどの分野に最初に導入されましたか？",
+      "entities": [
+        "オーストラリア",
+        "HACCP",
+        "と畜場"
+      ],
+      "entity_states": [
+        {
+          "entity": "オーストラリア",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "オーストラリア",
+            "富士通オーストラリア"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "HACCP",
+          "graph_exact": 3,
+          "graph_partial": 14,
+          "graph_names": [
+            "HACCP",
+            "HACCP",
+            "HACCP",
+            "HACCP+α",
+            "HACCPに基づく衛生管理"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "と畜場",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "と畜場"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 2
+      },
+      "question_pattern": "present"
+    },
+    {
+      "qn": 3,
+      "question": "日本は世界で何番目にHACCPに基づいた衛生管理を取り入れましたか？また日本より早く取り入れた国はどこですか？",
+      "entities": [
+        "日本",
+        "HACCP",
+        "アメリカ",
+        "ニュージーランド"
+      ],
+      "entity_states": [
+        {
+          "entity": "日本",
+          "graph_exact": 2,
+          "graph_partial": 28,
+          "graph_names": [
+            "日本",
+            "日本",
+            "日本語入力のオン/オフ切り替え",
+            "日本語テンキー付アイソレーションキーボード",
+            "日本語アイソレーションキーボード"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "HACCP",
+          "graph_exact": 3,
+          "graph_partial": 14,
+          "graph_names": [
+            "HACCP",
+            "HACCP",
+            "HACCP",
+            "HACCP+α",
+            "HACCPに基づく衛生管理"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "アメリカ",
+          "graph_exact": 2,
+          "graph_partial": 5,
+          "graph_names": [
+            "アメリカ",
+            "アメリカ",
+            "アメリカ国防総省",
+            "アメリカ航空宇宙局",
+            "特命全権大使アメリカ合衆国駐箚"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "ニュージーランド",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "ニュージーランド",
+            "ニュージーランド"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 13,
+      "question": "違法・有害情報に関する投稿の目撃経験のうち、３番目に「見たことがある」の割合が多い投稿は何ですか？また、１番目のものは、３番目のものより何パーセント「見たことが",
+      "entities": [
+        "違法・有害情報",
+        "他人の顔写真や名前を許可なく使用した投稿"
+      ],
+      "entity_states": [
+        {
+          "entity": "違法・有害情報",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "違法・有害情報",
+            "違法・有害情報に関する投稿の目撃経験"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "他人の顔写真や名前を許可なく使用した投稿",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 0,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 1
+      },
+      "question_pattern": "coref_miss"
+    },
+    {
+      "qn": 7,
+      "question": "バニラアイスの製造工程図で、計量の次に行われる工程は何ですか？",
+      "entities": [
+        "バニラアイス",
+        "製造工程図",
+        "計量",
+        "加熱混合・溶解工程"
+      ],
+      "entity_states": [
+        {
+          "entity": "バニラアイス",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "バニラアイス",
+            "バニラアイス溶液"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "製造工程図",
+          "graph_exact": 0,
+          "graph_partial": 6,
+          "graph_names": [
+            "製造工程図を作成",
+            "現場で確認製造工程図",
+            "製造工程図を現場で確認しよう",
+            "製造工程図を作ろう",
+            "製造工程図を現場で確認する"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "計量",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "計量",
+            "計量器の清潔維持",
+            "計量・混合"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "加熱混合・溶解工程",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 9,
+      "question": "乳酸菌飲料の製造工程図において、どの原材料が培養工程を通りますか？",
+      "entities": [
+        "乳酸菌飲料",
+        "製造工程",
+        "生乳",
+        "脱脂粉乳",
+        "乳酸菌"
+      ],
+      "entity_states": [
+        {
+          "entity": "乳酸菌飲料",
+          "graph_exact": 2,
+          "graph_partial": 2,
+          "graph_names": [
+            "乳酸菌飲料",
+            "乳酸菌飲料",
+            "乳製品乳酸菌飲料",
+            "乳酸菌飲料(ポリスチレン容器入り)"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "製造工程",
+          "graph_exact": 1,
+          "graph_partial": 12,
+          "graph_names": [
+            "製造工程",
+            "牛乳製造工程",
+            "製造工程図を作成",
+            "現場で確認製造工程図",
+            "製造工程図を現場で確認しよう"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "生乳",
+          "graph_exact": 2,
+          "graph_partial": 6,
+          "graph_names": [
+            "生乳",
+            "生乳",
+            "生乳100%",
+            "生乳検体",
+            "生乳の劣化"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "脱脂粉乳",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "脱脂粉乳",
+            "脱脂粉乳"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "乳酸菌",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "乳酸菌",
+            "乳酸菌",
+            "乳酸菌飲料",
+            "乳酸菌接種",
+            "乳酸菌または酵母数"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 2,
+      "question": "豆腐製造における衛生管理計画の例について、重要管理点と、各重要管理点に対する管理基準を教えてください。また、重要管理点と管理基準の用語の意味を教えてください。",
+      "entities": [
+        "豆腐製造",
+        "重要管理点",
+        "管理基準",
+        "危害要因",
+        "大豆",
+        "充填豆腐"
+      ],
+      "entity_states": [
+        {
+          "entity": "豆腐製造",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "豆腐製造"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "重要管理点",
+          "graph_exact": 2,
+          "graph_partial": 4,
+          "graph_names": [
+            "重要管理点",
+            "重要管理点",
+            "重要管理点の決定",
+            "重要管理点(CCP)",
+            "重要管理点(CCP)をみつける"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "管理基準",
+          "graph_exact": 3,
+          "graph_partial": 12,
+          "graph_names": [
+            "管理基準",
+            "管理基準",
+            "管理基準",
+            "管理基準(CL)",
+            "加熱殺菌温度が管理基準を逸脱した場合"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "危害要因",
+          "graph_exact": 1,
+          "graph_partial": 15,
+          "graph_names": [
+            "危害要因",
+            "危害要因分析の内容",
+            "危害要因分析の結果",
+            "危害要因分析",
+            "危害要因分析及びCCPの決定"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "大豆",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "大豆"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "充填豆腐",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 2
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 10,
+      "question": "乳酸菌飲料の製造工程図において、生乳・乳酸菌・砂糖・ぶどう糖果糖液糖のうち、どの原材料が発酵工程を通りますか？",
+      "entities": [
+        "乳酸菌飲料",
+        "生乳",
+        "乳酸菌",
+        "砂糖",
+        "ぶどう糖果糖液糖",
+        "発酵工程"
+      ],
+      "entity_states": [
+        {
+          "entity": "乳酸菌飲料",
+          "graph_exact": 2,
+          "graph_partial": 2,
+          "graph_names": [
+            "乳酸菌飲料",
+            "乳酸菌飲料",
+            "乳製品乳酸菌飲料",
+            "乳酸菌飲料(ポリスチレン容器入り)"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "生乳",
+          "graph_exact": 2,
+          "graph_partial": 6,
+          "graph_names": [
+            "生乳",
+            "生乳",
+            "生乳100%",
+            "生乳検体",
+            "生乳の劣化"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "乳酸菌",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "乳酸菌",
+            "乳酸菌",
+            "乳酸菌飲料",
+            "乳酸菌接種",
+            "乳酸菌または酵母数"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "砂糖",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "砂糖",
+            "砂糖"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "ぶどう糖果糖液糖",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "ぶどう糖果糖液糖",
+            "ぶどう糖果糖液糖"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "発酵工程",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 2
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 12,
+      "question": "乳飲料コーヒーについて、加熱殺菌や生乳受入以外の工程がCCPに含まれていますか？含まれている場合、その工程名と、その工程で何をモニタリングすべきかについても教え",
+      "entities": [
+        "乳飲料コーヒー",
+        "加熱殺菌",
+        "生乳受入",
+        "洗びん",
+        "CCP",
+        "洗剤濃度",
+        "洗剤温度",
+        "有効塩素濃度"
+      ],
+      "entity_states": [
+        {
+          "entity": "乳飲料コーヒー",
+          "graph_exact": 0,
+          "graph_partial": 1,
+          "graph_names": [
+            "乳飲料コーヒー(びん容器)"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "加熱殺菌",
+          "graph_exact": 0,
+          "graph_partial": 13,
+          "graph_names": [
+            "加熱殺菌機",
+            "加熱殺菌機の冷却部",
+            "加熱殺菌温度125°C以上",
+            "加熱殺菌温度",
+            "加熱殺菌工程"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "生乳受入",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "洗びん",
+          "graph_exact": 1,
+          "graph_partial": 5,
+          "graph_names": [
+            "洗びん",
+            "洗びん機",
+            "洗びん工程",
+            "洗びん機の洗剤濃度計",
+            "洗びん機の有効塩素濃度計"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "CCP",
+          "graph_exact": 2,
+          "graph_partial": 28,
+          "graph_names": [
+            "CCP",
+            "CCP",
+            "HACCP",
+            "HACCP+α",
+            "HACCPに基づく衛生管理"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "洗剤濃度",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "洗剤濃度",
+            "洗びん機の洗剤濃度計",
+            "洗剤濃度計"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "洗剤温度",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "洗剤温度"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "有効塩素濃度",
+          "graph_exact": 1,
+          "graph_partial": 4,
+          "graph_names": [
+            "有効塩素濃度",
+            "洗剤の濃度・温度、有効塩素濃度の不足",
+            "適正な洗剤の濃度・温度、有効塩素濃度",
+            "洗びん機の有効塩素濃度計",
+            "有効塩素濃度計"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 6,
+        "extraction_miss": 1,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 15,
+      "question": "無線LANではなぜ10mより長い波長の電波を使うのですか？",
+      "entities": [
+        "無線LAN",
+        "波長",
+        "電波"
+      ],
+      "entity_states": [
+        {
+          "entity": "無線LAN",
+          "graph_exact": 0,
+          "graph_partial": 13,
+          "graph_names": [
+            "無線LANの仕様",
+            "無線LANの種類確認",
+            "無線LANアクセスポイント",
+            "インテル®無線LAN",
+            "802.11ax無線LAN"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "波長",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "波長"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "電波",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "電波",
+            "電波を停止する",
+            "電波受信圏内",
+            "電波を個別に停止する",
+            "電波オフ時"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 16,
+      "question": "無線局数の推移のグラフにおいて、2013年と比較して数が減少している局を全て教えてください。",
+      "entities": [
+        "無線局数",
+        "2013年",
+        "アマチュア局"
+      ],
+      "entity_states": [
+        {
+          "entity": "無線局数",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "無線局数"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "2013年",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "アマチュア局",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "アマチュア局",
+            "不法アマチュア局"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 0,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 2
+      },
+      "question_pattern": "present"
+    },
+    {
+      "qn": 19,
+      "question": "Instagram、家族や友人とのLINE、X、Facebookの中で、熊本地震よりも能登半島地震で利用割合が高かった手段はどれですか？",
+      "entities": [
+        "Instagram",
+        "LINE",
+        "X",
+        "Facebook",
+        "熊本地震",
+        "能登半島地震"
+      ],
+      "entity_states": [
+        {
+          "entity": "Instagram",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "Instagram"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "LINE",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "LINE",
+            "環境省のLINE公式アカウント"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "X",
+          "graph_exact": 0,
+          "graph_partial": 30,
+          "graph_names": [
+            "DX・モダナイゼーション商談",
+            "DX/モダナイゼーション商談",
+            "DX移行",
+            "UNIXサーバ",
+            "DX化"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "Facebook",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "Facebook",
+            "Facebook"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "熊本地震",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "熊本地震",
+            "熊本地震に関するアンケート調査"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "能登半島地震",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "能登半島地震",
+            "令和6年能登半島地震",
+            "令和6年能登半島地震に係る災害復旧枠"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 4
+      },
+      "question_pattern": "present"
+    },
+    {
+      "qn": 14,
+      "question": "航空通信と衛星通信では、①電波の伝わり方、②伝送できる情報量、③利用技術の難易度はどのように違いますか？",
+      "entities": [
+        "航空通信",
+        "衛星通信",
+        "電波の伝わり方",
+        "伝送できる情報量",
+        "利用技術の難易度"
+      ],
+      "entity_states": [
+        {
+          "entity": "航空通信",
+          "graph_exact": 0,
+          "graph_partial": 1,
+          "graph_names": [
+            "船舶・航空通信"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "衛星通信",
+          "graph_exact": 2,
+          "graph_partial": 2,
+          "graph_names": [
+            "衛星通信",
+            "衛星通信",
+            "移動体衛星通信",
+            "移動体衛星通信"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "電波の伝わり方",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "電波の伝わり方"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "伝送できる情報量",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "利用技術の難易度",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 2,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 23,
+      "question": "被災地対象調査において、真偽の不確かな情報をSNSで拡散したと回答した人は何人ですか？",
+      "entities": [
+        "被災地対象調査",
+        "SNS",
+        "真偽の不確かな情報"
+      ],
+      "entity_states": [
+        {
+          "entity": "被災地対象調査",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "被災地対象調査"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "SNS",
+          "graph_exact": 2,
+          "graph_partial": 6,
+          "graph_names": [
+            "SNS",
+            "SNS",
+            "いずれのSNSでも見かけていない",
+            "SNS上で見かけた",
+            "SNS利用者"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "真偽の不確かな情報",
+          "graph_exact": 0,
+          "graph_partial": 2,
+          "graph_names": [
+            "真偽の不確かな情報の認知",
+            "SNS上の真偽の不確かな情報の流通・拡散"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 20,
+      "question": "能登半島地震の発災時、熊本地震よりもテレビ放送の利用割合が高かった理由、一方で一部地域で利用割合が顕著に低かった理由、今回の災害で分かったテレビ放送の課題を教え",
+      "entities": [
+        "能登半島地震",
+        "熊本地震",
+        "テレビ放送",
+        "総務省",
+        "放送ネットワーク"
+      ],
+      "entity_states": [
+        {
+          "entity": "能登半島地震",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "能登半島地震",
+            "令和6年能登半島地震",
+            "令和6年能登半島地震に係る災害復旧枠"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "熊本地震",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "熊本地震",
+            "熊本地震に関するアンケート調査"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "テレビ放送",
+          "graph_exact": 3,
+          "graph_partial": 3,
+          "graph_names": [
+            "テレビ放送",
+            "テレビ放送",
+            "テレビ放送",
+            "デジタルテレビ放送",
+            "テレビ放送を最初に利用した割合"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "総務省",
+          "graph_exact": 1,
+          "graph_partial": 3,
+          "graph_names": [
+            "総務省",
+            "総務省・災害時テレコム支援チーム(MIC-TEAM)",
+            "総務省電気通信消費者相談センター",
+            "総務省予算"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "放送ネットワーク",
+          "graph_exact": 2,
+          "graph_partial": 3,
+          "graph_names": [
+            "放送ネットワーク",
+            "放送ネットワーク",
+            "放送ネットワークの強靱化",
+            "地上基幹放送ネットワーク整備等事業",
+            "放送ネットワーク整備支援事業"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 22,
+      "question": "能登半島地震に関する真偽の不確かな情報に対する認知・拡散の図表4において、一時滞在者は、被災地対象調査と全国対象調査のどちらに含まれていますか？",
+      "entities": [
+        "能登半島地震",
+        "一時滞在者",
+        "被災地対象調査",
+        "全国対象調査"
+      ],
+      "entity_states": [
+        {
+          "entity": "能登半島地震",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "能登半島地震",
+            "令和6年能登半島地震",
+            "令和6年能登半島地震に係る災害復旧枠"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "一時滞在者",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "一時滞在者",
+            "一時滞在者(帰省)",
+            "一時滞在者(旅行・出張)"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "被災地対象調査",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "被災地対象調査"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "全国対象調査",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "全国対象調査"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 2
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 29,
+      "question": "令和に入ってから、6月から8月の気温偏差が1を超えているのは何年ですか？",
+      "entities": [
+        "令和",
+        "6月から8月の気温偏差"
+      ],
+      "entity_states": [
+        {
+          "entity": "令和",
+          "graph_exact": 0,
+          "graph_partial": 30,
+          "graph_names": [
+            "令和元",
+            "令和2年6月1日施行",
+            "令和3年6月1日完全施行",
+            "令和7年",
+            "令和7年5月"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "6月から8月の気温偏差",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 24,
+      "question": "被災地対象調査で真偽の不確かな情報をSNS上で見かけたと回答した人が、全国対象調査で真偽の不確かな情報をSNS上で見かけたと回答した人よりも多い原因を教えてくだ",
+      "entities": [
+        "被災地対象調査",
+        "全国対象調査",
+        "SNS",
+        "真偽の不確かな情報"
+      ],
+      "entity_states": [
+        {
+          "entity": "被災地対象調査",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "被災地対象調査"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "全国対象調査",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "全国対象調査"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "SNS",
+          "graph_exact": 2,
+          "graph_partial": 6,
+          "graph_names": [
+            "SNS",
+            "SNS",
+            "いずれのSNSでも見かけていない",
+            "SNS上で見かけた",
+            "SNS利用者"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "真偽の不確かな情報",
+          "graph_exact": 0,
+          "graph_partial": 2,
+          "graph_names": [
+            "真偽の不確かな情報の認知",
+            "SNS上の真偽の不確かな情報の流通・拡散"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 2
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 26,
+      "question": "日本郵便の引受荷物数が年々減少している理由を教えてください。",
+      "entities": [
+        "日本郵便",
+        "引受荷物数",
+        "2014年",
+        "2024年"
+      ],
+      "entity_states": [
+        {
+          "entity": "日本郵便",
+          "graph_exact": 1,
+          "graph_partial": 3,
+          "graph_names": [
+            "日本郵便",
+            "日本郵便株式会社",
+            "日本郵便(連結)",
+            "日本郵便(連結)の営業損益の推移"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "引受荷物数",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "2014年",
+          "graph_exact": 0,
+          "graph_partial": 3,
+          "graph_names": [
+            "2014年4月に8%、2015年10月に10%へと段階的に引上げ",
+            "2014年3月末の終値を100とした配当込株価(配当再投資)の相対値の月末値",
+            "2014年度"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "2024年",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "2024年",
+            "2024年度上期",
+            "2024年度上期末資産状況",
+            "2024年度下期",
+            "2024年3月期第4四半期連結会計期間"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 27,
+      "question": "電気通信事業政策の接続ルールなどの整備に関して、何が見直されましたか？内容を簡単にまとめてください。",
+      "entities": [
+        "電気通信事業法",
+        "固定電話網",
+        "MNO",
+        "接続料",
+        "卸電気通信役務"
+      ],
+      "entity_states": [
+        {
+          "entity": "電気通信事業法",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "電気通信事業法",
+            "電気通信事業法の一部を改正する法律",
+            "電気通信事業法施行規則"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "固定電話網",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "固定電話網"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "MNO",
+          "graph_exact": 2,
+          "graph_partial": 1,
+          "graph_names": [
+            "MNO",
+            "MNO",
+            "MNOのネットワークに関する接続料"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "接続料",
+          "graph_exact": 0,
+          "graph_partial": 6,
+          "graph_names": [
+            "音声接続料の在り方",
+            "接続料の算定等に関する研究会",
+            "接続料の算定",
+            "接続料の算定方法の見直し",
+            "モバイル接続料"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "卸電気通信役務",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "卸電気通信役務"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 3
+      },
+      "question_pattern": "present"
+    },
+    {
+      "qn": 25,
+      "question": "2019年度から2024年度において、日本郵便の郵便物流事業の営業損益、引受荷物数、ゆうちょ銀行の預貯金残高は、それぞれ何年度が最も数値が低いですか？",
+      "entities": [
+        "日本郵便",
+        "郵便物流事業",
+        "営業損益",
+        "引受荷物数",
+        "ゆうちょ銀行",
+        "預貯金残高"
+      ],
+      "entity_states": [
+        {
+          "entity": "日本郵便",
+          "graph_exact": 1,
+          "graph_partial": 3,
+          "graph_names": [
+            "日本郵便",
+            "日本郵便株式会社",
+            "日本郵便(連結)",
+            "日本郵便(連結)の営業損益の推移"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "郵便物流事業",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "営業損益",
+          "graph_exact": 0,
+          "graph_partial": 1,
+          "graph_names": [
+            "日本郵便(連結)の営業損益の推移"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "引受荷物数",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "ゆうちょ銀行",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "ゆうちょ銀行",
+            "株式会社ゆうちょ銀行"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "預貯金残高",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "預貯金残高"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 2,
+        "present": 2
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 28,
+      "question": "平成24年から令和5年までの間で、熱中症による負傷者が一番少ないのは何年ですか？その年の負傷者は何人ですか？",
+      "entities": [
+        "平成24年",
+        "令和5年",
+        "熱中症",
+        "負傷者",
+        "平成26年"
+      ],
+      "entity_states": [
+        {
+          "entity": "平成24年",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "平成24年",
+            "平成24年度自動車リサイクル連携高度化事業",
+            "平成24年式"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "令和5年",
+          "graph_exact": 1,
+          "graph_partial": 5,
+          "graph_names": [
+            "令和5年",
+            "令和5年3月",
+            "平成28年度から令和5年度の定義",
+            "令和5年度",
+            "令和5年4月1日から令和6年3月31日"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "熱中症",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "熱中症",
+            "熱中症警戒アラート",
+            "熱中症予防情報サイト",
+            "熱中症死亡者",
+            "熱中症予防対策"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "負傷者",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "平成26年",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "平成26年"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 30,
+      "question": "熱中症志望災害(R2-R5)の分析結果に関して、発見の遅れと異常時の対応の不備の両方に当てはまったのは何件ですか？",
+      "entities": [
+        "熱中症",
+        "熱中症志望災害",
+        "発見の遅れ",
+        "異常時の対応の不備"
+      ],
+      "entity_states": [
+        {
+          "entity": "熱中症",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "熱中症",
+            "熱中症警戒アラート",
+            "熱中症予防情報サイト",
+            "熱中症死亡者",
+            "熱中症予防対策"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "熱中症志望災害",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "発見の遅れ",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "異常時の対応の不備",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 0,
+        "coref_miss": 3,
+        "present": 0
+      },
+      "question_pattern": "coref_miss"
+    },
+    {
+      "qn": 33,
+      "question": "世田谷地域の熱中症予防のためのお休み処は、調剤薬局と高齢者施設ではどちらの方が多いですか？",
+      "entities": [
+        "世田谷地域",
+        "熱中症",
+        "調剤薬局",
+        "高齢者施設"
+      ],
+      "entity_states": [
+        {
+          "entity": "世田谷地域",
+          "graph_exact": 0,
+          "graph_partial": 1,
+          "graph_names": [
+            "世田谷地域のお休み処"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "熱中症",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "熱中症",
+            "熱中症警戒アラート",
+            "熱中症予防情報サイト",
+            "熱中症死亡者",
+            "熱中症予防対策"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "調剤薬局",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "高齢者施設",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "高齢者施設"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 35,
+      "question": "全国の熱中症による救急搬送状況について、2025年8月11日~8月17日のほうが2025年7月14日~7月20日と比較して発生場所が住居である割合が高いのは、お",
+      "entities": [
+        "熱中症",
+        "救急搬送",
+        "住居",
+        "お盆休み"
+      ],
+      "entity_states": [
+        {
+          "entity": "熱中症",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "熱中症",
+            "熱中症警戒アラート",
+            "熱中症予防情報サイト",
+            "熱中症死亡者",
+            "熱中症予防対策"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "救急搬送",
+          "graph_exact": 1,
+          "graph_partial": 12,
+          "graph_names": [
+            "救急搬送",
+            "救急搬送人員",
+            "救急搬送調査",
+            "都道府県別救急搬送人員昨年比",
+            "日別の発生場所別救急搬送人員"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "住居",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "住居",
+            "住居区分",
+            "会員の住居種別によるサービスの違い"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "お盆休み",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 36,
+      "question": "2025年8月11日~8月17日において、熱中症による救急搬送が最も多かった年齢区分を教えてください。また、その年齢区分の方の体内水分量はどれくらいですか？その",
+      "entities": [
+        "熱中症",
+        "救急搬送",
+        "高齢者",
+        "体内水分量",
+        "成人"
+      ],
+      "entity_states": [
+        {
+          "entity": "熱中症",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "熱中症",
+            "熱中症警戒アラート",
+            "熱中症予防情報サイト",
+            "熱中症死亡者",
+            "熱中症予防対策"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "救急搬送",
+          "graph_exact": 1,
+          "graph_partial": 12,
+          "graph_names": [
+            "救急搬送",
+            "救急搬送人員",
+            "救急搬送調査",
+            "都道府県別救急搬送人員昨年比",
+            "日別の発生場所別救急搬送人員"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "高齢者",
+          "graph_exact": 2,
+          "graph_partial": 28,
+          "graph_names": [
+            "高齢者",
+            "高齢者",
+            "高齢者の苦情相談",
+            "高齢者向け金融商品・サービス",
+            "高齢者世帯"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "体内水分量",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "成人",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "成人"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 32,
+      "question": "指定暑熱避難施設の運営に関して、世田谷区では、通常の開館・営業時間と同様の範囲で運営することで運営の負担を減らし、地域全体で幅広い時間帯をカバーしています。資料",
+      "entities": [
+        "世田谷区",
+        "指定暑熱避難施設",
+        "世田谷区役所",
+        "世田谷区保健医療福祉総合プラザ",
+        "若林まちづくりセンター",
+        "経堂さわやか接骨院"
+      ],
+      "entity_states": [
+        {
+          "entity": "世田谷区",
+          "graph_exact": 1,
+          "graph_partial": 3,
+          "graph_names": [
+            "世田谷区",
+            "世田谷区立保健医療福祉総合プラザ",
+            "世田谷区役所",
+            "世田谷区立保健医療福祉総合プラザ"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "指定暑熱避難施設",
+          "graph_exact": 3,
+          "graph_partial": 1,
+          "graph_names": [
+            "指定暑熱避難施設",
+            "指定暑熱避難施設",
+            "指定暑熱避難施設",
+            "指定暑熱避難施設の開放可能日等"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "世田谷区役所",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "世田谷区役所"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "世田谷区保健医療福祉総合プラザ",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "若林まちづくりセンター",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "経堂さわやか接骨院",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 0,
+        "coref_miss": 3,
+        "present": 2
+      },
+      "question_pattern": "coref_miss"
+    },
+    {
+      "qn": 37,
+      "question": "2025年5月と6月で、熱中症救急搬送の多い都道府県トップ3は異なりますか？",
+      "entities": [
+        "熱中症",
+        "救急搬送",
+        "愛知県",
+        "東京都",
+        "埼玉県",
+        "大阪府"
+      ],
+      "entity_states": [
+        {
+          "entity": "熱中症",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "熱中症",
+            "熱中症警戒アラート",
+            "熱中症予防情報サイト",
+            "熱中症死亡者",
+            "熱中症予防対策"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "救急搬送",
+          "graph_exact": 1,
+          "graph_partial": 12,
+          "graph_names": [
+            "救急搬送",
+            "救急搬送人員",
+            "救急搬送調査",
+            "都道府県別救急搬送人員昨年比",
+            "日別の発生場所別救急搬送人員"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "愛知県",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "愛知県",
+            "愛知県"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "埼玉県",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "埼玉県"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "大阪府",
+          "graph_exact": 2,
+          "graph_partial": 19,
+          "graph_names": [
+            "大阪府",
+            "大阪府",
+            "大阪府吹田市",
+            "大阪府総務部統計課",
+            "大阪府内の学校"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 2
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 39,
+      "question": "東京都において、令和６年度の教員１人あたりの生徒数が一番少ない学校種は何ですか？その学校種の教員１人あたりの生徒数も教えてください。",
+      "entities": [
+        "東京都",
+        "令和６年度",
+        "特別支援学校",
+        "教員１人あたりの生徒数"
+      ],
+      "entity_states": [
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "令和６年度",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "特別支援学校",
+          "graph_exact": 2,
+          "graph_partial": 20,
+          "graph_names": [
+            "特別支援学校",
+            "特別支援学校",
+            "高等学校の本科・別科,中等教育学校後期課程の本科・別科,特別支援学校高等部の本科・別科及び高等専門学校への進学者",
+            "大学の学部・通信教育部・別科,短期大学の本科・通信教育部・別科,高等学校の専攻科及び特別支援学校高等部の専攻科への進学者",
+            "特別支援学校高等部(専攻科)"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "教員１人あたりの生徒数",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 1,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 38,
+      "question": "学校基本調査の調査票の収集系統について、都内の市立中学校の場合はどうなりますか？最終的に文部科学大臣に届くまでの経路を記載してください。",
+      "entities": [
+        "学校基本調査",
+        "市立中学校",
+        "市の教育委員会",
+        "市長",
+        "東京都知事",
+        "文部科学大臣"
+      ],
+      "entity_states": [
+        {
+          "entity": "学校基本調査",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "学校基本調査"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "市立中学校",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "市の教育委員会",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "市長",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "市長"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "東京都知事",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "文部科学大臣",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "文部科学大臣"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 0,
+        "extraction_miss": 0,
+        "coref_miss": 3,
+        "present": 3
+      },
+      "question_pattern": "coref_miss"
+    },
+    {
+      "qn": 34,
+      "question": "全国の熱中症による救急搬送状況について、2025年7月14日~7月20日と2025年8月11日~8月17日では、どちらの方が初診時の重症者の割合が高いですか？",
+      "entities": [
+        "熱中症",
+        "救急搬送",
+        "重症者の割合",
+        "2025年7月14日~7月20日",
+        "2025年8月11日~8月17日"
+      ],
+      "entity_states": [
+        {
+          "entity": "熱中症",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "熱中症",
+            "熱中症警戒アラート",
+            "熱中症予防情報サイト",
+            "熱中症死亡者",
+            "熱中症予防対策"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "救急搬送",
+          "graph_exact": 1,
+          "graph_partial": 12,
+          "graph_names": [
+            "救急搬送",
+            "救急搬送人員",
+            "救急搬送調査",
+            "都道府県別救急搬送人員昨年比",
+            "日別の発生場所別救急搬送人員"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "重症者の割合",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "2025年7月14日~7月20日",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "2025年8月11日~8月17日",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 3,
+        "present": 0
+      },
+      "question_pattern": "coref_miss"
+    },
+    {
+      "qn": 41,
+      "question": "私は、幼稚園の園児数と幼保連携型認定こども園の園児数は、年ごとに似た増減傾向があると見込んで、都内の未就学児向けサービスのマーケ計画を立てています。この認識は合",
+      "entities": [
+        "東京都",
+        "幼稚園",
+        "幼保連携型認定こども園",
+        "園児数",
+        "学校基本統計"
+      ],
+      "entity_states": [
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "幼稚園",
+          "graph_exact": 2,
+          "graph_partial": 12,
+          "graph_names": [
+            "幼稚園",
+            "幼稚園",
+            "都立の幼稚園及び小学校の長",
+            "区市町村立の幼稚園及び小学校の長",
+            "幼稚園数"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "幼保連携型認定こども園",
+          "graph_exact": 2,
+          "graph_partial": 4,
+          "graph_names": [
+            "幼保連携型認定こども園",
+            "幼保連携型認定こども園",
+            "都立の幼保連携型認定こども園",
+            "区市町村立の幼保連携型認定こども園",
+            "公立の幼保連携型認定こども園"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "園児数",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "園児数",
+            "地域別園児数",
+            "設置者別園児数"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "学校基本統計",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "学校基本統計",
+            "学校基本統計"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 43,
+      "question": "令和６年度において、東京都と大阪府ではどちらのほうが幼保連携型認定こども園の数が多いですか？",
+      "entities": [
+        "令和6年度",
+        "東京都",
+        "大阪府",
+        "幼保連携型認定こども園"
+      ],
+      "entity_states": [
+        {
+          "entity": "令和6年度",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "令和6年度",
+            "令和6年度補正予算及び令和7年度当初予算",
+            "令和6年度の定義"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "大阪府",
+          "graph_exact": 2,
+          "graph_partial": 19,
+          "graph_names": [
+            "大阪府",
+            "大阪府",
+            "大阪府吹田市",
+            "大阪府総務部統計課",
+            "大阪府内の学校"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "幼保連携型認定こども園",
+          "graph_exact": 2,
+          "graph_partial": 4,
+          "graph_names": [
+            "幼保連携型認定こども園",
+            "幼保連携型認定こども園",
+            "都立の幼保連携型認定こども園",
+            "区市町村立の幼保連携型認定こども園",
+            "公立の幼保連携型認定こども園"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 47,
+      "question": "令和6年度の小学校の生徒数について、大阪府では減少しているのに東京都では大増加している理由を考察してください。",
+      "entities": [
+        "令和6年度",
+        "小学校",
+        "生徒数",
+        "大阪府",
+        "東京都"
+      ],
+      "entity_states": [
+        {
+          "entity": "令和6年度",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "令和6年度",
+            "令和6年度補正予算及び令和7年度当初予算",
+            "令和6年度の定義"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "小学校",
+          "graph_exact": 2,
+          "graph_partial": 10,
+          "graph_names": [
+            "小学校",
+            "小学校",
+            "都立の幼稚園及び小学校の長",
+            "区市町村立の幼稚園及び小学校の長",
+            "小学校等第1学年児童数に対する幼稚園修了者数の割合"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "生徒数",
+          "graph_exact": 2,
+          "graph_partial": 27,
+          "graph_names": [
+            "生徒数",
+            "生徒数",
+            "地域別生徒数",
+            "設置者別生徒数",
+            "通信制課程の学校数、生徒数及び教員数(本務者)"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "大阪府",
+          "graph_exact": 2,
+          "graph_partial": 19,
+          "graph_names": [
+            "大阪府",
+            "大阪府",
+            "大阪府吹田市",
+            "大阪府総務部統計課",
+            "大阪府内の学校"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 5,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 42,
+      "question": "東京都の現在（令和６年度）の小学校の児童数は令和元年度と比較して増加しているのに、中学校では令和元年度と比較して児童数が減少しているのは何故ですか？",
+      "entities": [
+        "東京都",
+        "小学校",
+        "児童数",
+        "中学校",
+        "令和６年度",
+        "令和元年度"
+      ],
+      "entity_states": [
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "小学校",
+          "graph_exact": 2,
+          "graph_partial": 10,
+          "graph_names": [
+            "小学校",
+            "小学校",
+            "都立の幼稚園及び小学校の長",
+            "区市町村立の幼稚園及び小学校の長",
+            "小学校等第1学年児童数に対する幼稚園修了者数の割合"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "児童数",
+          "graph_exact": 2,
+          "graph_partial": 18,
+          "graph_names": [
+            "児童数",
+            "児童数",
+            "設置者別児童数",
+            "男女、地域、設置者別児童数",
+            "地域別児童数"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "中学校",
+          "graph_exact": 2,
+          "graph_partial": 12,
+          "graph_names": [
+            "中学校",
+            "中学校",
+            "中学校卒業後の状況",
+            "中学校卒業",
+            "区市町村立の中学校、義務教育学校及び特別支援学校の長"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "令和６年度",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "令和元年度",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "令和元年度",
+            "令和元年度以前の調査項目",
+            "令和元年度以前の調査項目"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 5,
+        "extraction_miss": 1,
+        "coref_miss": 0,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 46,
+      "question": "令和6年度の専修学校生徒数の分野別構成比について、東京都と大阪府のそれぞれで、全国と比較して10ポイント以上上回っている、あるいは下回っている分野はありますか？",
+      "entities": [
+        "令和6年度",
+        "専修学校生徒数",
+        "東京都",
+        "大阪府",
+        "医療関係"
+      ],
+      "entity_states": [
+        {
+          "entity": "令和6年度",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "令和6年度",
+            "令和6年度補正予算及び令和7年度当初予算",
+            "令和6年度の定義"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "専修学校生徒数",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "専修学校生徒数"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "大阪府",
+          "graph_exact": 2,
+          "graph_partial": 19,
+          "graph_names": [
+            "大阪府",
+            "大阪府",
+            "大阪府吹田市",
+            "大阪府総務部統計課",
+            "大阪府内の学校"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "医療関係",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "医療関係"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 2
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 45,
+      "question": "令和6年度の専修学校生徒数の分野別構成比について、東京都と大阪府では、構成比の1位から3位は同じですか？",
+      "entities": [
+        "令和6年度",
+        "専修学校",
+        "東京都",
+        "大阪府",
+        "文化教養関係",
+        "工業関係",
+        "医療関係"
+      ],
+      "entity_states": [
+        {
+          "entity": "令和6年度",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "令和6年度",
+            "令和6年度補正予算及び令和7年度当初予算",
+            "令和6年度の定義"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "専修学校",
+          "graph_exact": 2,
+          "graph_partial": 28,
+          "graph_names": [
+            "専修学校",
+            "専修学校",
+            "専修学校等入学者",
+            "専修学校設置基準",
+            "専修学校及び各種学校の長"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "大阪府",
+          "graph_exact": 2,
+          "graph_partial": 19,
+          "graph_names": [
+            "大阪府",
+            "大阪府",
+            "大阪府吹田市",
+            "大阪府総務部統計課",
+            "大阪府内の学校"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "文化教養関係",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "工業関係",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "工業関係"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "医療関係",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "医療関係"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 2
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 49,
+      "question": "東京都の小学校児童数のピークと大阪の小学校児童数のピークは同じ年度ですか？また、そのピークの理由を教えてください。",
+      "entities": [
+        "東京都",
+        "大阪",
+        "小学校児童数",
+        "昭和54年度",
+        "昭和55年度",
+        "第二次ベビーブーム"
+      ],
+      "entity_states": [
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "大阪",
+          "graph_exact": 1,
+          "graph_partial": 27,
+          "graph_names": [
+            "大阪",
+            "大阪圏",
+            "大阪府吹田市",
+            "大阪倉庫",
+            "大阪府"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "小学校児童数",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "小学校児童数"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "昭和54年度",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "昭和54年度",
+            "昭和54年度からの数値"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "昭和55年度",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "昭和55年度"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "第二次ベビーブーム",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 3
+      },
+      "question_pattern": "present"
+    },
+    {
+      "qn": 51,
+      "question": "大阪府では、第二次ベビーブームのときの小学校児童が非常に多いので、その頃の教員１人あたりの在学者数が最も多くなっていたのではないかと仮定しています。この予想は合",
+      "entities": [
+        "大阪府",
+        "第二次ベビーブーム",
+        "小学校児童",
+        "教員１人あたりの在学者数"
+      ],
+      "entity_states": [
+        {
+          "entity": "大阪府",
+          "graph_exact": 2,
+          "graph_partial": 19,
+          "graph_names": [
+            "大阪府",
+            "大阪府",
+            "大阪府吹田市",
+            "大阪府総務部統計課",
+            "大阪府内の学校"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "第二次ベビーブーム",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "小学校児童",
+          "graph_exact": 0,
+          "graph_partial": 1,
+          "graph_names": [
+            "小学校児童数"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "教員１人あたりの在学者数",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 2,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 50,
+      "question": "東京都では第一次ベビーブームのほうが小学校児童数が多いのに対して、大阪では第二次ベビーブームのほうが多い理由を教えてください。",
+      "entities": [
+        "東京都",
+        "大阪府",
+        "第一次ベビーブーム",
+        "第二次ベビーブーム",
+        "小学校児童数"
+      ],
+      "entity_states": [
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "大阪府",
+          "graph_exact": 2,
+          "graph_partial": 19,
+          "graph_names": [
+            "大阪府",
+            "大阪府",
+            "大阪府吹田市",
+            "大阪府総務部統計課",
+            "大阪府内の学校"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "第一次ベビーブーム",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "第二次ベビーブーム",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "小学校児童数",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "小学校児童数"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 2,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 54,
+      "question": "要件定義ガイドの中で経営層が主な想定読者である章はどれですか？",
+      "entities": [
+        "要件定義ガイド",
+        "経営層",
+        "背景",
+        "問題認識"
+      ],
+      "entity_states": [
+        {
+          "entity": "要件定義ガイド",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "経営層",
+          "graph_exact": 3,
+          "graph_partial": 7,
+          "graph_names": [
+            "経営層",
+            "経営層",
+            "経営層",
+            "経営層や業務部門への説明",
+            "経営層の関与"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "背景",
+          "graph_exact": 1,
+          "graph_partial": 6,
+          "graph_names": [
+            "背景",
+            "背景ぼかし",
+            "第1章背景",
+            "システム化の背景・目的",
+            "システム化の背景・目的の明示"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "問題認識",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "問題認識",
+            "第2章要件定義の問題認識"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 1,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 53,
+      "question": "令和６年度の東京都と大阪府において、中学校の総数に対する私立中学校の割合はどちらが多いですか？",
+      "entities": [
+        "令和６年度",
+        "東京都",
+        "大阪府",
+        "中学校",
+        "私立中学校"
+      ],
+      "entity_states": [
+        {
+          "entity": "令和６年度",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "東京都",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "東京都",
+            "東京都",
+            "東京都港区東新橋1-5-2汐留シティセター",
+            "東京都港区",
+            "東京都監察医務院"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "大阪府",
+          "graph_exact": 2,
+          "graph_partial": 19,
+          "graph_names": [
+            "大阪府",
+            "大阪府",
+            "大阪府吹田市",
+            "大阪府総務部統計課",
+            "大阪府内の学校"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "中学校",
+          "graph_exact": 2,
+          "graph_partial": 12,
+          "graph_names": [
+            "中学校",
+            "中学校",
+            "中学校卒業後の状況",
+            "中学校卒業",
+            "区市町村立の中学校、義務教育学校及び特別支援学校の長"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "私立中学校",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 1,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 52,
+      "question": "令和６年度の大阪府において、幼稚園、小学校、中学校、高等学校の教員の中で、女性の方が多いものを全て教えてください。",
+      "entities": [
+        "令和６年度",
+        "大阪府",
+        "幼稚園",
+        "小学校",
+        "中学校",
+        "高等学校",
+        "教員",
+        "女性"
+      ],
+      "entity_states": [
+        {
+          "entity": "令和６年度",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "大阪府",
+          "graph_exact": 2,
+          "graph_partial": 19,
+          "graph_names": [
+            "大阪府",
+            "大阪府",
+            "大阪府吹田市",
+            "大阪府総務部統計課",
+            "大阪府内の学校"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "幼稚園",
+          "graph_exact": 2,
+          "graph_partial": 12,
+          "graph_names": [
+            "幼稚園",
+            "幼稚園",
+            "都立の幼稚園及び小学校の長",
+            "区市町村立の幼稚園及び小学校の長",
+            "幼稚園数"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "小学校",
+          "graph_exact": 2,
+          "graph_partial": 10,
+          "graph_names": [
+            "小学校",
+            "小学校",
+            "都立の幼稚園及び小学校の長",
+            "区市町村立の幼稚園及び小学校の長",
+            "小学校等第1学年児童数に対する幼稚園修了者数の割合"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "中学校",
+          "graph_exact": 2,
+          "graph_partial": 12,
+          "graph_names": [
+            "中学校",
+            "中学校",
+            "中学校卒業後の状況",
+            "中学校卒業",
+            "区市町村立の中学校、義務教育学校及び特別支援学校の長"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "高等学校",
+          "graph_exact": 0,
+          "graph_partial": 30,
+          "graph_names": [
+            "高等学校の本科・別科,中等教育学校後期課程の本科・別科,特別支援学校高等部の本科・別科及び高等専門学校への進学者",
+            "大学の学部・通信教育部・別科,短期大学の本科・通信教育部・別科,高等学校の専攻科及び特別支援学校高等部の専攻科への進学者",
+            "進学者数(高等学校等)",
+            "高等学校(通信制)卒業後の状況",
+            "高等学校(全日制・定時制)卒業後の状況"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "教員",
+          "graph_exact": 0,
+          "graph_partial": 30,
+          "graph_names": [
+            "教員向け授業実践パッケージ",
+            "通信制課程の学校数、生徒数及び教員数(本務者)",
+            "男女、地域、設置者別生徒数及び教員数",
+            "教員数本務者",
+            "教員数(兼務者)"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "女性",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "女性",
+            "女性幹部社員比率",
+            "女性・高齢者労働力の活用",
+            "女性の年齢階級別労働力率",
+            "女性や高齢者労働力の活用"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 7,
+        "extraction_miss": 1,
+        "coref_miss": 0,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 57,
+      "question": "要件定義に求められる３つのことを教えてください。",
+      "entities": [
+        "要件定義",
+        "経営",
+        "業務",
+        "要求仕様",
+        "システム開発"
+      ],
+      "entity_states": [
+        {
+          "entity": "要件定義",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "要件定義",
+            "要件定義の問題と解決のための勘どころ",
+            "要件定義マネジメント",
+            "要件定義プロセス",
+            "要件定義へのユーザ部門参加"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "経営",
+          "graph_exact": 0,
+          "graph_partial": 30,
+          "graph_names": [
+            "経営基盤強化",
+            "連結経営成績(累計)",
+            "経営成績等の概況",
+            "中期経営目標",
+            "経営基盤強化"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "業務",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "業務",
+            "パソコンの節電や起動時の業務開始の迅速化",
+            "オフラインの業務",
+            "業務システムへのサインイン",
+            "業務執行取締役"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "要求仕様",
+          "graph_exact": 1,
+          "graph_partial": 9,
+          "graph_names": [
+            "要求仕様",
+            "要求仕様の決定",
+            "要求仕様の提示責任",
+            "要求仕様の変更",
+            "要求仕様の統制"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "システム開発",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "システム開発",
+            "要件定義・システム開発・保守管理リポジトリ",
+            "システム開発の現状",
+            "大規模システム開発プロジェクト",
+            "システム開発の超上流フェーズ"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 5,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 56,
+      "question": "システム開発の工期遅延理由の分析データ（図1.7）について、要求仕様の決定漏れを原因に挙げているプロジェクトは何パーセントですか？",
+      "entities": [
+        "システム開発",
+        "工期遅延理由の分析データ",
+        "要求仕様の決定漏れ",
+        "プロジェクト"
+      ],
+      "entity_states": [
+        {
+          "entity": "システム開発",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "システム開発",
+            "要件定義・システム開発・保守管理リポジトリ",
+            "システム開発の現状",
+            "大規模システム開発プロジェクト",
+            "システム開発の超上流フェーズ"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "工期遅延理由の分析データ",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "要求仕様の決定漏れ",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "プロジェクト",
+          "graph_exact": 2,
+          "graph_partial": 28,
+          "graph_names": [
+            "プロジェクト",
+            "プロジェクト",
+            "不採算プロジェクト",
+            "不採算プロジェクト発生の可能性",
+            "プロジェクトの効率化"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 2,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 69,
+      "question": "2023年度において、サービスソリューションセグメントの調整後営業利益率と富士通全体の調整後営業利益率はどちらが高いですか？",
+      "entities": [
+        "2023年度",
+        "サービスソリューションセグメント",
+        "調整後営業利益率",
+        "富士通株式会社"
+      ],
+      "entity_states": [
+        {
+          "entity": "2023年度",
+          "graph_exact": 1,
+          "graph_partial": 10,
+          "graph_names": [
+            "2023年度",
+            "2023年度4Q",
+            "2023年度の実績を継続事業ベースに組み替えた数値",
+            "2023年度の検証",
+            "2023年度業績"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "サービスソリューションセグメント",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "調整後営業利益率",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "調整後営業利益率",
+            "調整後営業利益/調整後営業利益率",
+            "2025年度調整後営業利益率"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "富士通株式会社",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "富士通株式会社",
+            "富士通株式会社従業員持株会",
+            "富士通株式会社広報IR室"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 59,
+      "question": "アイデア発想の方法として提案されているものを全て教えてください。",
+      "entities": [
+        "ブレインストーミング",
+        "ゼロベース思考",
+        "共創",
+        "SCAMPER法",
+        "PoC",
+        "デザイン思考",
+        "人間中心設計"
+      ],
+      "entity_states": [
+        {
+          "entity": "ブレインストーミング",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "ゼロベース思考",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "ゼロベース思考"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "共創",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "共創",
+            "クロスインダストリーな共創"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "SCAMPER法",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "SCAMPER法"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "PoC",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "PoC",
+            "PoC"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "デザイン思考",
+          "graph_exact": 2,
+          "graph_partial": 2,
+          "graph_names": [
+            "デザイン思考",
+            "デザイン思考",
+            "デザイン思考基本プロセス",
+            "(一社)デザイン思考研究所"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "人間中心設計",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "人間中心設計",
+            "人間中心設計"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 5
+      },
+      "question_pattern": "present"
+    },
+    {
+      "qn": 70,
+      "question": "富士通の2020年度の売上収益と2024年度第三四半期累計の売上収益は、どちらが大きいですか？",
+      "entities": [
+        "富士通",
+        "2020年度",
+        "2024年度第三四半期累計",
+        "売上収益"
+      ],
+      "entity_states": [
+        {
+          "entity": "富士通",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "富士通",
+            "富士通グループ",
+            "富士通の事業活動",
+            "富士通ハードウェア修理相談センター",
+            "富士通ハードウェア"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "2020年度",
+          "graph_exact": 1,
+          "graph_partial": 4,
+          "graph_names": [
+            "2020年度",
+            "2020年度比",
+            "2020年度比で4.8倍",
+            "EF算定結果(2020年度)",
+            "2020年度以降のデータ"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "2024年度第三四半期累計",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "売上収益",
+          "graph_exact": 1,
+          "graph_partial": 16,
+          "graph_names": [
+            "売上収益",
+            "海外売上収益",
+            "売上収益+333億円",
+            "地域間の内部売上収益",
+            "セグメント内消去売上収益"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 65,
+      "question": "富士通の2025年3月期の第3四半期までの売上収益と前年比は？",
+      "entities": [
+        "富士通",
+        "2025年3月期",
+        "第3四半期",
+        "売上収益",
+        "前年比"
+      ],
+      "entity_states": [
+        {
+          "entity": "富士通",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "富士通",
+            "富士通グループ",
+            "富士通の事業活動",
+            "富士通ハードウェア修理相談センター",
+            "富士通ハードウェア"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "2025年3月期",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "2025年3月期",
+            "2025年3月期第3四半期"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "第3四半期",
+          "graph_exact": 0,
+          "graph_partial": 5,
+          "graph_names": [
+            "2024年3月期第3四半期",
+            "2025年3月期第3四半期",
+            "第3四半期末",
+            "当第3四半期累計",
+            "第3四半期連結累計期間"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "売上収益",
+          "graph_exact": 1,
+          "graph_partial": 16,
+          "graph_names": [
+            "売上収益",
+            "海外売上収益",
+            "売上収益+333億円",
+            "地域間の内部売上収益",
+            "セグメント内消去売上収益"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "前年比",
+          "graph_exact": 0,
+          "graph_partial": 2,
+          "graph_names": [
+            "前年比0.1ポイント低下",
+            "前年比0.5ポイント低下"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 75,
+      "question": "富士通のサービスソリューションの調整後営業利益の2019年から2025年のCAGRをおしえてください。",
+      "entities": [
+        "富士通",
+        "サービスソリューション",
+        "調整後営業利益",
+        "CAGR",
+        "2019年",
+        "2025年"
+      ],
+      "entity_states": [
+        {
+          "entity": "富士通",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "富士通",
+            "富士通グループ",
+            "富士通の事業活動",
+            "富士通ハードウェア修理相談センター",
+            "富士通ハードウェア"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "サービスソリューション",
+          "graph_exact": 4,
+          "graph_partial": 5,
+          "graph_names": [
+            "サービスソリューション",
+            "サービスソリューション",
+            "サービスソリューション",
+            "サービスソリューション",
+            "サービスソリューション事業"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "調整後営業利益",
+          "graph_exact": 2,
+          "graph_partial": 8,
+          "graph_names": [
+            "調整後営業利益",
+            "調整後営業利益",
+            "調整後営業利益率",
+            "調整後営業利益の変動内訳",
+            "調整後営業利益内訳"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "CAGR",
+          "graph_exact": 1,
+          "graph_partial": 5,
+          "graph_names": [
+            "CAGR",
+            "EPS経営目標CAGR12%",
+            "EPSCAGR(2022-2025年度)",
+            "CAGR(2023̶2030年度)17%以上",
+            "EPSCAGR"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "2019年",
+          "graph_exact": 0,
+          "graph_partial": 3,
+          "graph_names": [
+            "2019年1月",
+            "2019年6月",
+            "2019年度"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "2025年",
+          "graph_exact": 1,
+          "graph_partial": 15,
+          "graph_names": [
+            "2025年",
+            "2025年10月14日サポート終了",
+            "2025年4月",
+            "2025年3月期第3四半期",
+            "2025年3月期"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 6,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 76,
+      "question": "2024年度上期 Fujitsu Uvance の売上のうち海外での売上が占める割合を教えてください。",
+      "entities": [
+        "2024年度上期",
+        "Fujitsu Uvance",
+        "海外売上"
+      ],
+      "entity_states": [
+        {
+          "entity": "2024年度上期",
+          "graph_exact": 1,
+          "graph_partial": 1,
+          "graph_names": [
+            "2024年度上期",
+            "2024年度上期末資産状況"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "Fujitsu Uvance",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "海外売上",
+          "graph_exact": 0,
+          "graph_partial": 3,
+          "graph_names": [
+            "海外売上収益",
+            "海外売上収益比率",
+            "海外売上比率(%)"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 1,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 71,
+      "question": "富士通の2020年度から2023年度までの年度別のフリーキャッシュフローと、2024年度第3四半期のフリーキャッシュフローを教えてください。",
+      "entities": [
+        "富士通",
+        "フリーキャッシュフロー",
+        "2020年度",
+        "2021年度",
+        "2022年度",
+        "2023年度",
+        "2024年度第3四半期"
+      ],
+      "entity_states": [
+        {
+          "entity": "富士通",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "富士通",
+            "富士通グループ",
+            "富士通の事業活動",
+            "富士通ハードウェア修理相談センター",
+            "富士通ハードウェア"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "フリーキャッシュフロー",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "2020年度",
+          "graph_exact": 1,
+          "graph_partial": 4,
+          "graph_names": [
+            "2020年度",
+            "2020年度比",
+            "2020年度比で4.8倍",
+            "EF算定結果(2020年度)",
+            "2020年度以降のデータ"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "2021年度",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "2021年度"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "2022年度",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "2022年度",
+            "目標年度2022年度",
+            "2020-2022年度"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "2023年度",
+          "graph_exact": 1,
+          "graph_partial": 10,
+          "graph_names": [
+            "2023年度",
+            "2023年度4Q",
+            "2023年度の実績を継続事業ベースに組み替えた数値",
+            "2023年度の検証",
+            "2023年度業績"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "2024年度第3四半期",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 1,
+        "coref_miss": 1,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 73,
+      "question": "富士通のユビキタスソリューションセグメントの子会社名とユビキタスソリューションの2024年度第３四半期累計の収益合計を教えてください。",
+      "entities": [
+        "富士通",
+        "ユビキタスソリューションセグメント",
+        "富士通パーソナルズ",
+        "ユビキタスソリューション",
+        "2024年度第３四半期累計収益"
+      ],
+      "entity_states": [
+        {
+          "entity": "富士通",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "富士通",
+            "富士通グループ",
+            "富士通の事業活動",
+            "富士通ハードウェア修理相談センター",
+            "富士通ハードウェア"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "ユビキタスソリューションセグメント",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "富士通パーソナルズ",
+          "graph_exact": 0,
+          "graph_partial": 1,
+          "graph_names": [
+            "(株)富士通パーソナルズ"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "ユビキタスソリューション",
+          "graph_exact": 3,
+          "graph_partial": 0,
+          "graph_names": [
+            "ユビキタスソリューション",
+            "ユビキタスソリューション",
+            "ユビキタスソリューション"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "2024年度第３四半期累計収益",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 2,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 74,
+      "question": "富士通に関して、2020年度から2024年度までで、基本的１株当たり当期利益が最も高い年はいつですか？",
+      "entities": [
+        "富士通",
+        "基本的１株当たり当期利益",
+        "2020年度",
+        "2021年度",
+        "2022年度",
+        "2023年度",
+        "2024年度"
+      ],
+      "entity_states": [
+        {
+          "entity": "富士通",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "富士通",
+            "富士通グループ",
+            "富士通の事業活動",
+            "富士通ハードウェア修理相談センター",
+            "富士通ハードウェア"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "基本的１株当たり当期利益",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "2020年度",
+          "graph_exact": 1,
+          "graph_partial": 4,
+          "graph_names": [
+            "2020年度",
+            "2020年度比",
+            "2020年度比で4.8倍",
+            "EF算定結果(2020年度)",
+            "2020年度以降のデータ"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "2021年度",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "2021年度"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "2022年度",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "2022年度",
+            "目標年度2022年度",
+            "2020-2022年度"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "2023年度",
+          "graph_exact": 1,
+          "graph_partial": 10,
+          "graph_names": [
+            "2023年度",
+            "2023年度4Q",
+            "2023年度の実績を継続事業ベースに組み替えた数値",
+            "2023年度の検証",
+            "2023年度業績"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "2024年度",
+          "graph_exact": 1,
+          "graph_partial": 13,
+          "graph_names": [
+            "2024年度",
+            "2024年度上期",
+            "2024年度上期末資産状況",
+            "2024年度下期",
+            "2024年度(予想)"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 5,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 78,
+      "question": "中期経営計画におけるFY23からFY25の売上のFujitsu Uvance とVertical それぞれのCAGRを教えてください。",
+      "entities": [
+        "中期経営計画",
+        "Fujitsu Uvance",
+        "Vertical",
+        "CAGR",
+        "売上"
+      ],
+      "entity_states": [
+        {
+          "entity": "中期経営計画",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "中期経営計画",
+            "中期経営計画財務目標",
+            "新中期経営計画との連動性"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "Fujitsu Uvance",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "Vertical",
+          "graph_exact": 0,
+          "graph_partial": 5,
+          "graph_names": [
+            "Vertical売上伸長",
+            "5GVerticalService室",
+            "Vertical領域",
+            "Verticalareas",
+            "CustomerVertical"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "CAGR",
+          "graph_exact": 1,
+          "graph_partial": 5,
+          "graph_names": [
+            "CAGR",
+            "EPS経営目標CAGR12%",
+            "EPSCAGR(2022-2025年度)",
+            "CAGR(2023̶2030年度)17%以上",
+            "EPSCAGR"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "売上",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "売上",
+            "売上収益",
+            "海外売上収益",
+            "Vertical売上伸長",
+            "売上収益+333億円"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 1,
+        "coref_miss": 0,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 79,
+      "question": "Fujitsu Uvanceの2022年度の売上と2023年度の売上を教えてください。",
+      "entities": [
+        "Fujitsu Uvance",
+        "2022年度",
+        "2023年度",
+        "売上"
+      ],
+      "entity_states": [
+        {
+          "entity": "Fujitsu Uvance",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "2022年度",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "2022年度",
+            "目標年度2022年度",
+            "2020-2022年度"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "2023年度",
+          "graph_exact": 1,
+          "graph_partial": 10,
+          "graph_names": [
+            "2023年度",
+            "2023年度4Q",
+            "2023年度の実績を継続事業ベースに組み替えた数値",
+            "2023年度の検証",
+            "2023年度業績"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "売上",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "売上",
+            "売上収益",
+            "海外売上収益",
+            "Vertical売上伸長",
+            "売上収益+333億円"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 1,
+        "coref_miss": 0,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 81,
+      "question": "富士通の大西 俊介氏の2021年と2024年の役職を教えてください。",
+      "entities": [
+        "富士通",
+        "大西 俊介",
+        "執行役員常務",
+        "執行役員副社長COO",
+        "CRO"
+      ],
+      "entity_states": [
+        {
+          "entity": "富士通",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "富士通",
+            "富士通グループ",
+            "富士通の事業活動",
+            "富士通ハードウェア修理相談センター",
+            "富士通ハードウェア"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "大西 俊介",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "執行役員常務",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "執行役員常務",
+            "執行役員常務"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "執行役員副社長COO",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "CRO",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "CRO",
+            "CRO"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 0,
+        "coref_miss": 2,
+        "present": 2
+      },
+      "question_pattern": "coref_miss"
+    },
+    {
+      "qn": 80,
+      "question": "2023年度において、サービスソリューションのリージョンズ（海外）の欧州の売上収益と、富士通の欧州事業全体の売上収益を教えてください。また、2023年度の欧州の",
+      "entities": [
+        "2023年度",
+        "サービスソリューションのリージョンズ（海外）",
+        "欧州",
+        "富士通",
+        "売上収益",
+        "従業員数"
+      ],
+      "entity_states": [
+        {
+          "entity": "2023年度",
+          "graph_exact": 1,
+          "graph_partial": 10,
+          "graph_names": [
+            "2023年度",
+            "2023年度4Q",
+            "2023年度の実績を継続事業ベースに組み替えた数値",
+            "2023年度の検証",
+            "2023年度業績"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "サービスソリューションのリージョンズ（海外）",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "欧州",
+          "graph_exact": 1,
+          "graph_partial": 9,
+          "graph_names": [
+            "欧州",
+            "欧州での法人体系の再構築",
+            "欧州のCCD事業",
+            "欧州の低採算地域からの撤退",
+            "欧州のCCD事業の終息対応"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "富士通",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "富士通",
+            "富士通グループ",
+            "富士通の事業活動",
+            "富士通ハードウェア修理相談センター",
+            "富士通ハードウェア"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "売上収益",
+          "graph_exact": 1,
+          "graph_partial": 16,
+          "graph_names": [
+            "売上収益",
+            "海外売上収益",
+            "売上収益+333億円",
+            "地域間の内部売上収益",
+            "セグメント内消去売上収益"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "従業員数",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "従業員数",
+            "連結従業員数",
+            "期末従業員数(人)"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 5,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 84,
+      "question": "LIFEBOOK U9313/R（型名：FMVU81002）を購入しました。追加オプション費用込で希望小売価格（税別）は521,900円でした。動画再生時のバッ",
+      "entities": [
+        "LIFEBOOK U9313/R",
+        "FMVU81002",
+        "バッテリー駆動時間",
+        "動画再生"
+      ],
+      "entity_states": [
+        {
+          "entity": "LIFEBOOK U9313/R",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "FMVU81002",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "FMVU81002"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "バッテリー駆動時間",
+          "graph_exact": 2,
+          "graph_partial": 2,
+          "graph_names": [
+            "バッテリー駆動時間",
+            "バッテリー駆動時間",
+            "バッテリー駆動時間の維持",
+            "バッテリー駆動時間は、標準設定時の約8割"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "動画再生",
+          "graph_exact": 0,
+          "graph_partial": 9,
+          "graph_names": [
+            "動画再生時:約6.8時間",
+            "動画再生時:約8.0時間",
+            "動画再生時",
+            "動画再生時",
+            "動画再生時駆動時間"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 83,
+      "question": "LIFEBOOK U9313/Rでは、指紋認証機能付き電源ボタンと手のひら静脈センサーの両方を付けることはできますか？",
+      "entities": [
+        "LIFEBOOK U9313/R",
+        "指紋認証機能付き電源ボタン",
+        "手のひら静脈センサー"
+      ],
+      "entity_states": [
+        {
+          "entity": "LIFEBOOK U9313/R",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "指紋認証機能付き電源ボタン",
+          "graph_exact": 3,
+          "graph_partial": 4,
+          "graph_names": [
+            "指紋認証機能付き電源ボタン",
+            "指紋認証機能付き電源ボタン",
+            "指紋認証機能付き電源ボタン",
+            "指紋認証機能付き電源ボタン変更",
+            "指紋認証機能付き電源ボタン変更&リアカメラ追加"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "手のひら静脈センサー",
+          "graph_exact": 2,
+          "graph_partial": 13,
+          "graph_names": [
+            "手のひら静脈センサー",
+            "手のひら静脈センサー",
+            "指紋センサー/手のひら静脈センサー",
+            "指紋センサー/手のひら静脈センサー",
+            "手のひら静脈センサー搭載機種"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 86,
+      "question": "富士通の法人向けPCの製品評価試験の内容とRoHS指令対応について教えてください。",
+      "entities": [
+        "富士通",
+        "MIL-STD-810H",
+        "RoHS指令",
+        "EU",
+        "特定化学物質"
+      ],
+      "entity_states": [
+        {
+          "entity": "富士通",
+          "graph_exact": 1,
+          "graph_partial": 29,
+          "graph_names": [
+            "富士通",
+            "富士通グループ",
+            "富士通の事業活動",
+            "富士通ハードウェア修理相談センター",
+            "富士通ハードウェア"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "MIL-STD-810H",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "MIL-STD-810H"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "RoHS指令",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "RoHS指令"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "EU",
+          "graph_exact": 1,
+          "graph_partial": 3,
+          "graph_names": [
+            "EU",
+            "DEURAS",
+            "EUKLEMS",
+            "ダウンロード(EUC)"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "特定化学物質",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "特定化学物質"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        }
+      ],
+      "cls_counts": {
+        "split": 2,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 3
+      },
+      "question_pattern": "present"
+    },
+    {
+      "qn": 89,
+      "question": "LIFEBOOK U7314/Rの無線WANモデルを購入しました。SIMカードのセット方法と接続方法を教えてください。",
+      "entities": [
+        "LIFEBOOK U7314/R",
+        "nanoSIMカード",
+        "Windows 10",
+        "APN",
+        "携帯電話"
+      ],
+      "entity_states": [
+        {
+          "entity": "LIFEBOOK U7314/R",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "nanoSIMカード",
+          "graph_exact": 1,
+          "graph_partial": 9,
+          "graph_names": [
+            "nanoSIMカード",
+            "nanoSIMカードを取り出す",
+            "nanoSIMカードをセットする",
+            "nanoSIMカードの取り付け",
+            "nanoSIMカードの取り付け/取り外し"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "Windows 10",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "APN",
+          "graph_exact": 0,
+          "graph_partial": 6,
+          "graph_names": [
+            "APNを追加",
+            "APN設定",
+            "インターネットAPN",
+            "インターネットAPN設定が保存され",
+            "インターネットAPN設定が保存されました。"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "携帯電話",
+          "graph_exact": 2,
+          "graph_partial": 14,
+          "graph_names": [
+            "携帯電話",
+            "携帯電話",
+            "携帯電話会社から提供されたアクティブ化コードを入力する",
+            "携帯電話会社",
+            "「ネットワークとインターネット」から「携帯電話」を選択"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 2,
+        "coref_miss": 0,
+        "present": 0
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 92,
+      "question": "クラウドサービス利用者の経営層やセキュリティ管理者が組織のセキュリティ方針を定める際に、どのような手順を踏むべきかを教えてください。",
+      "entities": [
+        "クラウドサービス",
+        "経営層",
+        "セキュリティ管理者",
+        "セキュリティ方針",
+        "ガイドライン"
+      ],
+      "entity_states": [
+        {
+          "entity": "クラウドサービス",
+          "graph_exact": 2,
+          "graph_partial": 28,
+          "graph_names": [
+            "クラウドサービス",
+            "クラウドサービス",
+            "DC・クラウドサービス事業本部",
+            "デジタル・クラウドサービス",
+            "クラウドサービスプロバイダー"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "経営層",
+          "graph_exact": 3,
+          "graph_partial": 7,
+          "graph_names": [
+            "経営層",
+            "経営層",
+            "経営層",
+            "経営層や業務部門への説明",
+            "経営層の関与"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "セキュリティ管理者",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "セキュリティ管理者",
+            "セキュリティ管理者"
+          ],
+          "in_pdf_text": true,
+          "classification": "present"
+        },
+        {
+          "entity": "セキュリティ方針",
+          "graph_exact": 1,
+          "graph_partial": 2,
+          "graph_names": [
+            "セキュリティ方針",
+            "移行セキュリティ方針",
+            "組織のセキュリティ方針"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "ガイドライン",
+          "graph_exact": 0,
+          "graph_partial": 4,
+          "graph_names": [
+            "電波防護の国際ガイドライン",
+            "グリーン購入ガイドライン",
+            "株式保有ガイドライン",
+            "ガイドラインの位置付け"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 4,
+        "extraction_miss": 0,
+        "coref_miss": 0,
+        "present": 1
+      },
+      "question_pattern": "split"
+    },
+    {
+      "qn": 90,
+      "question": "LIFEBOOK U7314/Rの無線WANモデルのeSIM接続方法とEIDの確認方法を教えてください。",
+      "entities": [
+        "LIFEBOOK U7314/R",
+        "eSIM",
+        "EID",
+        "無線WANモデル",
+        "携帯電話ネットワーク"
+      ],
+      "entity_states": [
+        {
+          "entity": "LIFEBOOK U7314/R",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "eSIM",
+          "graph_exact": 2,
+          "graph_partial": 18,
+          "graph_names": [
+            "eSIM",
+            "eSIM",
+            "eSIMプロファイル",
+            "eSIMプロファイルの削除",
+            "SIM/eSIM切断する"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "EID",
+          "graph_exact": 2,
+          "graph_partial": 1,
+          "graph_names": [
+            "EID",
+            "EID",
+            "EIDの確認"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "無線WANモデル",
+          "graph_exact": 2,
+          "graph_partial": 0,
+          "graph_names": [
+            "無線WANモデル",
+            "無線WANモデル"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "携帯電話ネットワーク",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 0,
+        "coref_miss": 2,
+        "present": 2
+      },
+      "question_pattern": "coref_miss"
+    },
+    {
+      "qn": 87,
+      "question": "LIFEBOOK U9313/R 標準モデル（インテル® CoreTM 5 プロセッサー 220U）の省エネ法に基づくエネルギー消費効率（2022年度基準）を教",
+      "entities": [
+        "LIFEBOOK U9313/R 標準モデル",
+        "インテル Core 5 プロセッサー 220U",
+        "エネルギー消費効率",
+        "JIS C62623",
+        "省エネルギー基準達成率"
+      ],
+      "entity_states": [
+        {
+          "entity": "LIFEBOOK U9313/R 標準モデル",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "インテル Core 5 プロセッサー 220U",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "エネルギー消費効率",
+          "graph_exact": 2,
+          "graph_partial": 2,
+          "graph_names": [
+            "エネルギー消費効率",
+            "エネルギー消費効率",
+            "省エネ法に基づくエネルギー消費効率",
+            "省エネ法に基づくエネルギー消費効率"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "JIS C62623",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "省エネルギー基準達成率",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 2,
+        "coref_miss": 2,
+        "present": 0
+      },
+      "question_pattern": "extraction_miss"
+    },
+    {
+      "qn": 85,
+      "question": "LIFEBOOK U9313/R（FMVU81061）を１台購入しようと考えています。最も価格が高くなるカスタムメイドで仕様の変更・追加が可能な構成パターンの組",
+      "entities": [
+        "LIFEBOOK U9313/R",
+        "FMVU81061",
+        "LPDDR5 SDRAM",
+        "PCIe NVMe",
+        "PalmSecure-Fシリーズ",
+        "Microsoft Office Home & Business 2024",
+        "PC Sustainability Support Service Premium"
+      ],
+      "entity_states": [
+        {
+          "entity": "LIFEBOOK U9313/R",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "FMVU81061",
+          "graph_exact": 1,
+          "graph_partial": 0,
+          "graph_names": [
+            "FMVU81061"
+          ],
+          "in_pdf_text": false,
+          "classification": "present"
+        },
+        {
+          "entity": "LPDDR5 SDRAM",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "PCIe NVMe",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "PalmSecure-Fシリーズ",
+          "graph_exact": 1,
+          "graph_partial": 4,
+          "graph_names": [
+            "PalmSecure-Fシリーズ",
+            "PalmSecure-Fシリーズ手のひら静脈センサー",
+            "PalmSecure-Fシリーズ互換",
+            "PalmSecure-Fシリーズ互換",
+            "PalmSecure-Fシリーズ互換"
+          ],
+          "in_pdf_text": false,
+          "classification": "split"
+        },
+        {
+          "entity": "Microsoft Office Home & Business 2024",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "PC Sustainability Support Service Premium",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        }
+      ],
+      "cls_counts": {
+        "split": 1,
+        "extraction_miss": 0,
+        "coref_miss": 5,
+        "present": 1
+      },
+      "question_pattern": "coref_miss"
+    },
+    {
+      "qn": 93,
+      "question": "クラウドサービス利用におけるリテラシーを向上させるための具体的な方法を列挙してください。",
+      "entities": [
+        "クラウドサービス",
+        "テレワークセキュリティガイドライン第５版",
+        "総務省",
+        "クラウドを利用したシステム運用に関するガダンス（詳細版）",
+        "インシデント"
+      ],
+      "entity_states": [
+        {
+          "entity": "クラウドサービス",
+          "graph_exact": 2,
+          "graph_partial": 28,
+          "graph_names": [
+            "クラウドサービス",
+            "クラウドサービス",
+            "DC・クラウドサービス事業本部",
+            "デジタル・クラウドサービス",
+            "クラウドサービスプロバイダー"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "テレワークセキュリティガイドライン第５版",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": true,
+          "classification": "extraction_miss"
+        },
+        {
+          "entity": "総務省",
+          "graph_exact": 1,
+          "graph_partial": 3,
+          "graph_names": [
+            "総務省",
+            "総務省・災害時テレコム支援チーム(MIC-TEAM)",
+            "総務省電気通信消費者相談センター",
+            "総務省予算"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        },
+        {
+          "entity": "クラウドを利用したシステム運用に関するガダンス（詳細版）",
+          "graph_exact": 0,
+          "graph_partial": 0,
+          "graph_names": [],
+          "in_pdf_text": false,
+          "classification": "coref_miss"
+        },
+        {
+          "entity": "インシデント",
+          "graph_exact": 2,
+          "graph_partial": 5,
+          "graph_names": [
+            "インシデント",
+            "インシデント",
+            "インシデント管理",
+            "インシデントの報告および対応",
+            "重大インシデントの再発防止"
+          ],
+          "in_pdf_text": true,
+          "classification": "split"
+        }
+      ],
+      "cls_counts": {
+        "split": 3,
+        "extraction_miss": 1,
+        "coref_miss": 1,
+        "present": 0
+      },
+      "question_pattern": "split"
+    }
+  ]
+}

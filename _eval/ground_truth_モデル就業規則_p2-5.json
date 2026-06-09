@@ -1,0 +1,184 @@
+{
+  "_meta": {
+    "source": "docs/モデル就業規則.pdf",
+    "publisher": "厚生労働省労働基準局監督課",
+    "version_date": "令和７年12月版",
+    "scope": "pages 2-5 (はじめに セクション1-5)",
+    "ground_truth_version": "1.0",
+    "created_at": "2026-05-30",
+    "schema_relations": [
+      "IS_A", "BELONGS_TO_CATEGORY", "PART_OF", "HAS_STEP",
+      "HAS_ATTRIBUTE", "RELATED_TO", "AFFECTS", "CAUSES",
+      "DEPENDS_ON", "APPLIES_TO", "OWNED_BY", "SAME_AS"
+    ],
+    "notes": [
+      "subject/object は本文中で実際に出現する表現を優先。",
+      "criticality: must_have = 第1階層の重要概念。should_have = 派生・詳細。",
+      "evidence は page番号と該当条文・節名を記録。",
+      "BELONGS_TO_CATEGORY と PART_OF は区別: 分類関係=BELONGS_TO_CATEGORY、構成要素=PART_OF。",
+      "SAME_AS は本文中で『以下「Xといいます」』と明示された略称・別名のみ。"
+    ]
+  },
+
+  "entities": [
+    {"name": "就業規則", "type": "Term", "page": 2, "definition": "労働時間や賃金、人事・服務規律などの労働条件・待遇の基準を定めた規則"},
+    {"name": "モデル就業規則", "type": "Term", "page": 4, "definition": "厚生労働省が示す就業規則の規程例（解説付）"},
+    {"name": "本規則", "type": "Term", "page": 4, "definition": "本文中のモデル就業規則の自称略称"},
+    {"name": "労働基準法", "type": "Term", "page": 2, "definition": "昭和22年法律第49号"},
+    {"name": "労基法", "type": "Term", "page": 2, "definition": "労働基準法の本文略称"},
+    {"name": "労働基準法施行規則", "type": "Term", "page": 4, "definition": "昭和22年厚生省令第23号"},
+    {"name": "労基則", "type": "Term", "page": 4, "definition": "労働基準法施行規則の本文略称"},
+    {"name": "短時間労働者及び有期雇用労働者の雇用管理の改善等に関する法律", "type": "Term", "page": 5, "definition": "平成5年法律第76号"},
+    {"name": "パートタイム・有期雇用労働法", "type": "Term", "page": 5, "definition": "短時間労働者及び有期雇用労働者の雇用管理の改善等に関する法律の本文略称"},
+    {"name": "労働協約", "type": "Term", "page": 3},
+    {"name": "労働基準監督署長", "type": "Term", "page": 3},
+    {"name": "労働組合", "type": "Term", "page": 3},
+    {"name": "労働者の過半数を代表する者", "type": "Term", "page": 3},
+    {"name": "管理監督者", "type": "Term", "page": 4, "definition": "労基法第41条第2号の「監督若しくは管理の地位にある者」"},
+    {"name": "監督若しくは管理の地位にある者", "type": "Term", "page": 4},
+    {"name": "意見書", "type": "Term", "page": 3, "definition": "過半数代表者の意見を記し氏名を記載した書面"},
+
+    {"name": "記載事項", "type": "Term", "page": 2},
+    {"name": "絶対的必要記載事項", "type": "Term", "page": 2, "definition": "就業規則に必ず記載しなければならない事項"},
+    {"name": "相対的必要記載事項", "type": "Term", "page": 2, "definition": "事業場でルールを定める場合に記載しなければならない事項"},
+    {"name": "任意記載事項", "type": "Term", "page": 2, "definition": "使用者において任意に記載し得る事項"},
+
+    {"name": "労働時間関係", "type": "Term", "page": 2},
+    {"name": "賃金関係", "type": "Term", "page": 2},
+    {"name": "退職関係", "type": "Term", "page": 2},
+    {"name": "退職手当関係", "type": "Term", "page": 2},
+    {"name": "臨時の賃金・最低賃金額関係", "type": "Term", "page": 2},
+    {"name": "費用負担関係", "type": "Term", "page": 2},
+    {"name": "安全衛生関係", "type": "Term", "page": 3},
+    {"name": "職業訓練関係", "type": "Term", "page": 3},
+    {"name": "災害補償・業務外の傷病扶助関係", "type": "Term", "page": 3},
+    {"name": "表彰・制裁関係", "type": "Term", "page": 3},
+
+    {"name": "始業時刻", "type": "Term", "page": 2},
+    {"name": "終業時刻", "type": "Term", "page": 2},
+    {"name": "休憩時間", "type": "Term", "page": 2},
+    {"name": "休日", "type": "Term", "page": 2},
+    {"name": "休暇", "type": "Term", "page": 2},
+    {"name": "就業時転換", "type": "Term", "page": 2},
+    {"name": "賃金の決定", "type": "Term", "page": 2},
+    {"name": "賃金の計算", "type": "Term", "page": 2},
+    {"name": "賃金の支払の方法", "type": "Term", "page": 2},
+    {"name": "賃金の締切り", "type": "Term", "page": 2},
+    {"name": "賃金の支払の時期", "type": "Term", "page": 2},
+    {"name": "昇給", "type": "Term", "page": 2},
+    {"name": "退職", "type": "Term", "page": 2},
+    {"name": "解雇", "type": "Term", "page": 2},
+    {"name": "解雇の事由", "type": "Term", "page": 2},
+
+    {"name": "就業規則の作成", "type": "Term", "page": 3},
+    {"name": "就業規則の変更", "type": "Term", "page": 3},
+    {"name": "就業規則の届出", "type": "Term", "page": 3},
+    {"name": "就業規則の周知", "type": "Term", "page": 4},
+    {"name": "電子申請", "type": "Term", "page": 4},
+
+    {"name": "配付", "type": "Term", "page": 4},
+    {"name": "掲示", "type": "Term", "page": 4},
+    {"name": "備付け", "type": "Term", "page": 4},
+    {"name": "電子媒体への記録", "type": "Term", "page": 4},
+
+    {"name": "事業場", "type": "Term", "page": 2},
+    {"name": "常時10人以上の労働者を使用する事業場", "type": "Term", "page": 3},
+    {"name": "パートタイム労働者", "type": "Term", "page": 5},
+    {"name": "有期雇用労働者", "type": "Term", "page": 5},
+    {"name": "通常の労働者", "type": "Term", "page": 5},
+    {"name": "労働者", "type": "Term", "page": 2},
+    {"name": "使用者", "type": "Term", "page": 2},
+
+    {"name": "労基法第89条", "type": "Term", "page": 2},
+    {"name": "労基法第90条", "type": "Term", "page": 3},
+    {"name": "労基法第92条", "type": "Term", "page": 3},
+    {"name": "労基法第106条第1項", "type": "Term", "page": 4},
+    {"name": "労基法第41条第2号", "type": "Term", "page": 4},
+    {"name": "労基則第6条の2", "type": "Term", "page": 4},
+    {"name": "パートタイム・有期雇用労働法第7条", "type": "Term", "page": 5}
+  ],
+
+  "triples": [
+    {"s": "就業規則", "p": "APPLIES_TO", "o": "常時10人以上の労働者を使用する事業場", "evidence": "p3 第89条: 常時10人以上の労働者を使用する事業場においては...作成し", "criticality": "must_have"},
+    {"s": "労基法", "p": "APPLIES_TO", "o": "労働者を1人でも使用する事業場", "evidence": "p3: 労基法は、労働者を1人でも使用する事業場に適用されますが", "criticality": "must_have"},
+
+    {"s": "就業規則", "p": "HAS_ATTRIBUTE", "o": "記載事項", "evidence": "p2 §2: 就業規則に記載する事項には", "criticality": "must_have"},
+    {"s": "絶対的必要記載事項", "p": "IS_A", "o": "記載事項", "evidence": "p2 §2", "criticality": "must_have"},
+    {"s": "相対的必要記載事項", "p": "IS_A", "o": "記載事項", "evidence": "p2 §2", "criticality": "must_have"},
+    {"s": "任意記載事項", "p": "IS_A", "o": "記載事項", "evidence": "p2 §2: 任意に記載し得る事項", "criticality": "should_have"},
+
+    {"s": "労働時間関係", "p": "BELONGS_TO_CATEGORY", "o": "絶対的必要記載事項", "evidence": "p2 §2 (1)", "criticality": "must_have"},
+    {"s": "賃金関係", "p": "BELONGS_TO_CATEGORY", "o": "絶対的必要記載事項", "evidence": "p2 §2 (2)", "criticality": "must_have"},
+    {"s": "退職関係", "p": "BELONGS_TO_CATEGORY", "o": "絶対的必要記載事項", "evidence": "p2 §2 (3)", "criticality": "must_have"},
+
+    {"s": "退職手当関係", "p": "BELONGS_TO_CATEGORY", "o": "相対的必要記載事項", "evidence": "p2 §2 (1)相対", "criticality": "must_have"},
+    {"s": "臨時の賃金・最低賃金額関係", "p": "BELONGS_TO_CATEGORY", "o": "相対的必要記載事項", "evidence": "p2 §2 (2)相対", "criticality": "must_have"},
+    {"s": "費用負担関係", "p": "BELONGS_TO_CATEGORY", "o": "相対的必要記載事項", "evidence": "p2 §2 (3)相対", "criticality": "must_have"},
+    {"s": "安全衛生関係", "p": "BELONGS_TO_CATEGORY", "o": "相対的必要記載事項", "evidence": "p3 §2 (4)相対", "criticality": "must_have"},
+    {"s": "職業訓練関係", "p": "BELONGS_TO_CATEGORY", "o": "相対的必要記載事項", "evidence": "p3 §2 (5)相対", "criticality": "must_have"},
+    {"s": "災害補償・業務外の傷病扶助関係", "p": "BELONGS_TO_CATEGORY", "o": "相対的必要記載事項", "evidence": "p3 §2 (6)相対", "criticality": "must_have"},
+    {"s": "表彰・制裁関係", "p": "BELONGS_TO_CATEGORY", "o": "相対的必要記載事項", "evidence": "p3 §2 (7)相対", "criticality": "must_have"},
+
+    {"s": "始業時刻", "p": "PART_OF", "o": "労働時間関係", "evidence": "p2: 始業及び終業の時刻...", "criticality": "must_have"},
+    {"s": "終業時刻", "p": "PART_OF", "o": "労働時間関係", "evidence": "p2", "criticality": "must_have"},
+    {"s": "休憩時間", "p": "PART_OF", "o": "労働時間関係", "evidence": "p2", "criticality": "must_have"},
+    {"s": "休日", "p": "PART_OF", "o": "労働時間関係", "evidence": "p2", "criticality": "must_have"},
+    {"s": "休暇", "p": "PART_OF", "o": "労働時間関係", "evidence": "p2", "criticality": "must_have"},
+    {"s": "就業時転換", "p": "PART_OF", "o": "労働時間関係", "evidence": "p2: 就業時転換に関する事項", "criticality": "should_have"},
+
+    {"s": "賃金の決定", "p": "PART_OF", "o": "賃金関係", "evidence": "p2: 賃金の決定、計算及び支払の方法", "criticality": "must_have"},
+    {"s": "賃金の計算", "p": "PART_OF", "o": "賃金関係", "evidence": "p2", "criticality": "must_have"},
+    {"s": "賃金の支払の方法", "p": "PART_OF", "o": "賃金関係", "evidence": "p2", "criticality": "must_have"},
+    {"s": "賃金の締切り", "p": "PART_OF", "o": "賃金関係", "evidence": "p2", "criticality": "should_have"},
+    {"s": "賃金の支払の時期", "p": "PART_OF", "o": "賃金関係", "evidence": "p2", "criticality": "should_have"},
+    {"s": "昇給", "p": "PART_OF", "o": "賃金関係", "evidence": "p2: 並びに昇給に関する事項", "criticality": "must_have"},
+
+    {"s": "退職", "p": "PART_OF", "o": "退職関係", "evidence": "p2: 退職に関する事項", "criticality": "must_have"},
+    {"s": "解雇", "p": "PART_OF", "o": "退職関係", "evidence": "p2: 解雇の事由を含みます", "criticality": "must_have"},
+    {"s": "解雇の事由", "p": "PART_OF", "o": "解雇", "evidence": "p2", "criticality": "should_have"},
+
+    {"s": "労基法", "p": "SAME_AS", "o": "労働基準法", "evidence": "p2: 労働基準法（...）。以下「労基法」といいます", "criticality": "must_have"},
+    {"s": "労基則", "p": "SAME_AS", "o": "労働基準法施行規則", "evidence": "p4: 労働基準法施行規則（...）。以下「労基則」といいます", "criticality": "must_have"},
+    {"s": "パートタイム・有期雇用労働法", "p": "SAME_AS", "o": "短時間労働者及び有期雇用労働者の雇用管理の改善等に関する法律", "evidence": "p5", "criticality": "must_have"},
+    {"s": "管理監督者", "p": "SAME_AS", "o": "監督若しくは管理の地位にある者", "evidence": "p4: 監督若しくは管理の地位にある者...以下「管理監督者」", "criticality": "must_have"},
+    {"s": "本規則", "p": "SAME_AS", "o": "モデル就業規則", "evidence": "p4: このモデル就業規則（以下「本規則」といいます。）", "criticality": "must_have"},
+
+    {"s": "就業規則", "p": "DEPENDS_ON", "o": "労基法", "evidence": "p2 §2: 労基法第89条で定められる; p3: 法令に反してはなりません", "criticality": "must_have"},
+    {"s": "就業規則", "p": "DEPENDS_ON", "o": "労働協約", "evidence": "p3: 当該事業場において適用される労働協約に反してはなりません", "criticality": "must_have"},
+
+    {"s": "就業規則の作成", "p": "HAS_STEP", "o": "意見書の添付", "evidence": "p3 §3: 意見書...を添付しなければなりません（労基法第90条）", "criticality": "must_have"},
+    {"s": "就業規則の作成", "p": "HAS_STEP", "o": "労働基準監督署長への届出", "evidence": "p3 §3: 所轄の労働基準監督署長に届け出なければならない", "criticality": "must_have"},
+    {"s": "就業規則の変更", "p": "HAS_STEP", "o": "労働基準監督署長への届出", "evidence": "p3 §3", "criticality": "must_have"},
+    {"s": "就業規則の変更", "p": "HAS_STEP", "o": "意見書の添付", "evidence": "p3 §3", "criticality": "must_have"},
+
+    {"s": "就業規則の周知", "p": "HAS_STEP", "o": "配付", "evidence": "p4 §4: 労働者の一人ひとりへの配付", "criticality": "must_have"},
+    {"s": "就業規則の周知", "p": "HAS_STEP", "o": "掲示", "evidence": "p4 §4: 見やすい場所への掲示", "criticality": "must_have"},
+    {"s": "就業規則の周知", "p": "HAS_STEP", "o": "備付け", "evidence": "p4 §4: 備付け", "criticality": "must_have"},
+    {"s": "就業規則の周知", "p": "HAS_STEP", "o": "電子媒体への記録", "evidence": "p4 §4: 電子媒体に記録し...モニター画面等で確認できるように", "criticality": "must_have"},
+
+    {"s": "意見書", "p": "PART_OF", "o": "就業規則の届出", "evidence": "p3 §3: 添付しなければなりません", "criticality": "must_have"},
+    {"s": "労働者の過半数を代表する者", "p": "RELATED_TO", "o": "意見書", "evidence": "p3: 過半数を代表する者の意見を記し", "criticality": "must_have"},
+
+    {"s": "労働組合", "p": "RELATED_TO", "o": "意見書", "evidence": "p3: 労働組合がある場合はその労働組合...意見を記し", "criticality": "should_have"},
+
+    {"s": "労働者の過半数を代表する者", "p": "RELATED_TO", "o": "管理監督者", "evidence": "p3-4: 管理監督者でないこと", "criticality": "must_have"},
+
+    {"s": "労基法第89条", "p": "PART_OF", "o": "労基法", "evidence": "p2 §2", "criticality": "should_have"},
+    {"s": "労基法第90条", "p": "PART_OF", "o": "労基法", "evidence": "p3 §3", "criticality": "should_have"},
+    {"s": "労基法第92条", "p": "PART_OF", "o": "労基法", "evidence": "p3 §2: 労基法第92条", "criticality": "should_have"},
+    {"s": "労基法第106条第1項", "p": "PART_OF", "o": "労基法", "evidence": "p4 §4", "criticality": "should_have"},
+    {"s": "労基法第41条第2号", "p": "PART_OF", "o": "労基法", "evidence": "p4 §3", "criticality": "should_have"},
+    {"s": "労基則第6条の2", "p": "PART_OF", "o": "労基則", "evidence": "p4 §3", "criticality": "should_have"},
+    {"s": "パートタイム・有期雇用労働法第7条", "p": "PART_OF", "o": "パートタイム・有期雇用労働法", "evidence": "p5 §5", "criticality": "should_have"},
+
+    {"s": "就業規則", "p": "AFFECTS", "o": "労働者", "evidence": "p4 §4: 労働者に周知しなければなりません", "criticality": "must_have"},
+    {"s": "労基法第92条", "p": "AFFECTS", "o": "就業規則", "evidence": "p3 §2: 労働基準監督署長はその変更を命ずることができます", "criticality": "should_have"},
+
+    {"s": "パートタイム・有期雇用労働法", "p": "APPLIES_TO", "o": "パートタイム労働者", "evidence": "p5 §5", "criticality": "must_have"},
+    {"s": "パートタイム・有期雇用労働法", "p": "APPLIES_TO", "o": "有期雇用労働者", "evidence": "p5 §5", "criticality": "must_have"},
+
+    {"s": "本規則", "p": "APPLIES_TO", "o": "通常の労働者", "evidence": "p5 §5: 主として通常の労働者への適用を想定", "criticality": "must_have"},
+
+    {"s": "電子申請", "p": "RELATED_TO", "o": "就業規則の届出", "evidence": "p4 §3: 就業規則の届出については電子申請でも行うことが可能", "criticality": "should_have"}
+  ]
+}

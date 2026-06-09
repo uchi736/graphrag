@@ -1,0 +1,4223 @@
+{
+  "config": {
+    "high_threshold": 0.97,
+    "low_threshold": 0.92,
+    "top_k": 10
+  },
+  "stats": {
+    "total_terms": 5000,
+    "stage_a_normalize_clusters": 1,
+    "stage_a_pairs": 1,
+    "stage_b_fuzzy_pairs": 219,
+    "stage_c_auto_pairs": 123,
+    "stage_c_llm_judged": 5000,
+    "stage_c_llm_yes": 485,
+    "final_clusters": 462
+  },
+  "merge_plan": [
+    {
+      "canonical": "プロジェクトオーナー",
+      "canonical_type": "Person",
+      "canonical_pr": 9.427272679299298e-05,
+      "canonical_mc": 20,
+      "duplicates": [
+        "プロジェクトのオーナー",
+        "プロジェクトマネージャー",
+        "プロジェクト管理者",
+        "プロジェクト推進責任者"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "学生数",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00019237964102778463,
+      "canonical_mc": 9,
+      "duplicates": [
+        "在籍者数",
+        "生徒数",
+        "生徒数",
+        "在学者数"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "Windows11",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00037130911305385074,
+      "canonical_mc": 51,
+      "duplicates": [
+        "Windows10",
+        "Windows10",
+        "Win11",
+        "Win11"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "Service",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002836646044837159,
+      "canonical_mc": 21,
+      "duplicates": [
+        "サービス",
+        "サービス",
+        "サービス業",
+        "Services"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "業務フロー",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0002658485125071821,
+      "canonical_mc": 31,
+      "duplicates": [
+        "ビジネスプロセスフロー",
+        "ビジネスプロセスフロー"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "在庫共有システム",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00026485697928465185,
+      "canonical_mc": 3,
+      "duplicates": [
+        "在庫共有システムB",
+        "在庫共有システムA",
+        "部品共有システム"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "部門",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002372103525450193,
+      "canonical_mc": 3,
+      "duplicates": [
+        "部署",
+        "部署",
+        "部"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "機器洗浄殺菌手順",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00018955744140237432,
+      "canonical_mc": 11,
+      "duplicates": [
+        "機器洗浄手順",
+        "機器洗浄手順",
+        "機器の洗浄・殺菌"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "LIFEBOOKU7614/R",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00018095832814957479,
+      "canonical_mc": 149,
+      "duplicates": [
+        "LIFEBOOKU7314/R",
+        "LIFEBOOKU7414/R",
+        "LIFEBOOKU6313/R",
+        "LIFEBOOKU6313/RX"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "システム部門",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.0001484537818717192,
+      "canonical_mc": 43,
+      "duplicates": [
+        "システム部",
+        "システム側",
+        "情シス部門"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "病原微生物の汚染",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014532293243149966,
+      "canonical_mc": 11,
+      "duplicates": [
+        "生物微生物の汚染",
+        "生物病原微生物の汚染",
+        "生物病原微生物の存在",
+        "病原微生物の存在"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "保証拡張",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010658816278437519,
+      "canonical_mc": 30,
+      "duplicates": [
+        "保証延長",
+        "保証延長"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "システム化計画",
+      "canonical_type": "Process",
+      "canonical_pr": 6.560033784800474e-05,
+      "canonical_mc": 4,
+      "duplicates": [
+        "システム化企画",
+        "システム化の企画",
+        "システム化計画立案",
+        "システム化構想"
+      ],
+      "size": 5
+    },
+    {
+      "canonical": "業務要件",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00013459662884977375,
+      "canonical_mc": 23,
+      "duplicates": [
+        "業務の遂行要求",
+        "BusinessRequirements",
+        "業務要求"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "「が」を連続させない",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "「の」を連続させない",
+        "「は」を連続させない",
+        "接続助詞「が」を用いない"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "Process",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0006572325290328864,
+      "canonical_mc": 30,
+      "duplicates": [
+        "プロセス",
+        "プロセス"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "キーボード",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0005232349072592242,
+      "canonical_mc": 102,
+      "duplicates": [
+        "Keyboard",
+        "Keyboard"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "Standard",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.0004975165172218232,
+      "canonical_mc": 50,
+      "duplicates": [
+        "標準",
+        "標準"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "バッテリー",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00043247175138404025,
+      "canonical_mc": 65,
+      "duplicates": [
+        "バッテリ",
+        "バッテリ"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "成果",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0003631856163939208,
+      "canonical_mc": 11,
+      "duplicates": [
+        "成果物",
+        "▲成果"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "WindowsHello",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00030933194858934437,
+      "canonical_mc": 24,
+      "duplicates": [],
+      "size": 4
+    },
+    {
+      "canonical": "コスト",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002998566903547958,
+      "canonical_mc": 19,
+      "duplicates": [
+        "費用",
+        "費用"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "USBインターフェース",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00023407304630628553,
+      "canonical_mc": 12,
+      "duplicates": [
+        "USB接続",
+        "USB機器"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "USBType-C",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00021136005257771763,
+      "canonical_mc": 28,
+      "duplicates": [
+        "USB(Type-C)",
+        "USB(Type-C)"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "就職者等",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00020039305902521163,
+      "canonical_mc": 26,
+      "duplicates": [
+        "就職者数",
+        "就職者数"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "利用者",
+      "canonical_type": "Person",
+      "canonical_pr": 0.00019504102725755948,
+      "canonical_mc": 12,
+      "duplicates": [
+        "ユーザ",
+        "ユーザ"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "3年",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001604920118330312,
+      "canonical_mc": 17,
+      "duplicates": [
+        "3年間",
+        "3年間"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "CCP",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001545657830562264,
+      "canonical_mc": 45,
+      "duplicates": [
+        "CP",
+        "CP"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "暗号化機能",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014968798420859217,
+      "canonical_mc": 50,
+      "duplicates": [
+        "暗号化機能付",
+        "暗号化機能付"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "ハードウェア",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00014560363683936795,
+      "canonical_mc": 11,
+      "duplicates": [
+        "Hardware",
+        "Hardware"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "LPDDR5SDRAM",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00012866744874960768,
+      "canonical_mc": 6,
+      "duplicates": [
+        "LPDDR5XSDRAM"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "SIMカードのロック",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00012059622030744635,
+      "canonical_mc": 5,
+      "duplicates": [
+        "SIMPINコードロック",
+        "SIMカードがロックされます"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "標準保証",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00011486516052242019,
+      "canonical_mc": 23,
+      "duplicates": [],
+      "size": 4
+    },
+    {
+      "canonical": "節電機能",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010017683261054255,
+      "canonical_mc": 2,
+      "duplicates": [
+        "省エネ機能",
+        "省エネ機能"
+      ],
+      "size": 4
+    },
+    {
+      "canonical": "弊社ホームページ",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "当社ウェブサイト",
+        "当社ホームページ"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "CLEARSURENextサービス(P70)の契約",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0,
+      "canonical_mc": 2,
+      "duplicates": [
+        "CLEARSURENextサービスの契約",
+        "CLEARSURENextサービス契約"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "男女、地域、設置者別児童数",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "男女、地域、設置者別生徒数",
+        "男女、地域、設置者別園児数"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "業務プロセス",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00014598001350813104,
+      "canonical_mc": 13,
+      "duplicates": [
+        "業務プロセス名"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "可視化",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00012813602622299556,
+      "canonical_mc": 4,
+      "duplicates": [
+        "視覚化"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "クラウドサービス利用者",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00031926337723573513,
+      "canonical_mc": 1,
+      "duplicates": [
+        "クラウド利用",
+        "クラウドサービス利用"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "企業価値向上",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00017634624826052167,
+      "canonical_mc": 12,
+      "duplicates": [
+        "企業価値を高める"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "製品の規格",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00011908755264345878,
+      "canonical_mc": 3,
+      "duplicates": [
+        "製品規格"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "富士通",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00109093941315355,
+      "canonical_mc": 261,
+      "duplicates": [
+        "Fujitsu",
+        "富士通株式会社"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "HACCP",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.0005888817108096562,
+      "canonical_mc": 43,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "16GB",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.0004904039010039479,
+      "canonical_mc": 100,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "要求",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0004468062641284699,
+      "canonical_mc": 39,
+      "duplicates": [
+        "要望"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "要件定義工程",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0004132112772720174,
+      "canonical_mc": 62,
+      "duplicates": [
+        "要件定義プロセス",
+        "要件定義関連のプロセス"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "業績等",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0003448315562782201,
+      "canonical_mc": 1,
+      "duplicates": [
+        "業績",
+        "業績"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "クラウドサービス利用者",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00031926337723573513,
+      "canonical_mc": 6,
+      "duplicates": [
+        "クラウドサービス提供者",
+        "クラウドサービス事業者"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "ノートパソコン",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0002916485655287708,
+      "canonical_mc": 95,
+      "duplicates": [
+        "ノートPC",
+        "ノートパソコン用"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "Intel",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.0002855447672280427,
+      "canonical_mc": 51,
+      "duplicates": [
+        "インテル",
+        "インテル®"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "AAA",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002805142298764661,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "Wi-Fi",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00027496588827423,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "概念データモデル",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00025336670769463265,
+      "canonical_mc": 29,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "MemoryCapacity",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00023037662405572468,
+      "canonical_mc": 9,
+      "duplicates": [
+        "メモリ容量",
+        "メモリ容量"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "システム機能",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00022842862200058684,
+      "canonical_mc": 10,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "D",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00022683307070699515,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "システム化業務フロー",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00022618497426747146,
+      "canonical_mc": 11,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "1000BASE-T",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00021560545155922153,
+      "canonical_mc": 121,
+      "duplicates": [
+        "100BASE-TX",
+        "10BASE-T"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "USB",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.0002153773472889126,
+      "canonical_mc": 22,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "サービスソリューション",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00020959849858463372,
+      "canonical_mc": 24,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "PCIeNVMe",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00020679045074770673,
+      "canonical_mc": 52,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "XML",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00020025706448544237,
+      "canonical_mc": 6,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "男",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00019858413128514608,
+      "canonical_mc": 55,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "1TB",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00019791498906756306,
+      "canonical_mc": 41,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "DDR4SDRAM",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0001908402149595361,
+      "canonical_mc": 8,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "教育",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00018838116469684137,
+      "canonical_mc": 11,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "LTE",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001876146681186213,
+      "canonical_mc": 44,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "売上拡大",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00018691869799044854,
+      "canonical_mc": 8,
+      "duplicates": [
+        "売上向上",
+        "売上向上"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "スケジュール",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00018161717990862773,
+      "canonical_mc": 16,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "Secured-corePC",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00018094332275276736,
+      "canonical_mc": 53,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "熱中症予防対策",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00017173787026632394,
+      "canonical_mc": 2,
+      "duplicates": [
+        "熱中症対策"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "危害要因",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00017151330671619515,
+      "canonical_mc": 21,
+      "duplicates": [
+        "ハザード",
+        "潜在的なハザード"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "ITシステム",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00016402762047223747,
+      "canonical_mc": 13,
+      "duplicates": [
+        "情報システム"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "HDMI",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00015639793689537794,
+      "canonical_mc": 47,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "大学等進学者数",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.0001530654412831581,
+      "canonical_mc": 6,
+      "duplicates": [
+        "進学者数(大学等)"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "開発工程",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001490255498684804,
+      "canonical_mc": 11,
+      "duplicates": [
+        "開発プロセス"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "評価",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001485938189279369,
+      "canonical_mc": 10,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "品質指標",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00014359250398861026,
+      "canonical_mc": 5,
+      "duplicates": [
+        "品質基準"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "レベル2",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014286985235867377,
+      "canonical_mc": 5,
+      "duplicates": [
+        "レベル3",
+        "レベル0"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "RequirementsManagement",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001419540253697918,
+      "canonical_mc": 1,
+      "duplicates": [
+        "要件定義マネジメント",
+        "要件定義マネジメント"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "64bit",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001409970599697099,
+      "canonical_mc": 114,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "一般的衛生管理プログラム",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00013041402228137821,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "インテル®vPro®プラットフォーム",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00012483800627210835,
+      "canonical_mc": 13,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "衛生標準作業手順",
+      "canonical_type": "Process",
+      "canonical_pr": 0.000121887194069354,
+      "canonical_mc": 1,
+      "duplicates": [
+        "SanitationStandardOperationProcedure"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "12区分",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00012124541624508779,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "マネージドサービス",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00011957384586426181,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "オンライン",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011841589214063511,
+      "canonical_mc": 4,
+      "duplicates": [
+        "オフライン"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "データモデル",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011704714553948292,
+      "canonical_mc": 7,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "オプション品",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.000112092299663584,
+      "canonical_mc": 8,
+      "duplicates": [
+        "オプション"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "Type-C",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00010990247676384599,
+      "canonical_mc": 35,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "ITサービス",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00010780001487815529,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "卒業者数",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00010615527862118561,
+      "canonical_mc": 24,
+      "duplicates": [
+        "卒業者総数"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "フルHD",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010507935706635523,
+      "canonical_mc": 14,
+      "duplicates": [],
+      "size": 3
+    },
+    {
+      "canonical": "RM.3.5",
+      "canonical_type": "Standard",
+      "canonical_pr": 8.827238063681507e-05,
+      "canonical_mc": 4,
+      "duplicates": [
+        "RM.3.3",
+        "RM.3.1"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "パソコン本体下面",
+      "canonical_type": "Product",
+      "canonical_pr": 7.369677327156502e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "パソコン本体前面",
+        "パソコン本体背面"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "パソコン本体下面",
+      "canonical_type": "Concept",
+      "canonical_pr": 7.369677327156502e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "パソコン本体前面",
+        "パソコン本体背面"
+      ],
+      "size": 3
+    },
+    {
+      "canonical": "財務・非財務指標の関係性の把握",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "記録内容",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 3,
+      "duplicates": [
+        "記述内容"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "コンピューターがスリープ状態になる時間を変更",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "日経BP社",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.0,
+      "canonical_mc": 2,
+      "duplicates": [
+        "日経BP"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "基本設計",
+      "canonical_type": "Process",
+      "canonical_pr": 8.037716128561372e-05,
+      "canonical_mc": 23,
+      "duplicates": [
+        "基盤設計"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "問題原因分析図のID",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "問題原因分析図の名称"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "操作要件",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "操作条件"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "コーポレートガバナンス",
+      "canonical_type": "Concept",
+      "canonical_pr": 9.555347460004332e-05,
+      "canonical_mc": 90,
+      "duplicates": [
+        "コーポレート・ガバナンス"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "データの共通理解",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00018947596216311086,
+      "canonical_mc": 16,
+      "duplicates": [
+        "データ項目自体が同じものとして認識できるか"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "インストール",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00018200159810138796,
+      "canonical_mc": 12,
+      "duplicates": [
+        "取り付け"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "優先順",
+      "canonical_type": "Indicator",
+      "canonical_pr": 5.940012965316138e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "要求の優先度"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "洗浄剤の残留",
+      "canonical_type": "Concept",
+      "canonical_pr": 7.746561089868532e-05,
+      "canonical_mc": 9,
+      "duplicates": [
+        "化学洗浄剤・殺菌剤の残存"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "B.Boehm",
+      "canonical_type": "Person",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "BarryBoehm"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "原料の入荷",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "原材料の入荷"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "対応責任者",
+      "canonical_type": "Person",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "対応担当者"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "問題や課題",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "問題点・課題"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "利用者統計・実績報告",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "クラウドサービス提供側の対策",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "クラウドサービス利用側の対策"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "受入検査結果",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 5,
+      "duplicates": [
+        "検査結果の確認"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "使用基準のある添加物と使用基準",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "使用基準のある添加物とその使用基準"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "設定不備のリスク",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00015490597258858052,
+      "canonical_mc": 1,
+      "duplicates": [
+        "設定不備によるリスク"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "洗浄・殺菌",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010481734355367125,
+      "canonical_mc": 2,
+      "duplicates": [
+        "洗浄殺菌"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "実施期間",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 3,
+      "duplicates": [
+        "実施時期"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "評価者による個別評価",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "評価者による個別評価例"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "上位作業名",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "下位作業名"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "システム動作環境の設定の方法論",
+      "canonical_type": "Process",
+      "canonical_pr": 8.531927885422919e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "システム動作環境設定の方法論"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "支援ツール",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00014153026803855387,
+      "canonical_mc": 5,
+      "duplicates": [
+        "利用者を支援するツール"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "CRUD図のID",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "CRUD図の名称"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "情報取扱規程",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "情報取扱方針"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "記録文書名",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 3,
+      "duplicates": [
+        "記録文書"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "原因究明",
+      "canonical_type": "Process",
+      "canonical_pr": 8.497460000362353e-05,
+      "canonical_mc": 3,
+      "duplicates": [
+        "原因調査"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "運用や移行、総合テスト",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "DD.13運用、移行、総合テスト"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "地域、設置者別学校数",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 3,
+      "duplicates": [
+        "地域、設置者程別学校数"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "システムアーキテクチャ設計",
+      "canonical_type": "Process",
+      "canonical_pr": 5.349262076198419e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "システムアーキテクチャ選定"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ライフサイクルに合わせた総合的な金融商品・サービスの内訳",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "ライフサイクルに合わせた総合的な金融商品・サービスの取扱い状況"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "問題カテゴリ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011178903883499739,
+      "canonical_mc": 1,
+      "duplicates": [
+        "問題分類"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "エンティティや機能の抜け漏れ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "機能とエンティティの抜けや漏れ"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "業務Lv2",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 2,
+      "duplicates": [
+        "業務Lv3"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "短文主義",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "単文主義"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "システム化要求定義",
+      "canonical_type": "Concept",
+      "canonical_pr": 8.817652290511799e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "システム要求仕様"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "組織全体での基本的方針",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "組織全体での基本的な方針"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "要件定義成果物",
+      "canonical_type": "Product",
+      "canonical_pr": 7.321161527418508e-05,
+      "canonical_mc": 7,
+      "duplicates": [
+        "要件定義のアウトプット"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "優先順位付け",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00032586464840408616,
+      "canonical_mc": 9,
+      "duplicates": [
+        "優先順位の判断"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "類別番号",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "類別区分番号"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "Number",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0006219836727999547,
+      "canonical_mc": 19,
+      "duplicates": [
+        "番号"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "一般的衛生管理",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00023690696780484684,
+      "canonical_mc": 4,
+      "duplicates": [
+        "一般的な衛生管理"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "クラウドサービス設定不備の抑止・防止に係る方針的事項",
+      "canonical_type": "Concept",
+      "canonical_pr": 8.411055651868699e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "クラウドサービス提供における設定不備の抑止・防止のための組織的方針"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "消費期限又は賞味期限",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "システム開発プロセス",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010223357870020692,
+      "canonical_mc": 4,
+      "duplicates": [
+        "システム化プロセス"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "値の用語辞書",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "データ項目の用語辞書"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "利用方法",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "利用方針"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "都道府県別の発生場所別救急搬送人員",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "令和7年8月11日",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "令和7年8月17日"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "掲示板",
+      "canonical_type": "Concept",
+      "canonical_pr": 7.36788567415061e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "掲示物"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "DD.1",
+      "canonical_type": "Process",
+      "canonical_pr": 7.766616977580395e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "DD.7"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "小規模な営業者等",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00021530651928030456,
+      "canonical_mc": 1,
+      "duplicates": [
+        "小規模営業者等"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "システム化対象業務",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0,
+      "canonical_mc": 1,
+      "duplicates": [
+        "システム化するすべての業務"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "一般社団法人日本自動車リサイクル部品協議会",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.0002869006716725076,
+      "canonical_mc": 6,
+      "duplicates": [
+        "日本自動車リサイクル部品販売団体協議会"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "対応内容",
+      "canonical_type": "Concept",
+      "canonical_pr": 7.039130795348491e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "対処内容"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "KC",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.002350788221145861,
+      "canonical_mc": 1,
+      "duplicates": [
+        "IKC"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "要件定義",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0016747989634312628,
+      "canonical_mc": 234,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "ステークホルダ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0007282793077733242,
+      "canonical_mc": 18,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "Processor",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.000695906943360606,
+      "canonical_mc": 112,
+      "duplicates": [
+        "プロセッサー"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "Windows",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0006286520241868523,
+      "canonical_mc": 88,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "セキュリティ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0005777613673190834,
+      "canonical_mc": 88,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "システム",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0005595696059645211,
+      "canonical_mc": 1,
+      "duplicates": [
+        "システム化"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "SSD",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0005589220331176592,
+      "canonical_mc": 94,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "32GB",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.0005581916959530538,
+      "canonical_mc": 63,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "微生物の汚染",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0005512472550280826,
+      "canonical_mc": 21,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "CPU",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0005205185949146597,
+      "canonical_mc": 41,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "手のひら静脈センサー",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0005057335292017088,
+      "canonical_mc": 209,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "リユース部品",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0004789004338215723,
+      "canonical_mc": 24,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "メモリ",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0004616452530492776,
+      "canonical_mc": 73,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "フラッシュメモリ",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00045736607677336383,
+      "canonical_mc": 67,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "役職",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0004568287950447159,
+      "canonical_mc": 6,
+      "duplicates": [
+        "Officer"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "Organization",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00045631137894529164,
+      "canonical_mc": 19,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "調整後営業利益",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00042360164013785745,
+      "canonical_mc": 66,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "Product",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0004208112535661881,
+      "canonical_mc": 35,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "微生物の増殖",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0004070912394694826,
+      "canonical_mc": 21,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "ディスプレイ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00040346802392488544,
+      "canonical_mc": 4,
+      "duplicates": [
+        "Display"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ディスプレイ",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00040346802392488544,
+      "canonical_mc": 23,
+      "duplicates": [
+        "Display"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "その他",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0003988219887740627,
+      "canonical_mc": 48,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "8GB",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00038056346214842613,
+      "canonical_mc": 71,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "OS",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0003778605496483157,
+      "canonical_mc": 50,
+      "duplicates": [
+        "OperatingSystem"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "オンボード",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00037145922955858805,
+      "canonical_mc": 43,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "手段",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0003687451020407093,
+      "canonical_mc": 12,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "指紋認証機能付き電源ボタン",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0003444558249521351,
+      "canonical_mc": 157,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "BIOS",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0003361418058672609,
+      "canonical_mc": 21,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "顔認証対応",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0003232553063877498,
+      "canonical_mc": 116,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "Bluetooth",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00032212136987535536,
+      "canonical_mc": 68,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "学校",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00031139355982206076,
+      "canonical_mc": 19,
+      "duplicates": [
+        "小学校"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "学校",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00031139355982206076,
+      "canonical_mc": 8,
+      "duplicates": [
+        "小学校"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "周辺機器",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0003104921482660424,
+      "canonical_mc": 19,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "解像度",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00031022427385964785,
+      "canonical_mc": 12,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "Support",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00030552383374970104,
+      "canonical_mc": 8,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "時間",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.000304610560314919,
+      "canonical_mc": 19,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "アプリ",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0003021506376181964,
+      "canonical_mc": 10,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "仕様化",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00030106752500557056,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "4年",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00029119647605307833,
+      "canonical_mc": 11,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "レビュー",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00028999143580864413,
+      "canonical_mc": 24,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "インターネット",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002885794099195579,
+      "canonical_mc": 31,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "Service",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0002836646044837159,
+      "canonical_mc": 5,
+      "duplicates": [
+        "サービス"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "クラウドサービス",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0002772166095433283,
+      "canonical_mc": 42,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "CoreTM",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00027323987616419,
+      "canonical_mc": 44,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "アプリケーション",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0002731951781920956,
+      "canonical_mc": 39,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "機能",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00027139868782378486,
+      "canonical_mc": 24,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "タッチパネル",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0002701318588782381,
+      "canonical_mc": 32,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "業務",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00026543472852060056,
+      "canonical_mc": 22,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "大容量バッテリー",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00026542711480039276,
+      "canonical_mc": 22,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "負債",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00026450858899438207,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "業務部門",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.000263170127472444,
+      "canonical_mc": 48,
+      "duplicates": [
+        "法務部門"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "エンティティ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002557324096966591,
+      "canonical_mc": 19,
+      "duplicates": [
+        "エンティティ名"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "本体",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0002521344027933006,
+      "canonical_mc": 20,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "Wi-FiAlliance",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.0002516148858878295,
+      "canonical_mc": 1,
+      "duplicates": [
+        "Wi-FiAlliance®"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "HACCPプラン",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00024912158483533336,
+      "canonical_mc": 11,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "異物の混入",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002490077572124495,
+      "canonical_mc": 14,
+      "duplicates": [
+        "異物混入"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "要求レベル",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002476914442288715,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "SIMカード",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0002476743420997276,
+      "canonical_mc": 42,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "サポートOS",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00024597905199017693,
+      "canonical_mc": 15,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "合意形成",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00024432778821675637,
+      "canonical_mc": 22,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "BIOSセットアップ",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00024409959136368982,
+      "canonical_mc": 46,
+      "duplicates": [
+        "BIOS設定"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "コード",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00024214590757450517,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "サステナビリティ経営",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00023936611435654298,
+      "canonical_mc": 80,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "衛生管理",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00023847733038468162,
+      "canonical_mc": 12,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "標準モデル",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00023426727995296966,
+      "canonical_mc": 9,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "公立",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00023407485501791942,
+      "canonical_mc": 89,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "ビジネスプロセス",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00023093223369312962,
+      "canonical_mc": 30,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "施策",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00022889253818871364,
+      "canonical_mc": 9,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "指紋センサー",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00022858200862206645,
+      "canonical_mc": 48,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "お客様",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00022824135166237753,
+      "canonical_mc": 1,
+      "duplicates": [
+        "顧客"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "お客様",
+      "canonical_type": "Person",
+      "canonical_pr": 0.00022824135166237753,
+      "canonical_mc": 11,
+      "duplicates": [
+        "顧客"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "要求交渉",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00022478615523144766,
+      "canonical_mc": 3,
+      "duplicates": [
+        "要求の交渉"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "取引先",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002224249733978955,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "指標",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00022130092777306393,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "組織",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.0002164370079281135,
+      "canonical_mc": 9,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "無線通信",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0002152418496002687,
+      "canonical_mc": 1,
+      "duplicates": [
+        "無線・通信"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "顔認証",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00021420354571489026,
+      "canonical_mc": 36,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "LAN",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00021285637584217299,
+      "canonical_mc": 71,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "USBType-C",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00021136005257771763,
+      "canonical_mc": 23,
+      "duplicates": [
+        "USB(Type-C)"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "FujitsuUvance",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0002109248154865725,
+      "canonical_mc": 71,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "標準化",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00020320297334087522,
+      "canonical_mc": 8,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "品質",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00019908047090140999,
+      "canonical_mc": 23,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "保証延長パック",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00019707140845935393,
+      "canonical_mc": 190,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "設定不備",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00019653043338856643,
+      "canonical_mc": 13,
+      "duplicates": [
+        "設定ミス"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ソフトウェア",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00019613663013831335,
+      "canonical_mc": 3,
+      "duplicates": [
+        "Software"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "卒業者",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001951191468781831,
+      "canonical_mc": 9,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "デジタルインフラ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001939664565141237,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "金融商品・サービス",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00019247665341319466,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "コミュニケーション",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001920567639526703,
+      "canonical_mc": 15,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "製品",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00019171040337251951,
+      "canonical_mc": 35,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "情報漏えい",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001871156851093842,
+      "canonical_mc": 18,
+      "duplicates": [
+        "情報漏洩"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "正確性",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00018704009938721612,
+      "canonical_mc": 9,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "自治体",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00018675180101694158,
+      "canonical_mc": 31,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "承認",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00018495713301212223,
+      "canonical_mc": 8,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "モダナイゼーション",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00018442754773492355,
+      "canonical_mc": 28,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "プロジェクト",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001824757136986664,
+      "canonical_mc": 14,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "総数",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00018111027495502108,
+      "canonical_mc": 25,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "接続",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00018097049772600123,
+      "canonical_mc": 10,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "搭載モデル",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0001792957336781482,
+      "canonical_mc": 12,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "管理基準",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00017852219269418328,
+      "canonical_mc": 18,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "DX",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00017705374581491228,
+      "canonical_mc": 40,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "要件量",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00017649118138624587,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "標準化ルール",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001735573328519256,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "暗号化",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00017333659565278408,
+      "canonical_mc": 13,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "無線WAN(LTE)搭載モデル",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00017298446102405646,
+      "canonical_mc": 1,
+      "duplicates": [
+        "無線WAN(LTE)モデル"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "資本合計",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00017282373247614553,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "上流工程",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001717798534534665,
+      "canonical_mc": 7,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "生産性",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00017063460844457228,
+      "canonical_mc": 11,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "推奨",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00016927484235726865,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "学校数",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00016797884757278238,
+      "canonical_mc": 67,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "非機能要求",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00016669117543966042,
+      "canonical_mc": 30,
+      "duplicates": [
+        "非機能要件"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "価格",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00016555915223166956,
+      "canonical_mc": 16,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "5G",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001642568641259694,
+      "canonical_mc": 29,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "ドライバー",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00016416697163217127,
+      "canonical_mc": 15,
+      "duplicates": [
+        "ドライバ"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ドライバー",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00016416697163217127,
+      "canonical_mc": 1,
+      "duplicates": [
+        "ドライバ"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "マスタ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001636747566090581,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "円",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00016169458763535044,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "営業利益率",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.0001608662312874187,
+      "canonical_mc": 8,
+      "duplicates": [
+        "営業利益"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "予算",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00016075539985222222,
+      "canonical_mc": 7,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "廃棄",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001595296115854889,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "WakeonLAN",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00015913090967734157,
+      "canonical_mc": 32,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "フラップ",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00015868767625718463,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "各種学校",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00015781204930230493,
+      "canonical_mc": 13,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "メモリーカード",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00015766969257776362,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "【Fn】キー",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00015726452957160313,
+      "canonical_mc": 1,
+      "duplicates": [
+        "Fnキー"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "NIST",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00015722847437724978,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "対策",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00015477614804586154,
+      "canonical_mc": 7,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "バッテリー駆動時間",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00015265576083056554,
+      "canonical_mc": 14,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "テスト",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001526469349647201,
+      "canonical_mc": 12,
+      "duplicates": [
+        "試験"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "重点戦略",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00015021032647400076,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "女",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00014956398297283986,
+      "canonical_mc": 7,
+      "duplicates": [
+        "女子"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "東京都",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00014923838928118335,
+      "canonical_mc": 58,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "金融資産",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014800051138821324,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "スタムメイド",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00014717197542728436,
+      "canonical_mc": 1,
+      "duplicates": [
+        "カスタムメイド"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "食品",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014691829663922128,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "5年",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014680079394056958,
+      "canonical_mc": 22,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "指紋認証",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001465233533879369,
+      "canonical_mc": 37,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "取締役会",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00014572989939251938,
+      "canonical_mc": 28,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "ECO",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014550771508042696,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "全日制",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014528016130800742,
+      "canonical_mc": 18,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "指紋認証機能付き",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014525045594893383,
+      "canonical_mc": 16,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "共通フレーム",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00014507576871768826,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "継続的な改善",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00014444264218781735,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "定義",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001444265367234452,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "体調不良",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014428577629506953,
+      "canonical_mc": 2,
+      "duplicates": [
+        "体調不良者"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "変更",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001440517002167901,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "目標",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00014345001249418282,
+      "canonical_mc": 7,
+      "duplicates": [
+        "目標値"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "セキュリティ対策",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00014322342751941355,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "負債合計",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00014166905027575738,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "設定",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00014034733943056745,
+      "canonical_mc": 8,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "改善措置",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00013925783246776668,
+      "canonical_mc": 21,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "数量",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00013893807031703856,
+      "canonical_mc": 6,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "ツール",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0001387290133386772,
+      "canonical_mc": 6,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "就職者",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00013857714835141473,
+      "canonical_mc": 14,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "IT施策",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00013712982079641876,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "LED",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00013614749420065217,
+      "canonical_mc": 26,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "総合的な金融商品・サービスの提供",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00013466527985440892,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "エネルギー消費効率",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00013370363287931681,
+      "canonical_mc": 12,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "リカバリメディア",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0001329543458246634,
+      "canonical_mc": 61,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "定時制",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00013294524658143684,
+      "canonical_mc": 16,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "メトリクス",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001326400409243568,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "システム要件",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001323482100836745,
+      "canonical_mc": 17,
+      "duplicates": [
+        "SystemRequirements"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ビジネス要件",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001320986736444195,
+      "canonical_mc": 2,
+      "duplicates": [
+        "ビジネス要求"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ペットストア",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00013166110249080944,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "進学者",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00013123855191419484,
+      "canonical_mc": 11,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "内蔵無線WAN",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00013110955846764327,
+      "canonical_mc": 59,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "記録",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00013077521320083632,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "非構造化データ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00013069509131062986,
+      "canonical_mc": 1,
+      "duplicates": [
+        "構造化データ"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "手戻り量",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.0001305809063512229,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "商品",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00013025523593447,
+      "canonical_mc": 8,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "高齢者",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00012976578704081983,
+      "canonical_mc": 20,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "富士通グループ",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00012958119485211652,
+      "canonical_mc": 115,
+      "duplicates": [
+        "FujitsuGroup"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "検証",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00012707537909598942,
+      "canonical_mc": 13,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "5段階評価",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00012703748784176675,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "WUXGA",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00012570005936681013,
+      "canonical_mc": 27,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "高速スタートアップを有効にする(推奨)",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00012529675761273966,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "数値",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001244262853849067,
+      "canonical_mc": 2,
+      "duplicates": [
+        "数字"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "品",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00012354154467963342,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "工程",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00012290263631185418,
+      "canonical_mc": 7,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "合計",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00012238225702776459,
+      "canonical_mc": 13,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "表示色",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00012232585742921224,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "セキュリティチップ",
+      "canonical_type": "Product",
+      "canonical_pr": 0.0001211672322881595,
+      "canonical_mc": 63,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "画面遷移",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00012016385141371452,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "ドライバーズディスク検索",
+      "canonical_type": "Process",
+      "canonical_pr": 0.0001196860008791498,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "予防法",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00011967250366591239,
+      "canonical_mc": 1,
+      "duplicates": [
+        "予防"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "製造責任者",
+      "canonical_type": "Person",
+      "canonical_pr": 0.0001196276161982494,
+      "canonical_mc": 15,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "DRAM-lessSSD",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00011949663030976453,
+      "canonical_mc": 25,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "スマートカード",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00011907054154543425,
+      "canonical_mc": 58,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "Enterprise",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011876371758119862,
+      "canonical_mc": 27,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "タッチパネル非搭載モデル",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011867546459255868,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "売上",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00011830334343704487,
+      "canonical_mc": 6,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "Secured-core",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011793655234966148,
+      "canonical_mc": 25,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "水分補給",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00011779779129000604,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "eSIM",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00011756531573500582,
+      "canonical_mc": 12,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "人的資本経営",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011711688334386168,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "認証",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011694389291526033,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "ユーザインターフェース",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001167181748913787,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "共通認識",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011646484553115929,
+      "canonical_mc": 3,
+      "duplicates": [
+        "共通理解"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "抗生物質",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011645166176166813,
+      "canonical_mc": 16,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "RemoteSetupAndConfiguration",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00011643820418149224,
+      "canonical_mc": 1,
+      "duplicates": [
+        "RemoteConfiguration"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "OFFボタン",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00011586580548567331,
+      "canonical_mc": 9,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "ベストプラクティス",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001153200709548081,
+      "canonical_mc": 6,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "レーザー式",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011416031432447483,
+      "canonical_mc": 24,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "AuthConductor",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00011403906522649885,
+      "canonical_mc": 19,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "JIS配列",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00011318671828134275,
+      "canonical_mc": 31,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "リザルトチェーン",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011316664832191434,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "出荷プロセス",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00011306125858571163,
+      "canonical_mc": 1,
+      "duplicates": [
+        "出荷処理"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "QCD",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00011243371313593487,
+      "canonical_mc": 8,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "FujitsuWay",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011240841859125148,
+      "canonical_mc": 15,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "NVMe",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00011224081636190165,
+      "canonical_mc": 50,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "社外取締役",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011196068913398714,
+      "canonical_mc": 8,
+      "duplicates": [
+        "社外監査役"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "社外取締役",
+      "canonical_type": "Person",
+      "canonical_pr": 0.00011196068913398714,
+      "canonical_mc": 15,
+      "duplicates": [
+        "社外監査役"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "無線WAN(LTE)",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011183579907860087,
+      "canonical_mc": 16,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "プロジェクトチーム",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00011092014858573229,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "IT",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00011023990908978748,
+      "canonical_mc": 6,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "SMARTACCESSシリーズ",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00010931814176065209,
+      "canonical_mc": 54,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "デジタル化",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010850689876539176,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "有効性",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010833096083222172,
+      "canonical_mc": 6,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "管理計画作成",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010813550023695748,
+      "canonical_mc": 1,
+      "duplicates": [
+        "プロジェクト管理計画"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "品質低下",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010766456786493666,
+      "canonical_mc": 4,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "手戻りコスト",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001075889611104463,
+      "canonical_mc": 7,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "組織のスイムレーン",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010747869419185633,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "健康状態",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00010744625261381389,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "コンサルティング",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010700851266703941,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "インシデント",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010667112222688825,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "全国",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00010612994636283411,
+      "canonical_mc": 17,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "病原微生物の生残",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001060623137376561,
+      "canonical_mc": 11,
+      "duplicates": [
+        "病原微生物の残存"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "論理削除",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010548043408986823,
+      "canonical_mc": 1,
+      "duplicates": [
+        "物理削除"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "進捗遅れ",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010520685658213441,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "非機能要求グレード",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00010487018183925038,
+      "canonical_mc": 6,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "分野別本科学生数の割合",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00010481485948154717,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "受注生産品",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010456547023076962,
+      "canonical_mc": 15,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "公衆衛生に与える影響が少ない営業",
+      "canonical_type": "Organization",
+      "canonical_pr": 0.00010418868233648636,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "core",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010336313380612341,
+      "canonical_mc": 3,
+      "duplicates": [
+        "Core"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "PCIe",
+      "canonical_type": "Standard",
+      "canonical_pr": 0.00010316406962486081,
+      "canonical_mc": 38,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "指紋認証機能",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010307548381130325,
+      "canonical_mc": 64,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "暗号化フラッシュ",
+      "canonical_type": "Product",
+      "canonical_pr": 0.00010289359598070643,
+      "canonical_mc": 11,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "組織体制・人材育成",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010263901753510357,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "温度",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010251258729639623,
+      "canonical_mc": 19,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "投資対効果",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.000101734804215602,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "事業戦略",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010157208630566334,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "20スレッド",
+      "canonical_type": "Indicator",
+      "canonical_pr": 0.00010155221166179735,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "評価指標",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010134469486921287,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "国籍・地域別留学生数の割合の推移",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.0001008716057460631,
+      "canonical_mc": 1,
+      "duplicates": [
+        "分野・専攻分野別留学生数の割合の推移"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "対応",
+      "canonical_type": "Process",
+      "canonical_pr": 0.00010044114150698032,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "物品",
+      "canonical_type": "Concept",
+      "canonical_pr": 0.00010028545874562633,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "CLEARSURENext",
+      "canonical_type": "Product",
+      "canonical_pr": 9.958247664517112e-05,
+      "canonical_mc": 34,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "CLEARSURENext",
+      "canonical_type": "Standard",
+      "canonical_pr": 9.958247664517112e-05,
+      "canonical_mc": 18,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "総合的な対策",
+      "canonical_type": "Process",
+      "canonical_pr": 9.866680970227012e-05,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "社会",
+      "canonical_type": "Concept",
+      "canonical_pr": 9.826213886726159e-05,
+      "canonical_mc": 6,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "マルウェア",
+      "canonical_type": "Concept",
+      "canonical_pr": 9.78806353778199e-05,
+      "canonical_mc": 3,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "生物なし",
+      "canonical_type": "Concept",
+      "canonical_pr": 9.786383769757443e-05,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "乳製品",
+      "canonical_type": "Concept",
+      "canonical_pr": 9.784545319116779e-05,
+      "canonical_mc": 5,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "放送番組",
+      "canonical_type": "Product",
+      "canonical_pr": 9.778092571490365e-05,
+      "canonical_mc": 2,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "クラウド",
+      "canonical_type": "Concept",
+      "canonical_pr": 9.724274426099866e-05,
+      "canonical_mc": 6,
+      "duplicates": [
+        "クラウド化"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "改造型開発",
+      "canonical_type": "Process",
+      "canonical_pr": 9.603795317336762e-05,
+      "canonical_mc": 5,
+      "duplicates": [
+        "改造開発型"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "不特定者が出入りする場所の屋内部分",
+      "canonical_type": "Concept",
+      "canonical_pr": 9.457704740411229e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "不特定者が出入りする場所の屋外部分"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ITシステムの機能",
+      "canonical_type": "Process",
+      "canonical_pr": 9.319565678172791e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "IT機能"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "フィルターの維持管理",
+      "canonical_type": "Process",
+      "canonical_pr": 9.188515420669677e-05,
+      "canonical_mc": 6,
+      "duplicates": [
+        "フィルターを維持管理する"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "膨らむ要求の制御",
+      "canonical_type": "Process",
+      "canonical_pr": 9.115161308604072e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "膨らむ要求を制御したこと"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "データ表記",
+      "canonical_type": "Concept",
+      "canonical_pr": 9.065380762293554e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "データ記法"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "予約資料を利用者に提示",
+      "canonical_type": "Process",
+      "canonical_pr": 8.987066627928948e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "予約資料の提示"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "実現性",
+      "canonical_type": "Concept",
+      "canonical_pr": 8.879500653978975e-05,
+      "canonical_mc": 16,
+      "duplicates": [
+        "実現可能性"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "直接的な関わりを持つ関係者",
+      "canonical_type": "Concept",
+      "canonical_pr": 8.694019776067363e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "間接的な関わりを持つ関係者"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "書き出す",
+      "canonical_type": "Process",
+      "canonical_pr": 8.567746723958543e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "書き出し"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "32GB×2",
+      "canonical_type": "Indicator",
+      "canonical_pr": 8.559208502335357e-05,
+      "canonical_mc": 5,
+      "duplicates": [
+        "32GB×1"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "32GB×2",
+      "canonical_type": "Concept",
+      "canonical_pr": 8.559208502335357e-05,
+      "canonical_mc": 5,
+      "duplicates": [
+        "32GB×1"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ビジネス・モデル",
+      "canonical_type": "Concept",
+      "canonical_pr": 8.275308931718666e-05,
+      "canonical_mc": 6,
+      "duplicates": [
+        "ビジネスモデル"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "図書館システム",
+      "canonical_type": "Product",
+      "canonical_pr": 8.264082979849079e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "図書館情報システム"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "危害要因分析",
+      "canonical_type": "Process",
+      "canonical_pr": 8.244611674235655e-05,
+      "canonical_mc": 28,
+      "duplicates": [
+        "危害要因の分析"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "週次のバックアップ",
+      "canonical_type": "Process",
+      "canonical_pr": 8.217031576950955e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "週次バックアップ"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "製作",
+      "canonical_type": "Process",
+      "canonical_pr": 8.201835859543096e-05,
+      "canonical_mc": 5,
+      "duplicates": [
+        "作成"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "FMCPTD01X",
+      "canonical_type": "Product",
+      "canonical_pr": 8.14087627127651e-05,
+      "canonical_mc": 23,
+      "duplicates": [
+        "FMCPTD01Y"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "1年目翌営業日以降訪問修理",
+      "canonical_type": "Process",
+      "canonical_pr": 8.090306352774016e-05,
+      "canonical_mc": 9,
+      "duplicates": [
+        "4年間翌営業日以降訪問修理"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "約10.0時間",
+      "canonical_type": "Indicator",
+      "canonical_pr": 8.017763657034844e-05,
+      "canonical_mc": 4,
+      "duplicates": [
+        "約30.0時間"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "約29.0時間",
+      "canonical_type": "Indicator",
+      "canonical_pr": 7.999410542045143e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "約9.0時間"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ナレッジ",
+      "canonical_type": "Concept",
+      "canonical_pr": 7.748946193232974e-05,
+      "canonical_mc": 3,
+      "duplicates": [
+        "知識"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "クラウドサービス提供",
+      "canonical_type": "Process",
+      "canonical_pr": 7.74786490356838e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "クラウドサービス利用"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "金属異物の残存",
+      "canonical_type": "Concept",
+      "canonical_pr": 7.743117282948022e-05,
+      "canonical_mc": 4,
+      "duplicates": [
+        "金属片の残存"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "コスト削減",
+      "canonical_type": "Concept",
+      "canonical_pr": 7.602553884586069e-05,
+      "canonical_mc": 5,
+      "duplicates": [
+        "コストダウン"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "ACアダプタ(45W)",
+      "canonical_type": "Product",
+      "canonical_pr": 7.54354269750997e-05,
+      "canonical_mc": 7,
+      "duplicates": [
+        "ACアダプタ(65W)"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "経営指標",
+      "canonical_type": "Concept",
+      "canonical_pr": 7.519783346830192e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "経営目標"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "生クリーム",
+      "canonical_type": "Product",
+      "canonical_pr": 7.494310566752848e-05,
+      "canonical_mc": 7,
+      "duplicates": [
+        "クリーム"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "災害復旧枠",
+      "canonical_type": "Process",
+      "canonical_pr": 7.477691594785369e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "災害復旧"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "パソコン本体左側面",
+      "canonical_type": "Product",
+      "canonical_pr": 7.369677327156502e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "パソコン本体右側面"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "パソコン本体左側面",
+      "canonical_type": "Concept",
+      "canonical_pr": 7.369677327156502e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "パソコン本体右側面"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "商品を登録する",
+      "canonical_type": "Process",
+      "canonical_pr": 7.17504889525274e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "商品登録"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "右側面外装部品",
+      "canonical_type": "Concept",
+      "canonical_pr": 6.946945655064277e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "左側面外装部品"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "別売品",
+      "canonical_type": "Concept",
+      "canonical_pr": 6.865159003197703e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "別売"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "2重管理",
+      "canonical_type": "Concept",
+      "canonical_pr": 6.806672528023749e-05,
+      "canonical_mc": 1,
+      "duplicates": [],
+      "size": 2
+    },
+    {
+      "canonical": "To-Be",
+      "canonical_type": "Concept",
+      "canonical_pr": 6.777878066337735e-05,
+      "canonical_mc": 5,
+      "duplicates": [
+        "ToBe"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "RM.3.1",
+      "canonical_type": "Process",
+      "canonical_pr": 6.768446934259902e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "RM.4.1"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "IaaS",
+      "canonical_type": "Concept",
+      "canonical_pr": 6.755879399308242e-05,
+      "canonical_mc": 15,
+      "duplicates": [
+        "SaaS"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "IaaS",
+      "canonical_type": "Product",
+      "canonical_pr": 6.755879399308242e-05,
+      "canonical_mc": 12,
+      "duplicates": [
+        "SaaS"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "液晶ディスプレイを暗くする",
+      "canonical_type": "Process",
+      "canonical_pr": 6.726294238981077e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "液晶ディスプレイを明るくする"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "金属探知機",
+      "canonical_type": "Product",
+      "canonical_pr": 6.647723912214317e-05,
+      "canonical_mc": 8,
+      "duplicates": [
+        "金属検出機"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "利用部門",
+      "canonical_type": "Organization",
+      "canonical_pr": 6.598685769694546e-05,
+      "canonical_mc": 9,
+      "duplicates": [
+        "運用部門"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "CoreUltra5135U",
+      "canonical_type": "Product",
+      "canonical_pr": 6.565466333244525e-05,
+      "canonical_mc": 28,
+      "duplicates": [
+        "CoreUltra5125U"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "AsIs",
+      "canonical_type": "Concept",
+      "canonical_pr": 5.96486084880389e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "As-Is"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "Ultra5135U",
+      "canonical_type": "Product",
+      "canonical_pr": 5.8772360546284945e-05,
+      "canonical_mc": 6,
+      "duplicates": [
+        "Ultra5125U"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "貸出",
+      "canonical_type": "Process",
+      "canonical_pr": 5.868640839185515e-05,
+      "canonical_mc": 2,
+      "duplicates": [
+        "貸し出し"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "PCカード",
+      "canonical_type": "Product",
+      "canonical_pr": 5.860333002951601e-05,
+      "canonical_mc": 3,
+      "duplicates": [
+        "ICカード"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "Technology",
+      "canonical_type": "Concept",
+      "canonical_pr": 5.6790118127622725e-05,
+      "canonical_mc": 4,
+      "duplicates": [
+        "技術"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "週次月別",
+      "canonical_type": "Process",
+      "canonical_pr": 5.614630230113762e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "週次週別"
+      ],
+      "size": 2
+    },
+    {
+      "canonical": "左リアキャリパー",
+      "canonical_type": "Product",
+      "canonical_pr": 5.441182874510565e-05,
+      "canonical_mc": 1,
+      "duplicates": [
+        "左フロントキャリパー"
+      ],
+      "size": 2
+    }
+  ]
+}

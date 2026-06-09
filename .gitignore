@@ -62,3 +62,14 @@ tmp/
 # Output files
 output/
 results/
+
+# Auto-generated graph exports (build_kg.py で毎回再生成)
+graph.json
+graph.pkl
+
+# 前処理出力 (PDF→テキスト/JSON、derived data, 5MB+)
+_bench/_pp/
+_bench/_pp_test/
+
+# Claude Code 一時ファイル
+.claude/scheduled_tasks.lock

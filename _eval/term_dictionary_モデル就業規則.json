@@ -1,0 +1,107 @@
+{
+  "_meta": {
+    "description": "モデル就業規則(厚労省) 用の専門用語辞書サンプル",
+    "version": "1.0",
+    "applies_to_categories": ["法令", "概念", "プロセス", "組織"]
+  },
+  "_format_notes": [
+    "entries[].canonical: 正規名 (Term.id と一致させる or alias 経由でマッチ)",
+    "entries[].aliases: 別名・略称 (Term.id がこのリストに含まれる Term もマッチ対象)",
+    "entries[].category: Term.category にコピーされる",
+    "entries[].definition: Term.definition にコピーされる",
+    "entries[].notes: Term.notes にコピー (任意)"
+  ],
+  "entries": [
+    {
+      "canonical": "労働基準法",
+      "aliases": ["労基法"],
+      "category": "法令",
+      "definition": "昭和22年法律第49号",
+      "notes": "労働条件の最低基準を定める法律"
+    },
+    {
+      "canonical": "労働基準法施行規則",
+      "aliases": ["労基則"],
+      "category": "法令",
+      "definition": "昭和22年厚生省令第23号"
+    },
+    {
+      "canonical": "短時間労働者及び有期雇用労働者の雇用管理の改善等に関する法律",
+      "aliases": ["パートタイム・有期雇用労働法", "パート有期法"],
+      "category": "法令",
+      "definition": "平成5年法律第76号"
+    },
+    {
+      "canonical": "労働協約",
+      "aliases": [],
+      "category": "概念",
+      "definition": "労働組合と使用者の間で労働条件等について書面で取り交わされる協定"
+    },
+    {
+      "canonical": "労働基準監督署長",
+      "aliases": ["労基署長"],
+      "category": "組織",
+      "definition": "都道府県労働局の管轄区域ごとに置かれる労働基準監督署の長"
+    },
+    {
+      "canonical": "管理監督者",
+      "aliases": ["監督若しくは管理の地位にある者"],
+      "category": "概念",
+      "definition": "労基法第41条第2号に規定する、労働時間等に関する規制の適用除外となる管理職層"
+    },
+    {
+      "canonical": "就業規則",
+      "aliases": [],
+      "category": "概念",
+      "definition": "労働時間や賃金、人事・服務規律などの労働条件・待遇の基準を定めた規則"
+    },
+    {
+      "canonical": "モデル就業規則",
+      "aliases": ["本規則"],
+      "category": "概念",
+      "definition": "厚生労働省が示す就業規則の規程例"
+    },
+    {
+      "canonical": "絶対的必要記載事項",
+      "aliases": [],
+      "category": "概念",
+      "definition": "就業規則に必ず記載しなければならない事項 (労基法第89条)"
+    },
+    {
+      "canonical": "相対的必要記載事項",
+      "aliases": [],
+      "category": "概念",
+      "definition": "事業場でルールを定める場合に就業規則に記載しなければならない事項 (労基法第89条)"
+    },
+    {
+      "canonical": "意見書",
+      "aliases": [],
+      "category": "文書",
+      "definition": "就業規則の作成・変更時に過半数代表者の意見を記し氏名を記載した書面"
+    },
+    {
+      "canonical": "厚生労働省",
+      "aliases": ["厚労省"],
+      "category": "組織",
+      "definition": "労働行政を所管する日本の中央省庁"
+    },
+    {
+      "canonical": "労働組合",
+      "aliases": [],
+      "category": "組織",
+      "definition": "労働者が主体となって自主的に労働条件の維持改善等を図ることを目的として組織する団体"
+    },
+    {
+      "canonical": "パートタイム労働者",
+      "aliases": ["短時間労働者"],
+      "category": "概念",
+      "definition": "1週間の所定労働時間が同一事業場の通常の労働者より短い労働者"
+    },
+    {
+      "canonical": "有期雇用労働者",
+      "aliases": [],
+      "category": "概念",
+      "definition": "期間の定めのある労働契約を締結している労働者"
+    }
+  ]
+}

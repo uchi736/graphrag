@@ -1,0 +1,202 @@
+{
+  "domain": "fujitsu-rag-hard-benchmark/multi-domain",
+  "version": "fjrag-v1.0",
+  "generated_at": "2026-06-07T00:00:00Z",
+  "generated_by": "claude (manual curation after reviewing all 34 PDFs)",
+  "notes": [
+    "12ドメイン (HACCP/富士通決算/LIFEBOOK/熱中症/総務省白書/クラウドセキュリティ/用語辞書/学校統計/自動車リユース/金融/要件定義/その他) を横断するためのスキーマ。",
+    "デフォルトの12関係をベースに、ドメイン横断で頻出する関係を追加して 35関係とした。",
+    "node_types はLangChain LLMGraphTransformer の allowed_nodes 用。8種で抽出を分類化。",
+    "次の作業: build_kg.py を allowed_relationships=この一覧 で再構築 (5-6h)、評価して FJH-04 と比較する。"
+  ],
+
+  "node_types": [
+    "Person",
+    "Organization",
+    "Product",
+    "Process",
+    "Standard",
+    "Indicator",
+    "Concept",
+    "Document"
+  ],
+
+  "node_type_definitions": {
+    "Person": "個人 (役員、担当者、責任者など)。例: 時田隆仁、CFO、食品衛生責任者",
+    "Organization": "組織・団体・自治体・政府機関・部署。例: 富士通株式会社、厚生労働省、世田谷区、サービスソリューション事業本部",
+    "Product": "製品・サービス・ブランド。例: LIFEBOOK U7614/R、DataFlow Pro、サーバ製品、Windows 11",
+    "Process": "手順・工程・プロセス・業務。例: HACCPの手順4、製造工程、要件定義プロセス、BIOSセットアップ",
+    "Standard": "規格・法律・規則・ガイドライン・基準。例: 労基法第89条、CIS Benchmarks、ISO 22000、衛生管理基準",
+    "Indicator": "指標・統計値・財務数値。例: 売上収益、前年比、傷病程度別の搬送人員、救急搬送数",
+    "Concept": "一般概念・専門用語 (上記に該当しないもの)。例: 重要管理点、リユース部品、暑さ指数、ICTリテラシー",
+    "Document": "文書・報告書・規程・カタログ。例: 統合レポート2024、HACCPプラン、製造工程図、就業規則"
+  },
+
+  "relations": [
+    {"name": "IS_A", "definition": "AはBの一種である (上位概念への分類)", "examples": [
+      "牛乳 IS_A 乳製品", "リユース部品 IS_A 自動車部品", "LIFEBOOK U7614/R IS_A LIFEBOOK"
+    ]},
+    {"name": "BELONGS_TO_CATEGORY", "definition": "AはBというカテゴリに属する", "examples": [
+      "サービスソリューション BELONGS_TO_CATEGORY セグメント",
+      "暑熱避難施設 BELONGS_TO_CATEGORY 熱中症対策施設"
+    ]},
+    {"name": "PART_OF", "definition": "AはBの構成要素・一部である", "examples": [
+      "始業時刻 PART_OF 労働時間関係",
+      "CFO PART_OF 富士通経営陣",
+      "公共サービスシステム事業本部 PART_OF JAPANビジネスグループ"
+    ]},
+    {"name": "HAS_PART", "definition": "AはBを構成要素として含む (PART_OFの逆)", "examples": [
+      "HACCPプラン HAS_PART モニタリング方法",
+      "決算報告 HAS_PART セグメント別事業概況"
+    ]},
+
+    {"name": "HAS_STEP", "definition": "Aには手順・工程Bがある (順序性ありの構成要素)", "examples": [
+      "HACCP導入 HAS_STEP 危害要因の分析",
+      "BIOSセットアップ HAS_STEP パスワード設定",
+      "要件定義 HAS_STEP ビジネス要求の文書化"
+    ]},
+    {"name": "FOLLOWS", "definition": "Aは順番でBの後に続く (時系列・手順)", "examples": [
+      "手順7(CCP決定) FOLLOWS 手順6(危害要因分析)"
+    ]},
+    {"name": "PRECEDES", "definition": "AはBに先行する", "examples": [
+      "受入検査 PRECEDES 製造工程"
+    ]},
+    {"name": "REQUIRES_BEFORE", "definition": "Aを行う前提としてBが必要", "examples": [
+      "電子申請 REQUIRES_BEFORE GビズIDの取得"
+    ]},
+
+    {"name": "HAS_ATTRIBUTE", "definition": "AはBという属性・特性を持つ (汎用)", "examples": [
+      "LIFEBOOK U7614/R HAS_ATTRIBUTE TPM2.0",
+      "高齢者 HAS_ATTRIBUTE 体内水分量50%"
+    ]},
+    {"name": "HAS_VALUE", "definition": "指標Aの値はB (Indicatorに特化)", "examples": [
+      "売上収益 HAS_VALUE 2兆6,214億円",
+      "総搬送人員 HAS_VALUE 17,229人"
+    ]},
+    {"name": "MEASURED_IN", "definition": "Aは単位Bで計測される", "examples": [
+      "売上収益 MEASURED_IN 億円",
+      "傷病程度別搬送人員 MEASURED_IN 人"
+    ]},
+
+    {"name": "CAUSES", "definition": "AはBを引き起こす", "examples": [
+      "設定不備 CAUSES 情報漏えい",
+      "災害 CAUSES 通信障害",
+      "管理基準逸脱 CAUSES 食品衛生上の危害"
+    ]},
+    {"name": "AFFECTS", "definition": "AはBに影響する", "examples": [
+      "為替変動 AFFECTS 売上収益",
+      "暑熱 AFFECTS 高齢者の循環器系"
+    ]},
+    {"name": "PREVENTS", "definition": "AはBを予防する/防ぐ", "examples": [
+      "重要管理点(CCP) PREVENTS 食品衛生上の危害",
+      "エアコン PREVENTS 熱中症",
+      "5S活動 PREVENTS 異物混入"
+    ]},
+    {"name": "MITIGATES", "definition": "AはBを軽減する", "examples": [
+      "暑熱避難施設 MITIGATES 熱中症リスク",
+      "BCP対策 MITIGATES 災害影響"
+    ]},
+
+    {"name": "DEPENDS_ON", "definition": "AはBに依存する", "examples": [
+      "就業規則 DEPENDS_ON 労基法",
+      "DXプラットフォーム DEPENDS_ON クラウドインフラ"
+    ]},
+    {"name": "REQUIRES", "definition": "AはBを必要とする (材料・要件)", "examples": [
+      "HACCPプラン REQUIRES 危害要因分析",
+      "暑熱避難施設 REQUIRES 庁内連携体制"
+    ]},
+    {"name": "ENABLES", "definition": "AはBを可能にする", "examples": [
+      "電子申請 ENABLES 就業規則届出のオンライン化",
+      "5G ENABLES 高速無線通信"
+    ]},
+
+    {"name": "APPLIES_TO", "definition": "AはBに適用される (規則・対象範囲)", "examples": [
+      "就業規則 APPLIES_TO 常時10人以上の事業場",
+      "HACCP制度化 APPLIES_TO すべての食品等事業者",
+      "白ロム割規制 APPLIES_TO 携帯電話キャリア"
+    ]},
+    {"name": "COVERS", "definition": "AはBを対象とする (調査・統計の対象)", "examples": [
+      "学校基本統計 COVERS 幼稚園から各種学校",
+      "決算概要 COVERS 2024年度上期"
+    ]},
+    {"name": "EXCLUDES", "definition": "AはBを除外する", "examples": [
+      "決算 EXCLUDES セグメント間内部売上収益",
+      "本ガイドライン EXCLUDES 小規模事業者"
+    ]},
+    {"name": "TARGETS", "definition": "AはBを対象とする (制度や施設のターゲット)", "examples": [
+      "暑熱避難施設 TARGETS 高齢者",
+      "高度無線環境整備事業 TARGETS 離島地域"
+    ]},
+
+    {"name": "DEFINED_BY", "definition": "AはBで定義されている", "examples": [
+      "管理監督者 DEFINED_BY 労基法第41条第2号",
+      "CCP DEFINED_BY HACCP原則2"
+    ]},
+    {"name": "REFERENCES", "definition": "AはBを参照する", "examples": [
+      "決算短信 REFERENCES 別紙の決算概要資料",
+      "本規則 REFERENCES 労働基準法施行規則第6条の2"
+    ]},
+    {"name": "SAME_AS", "definition": "AとBは同義 (本文中の別名・略称・正式名)", "examples": [
+      "労基法 SAME_AS 労働基準法",
+      "本規則 SAME_AS モデル就業規則",
+      "CCP SAME_AS 重要管理点"
+    ]},
+
+    {"name": "OWNED_BY", "definition": "AはBが所有する", "examples": [
+      "LIFEBOOK SAME_AS 富士通製品",
+      "Insight Cards OWNED_BY TechSpark"
+    ]},
+    {"name": "MANAGED_BY", "definition": "AはBが管理する/管轄する", "examples": [
+      "労働基準監督署 MANAGED_BY 厚生労働省",
+      "事業ポートフォリオ MANAGED_BY 経営戦略本部"
+    ]},
+    {"name": "ISSUED_BY", "definition": "AはBが発行・公表した", "examples": [
+      "統合レポート2024 ISSUED_BY 富士通株式会社",
+      "HACCP制度化通知 ISSUED_BY 厚生労働省",
+      "CIS Benchmarks ISSUED_BY Center for Internet Security"
+    ]},
+    {"name": "ENACTED_BY", "definition": "Aは法律・規則として制定された (制定主体)", "examples": [
+      "労働基準法 ENACTED_BY 国会",
+      "労基則 ENACTED_BY 厚生省 (昭和22年厚生省令第23号)"
+    ]},
+    {"name": "OPERATED_BY", "definition": "AはBが運営する", "examples": [
+      "世田谷区立保健医療福祉総合プラザ OPERATED_BY シダックス大新東ヒューマン",
+      "簡易郵便局 OPERATED_BY 業務委託契約者"
+    ]},
+
+    {"name": "OCCURRED_IN", "definition": "Aは時期Bに発生・存在する", "examples": [
+      "能登半島地震 OCCURRED_IN 2024年1月",
+      "決算 OCCURRED_IN 2024年度第2四半期"
+    ]},
+    {"name": "VALID_FROM", "definition": "Aは時期Bから有効", "examples": [
+      "新就業規則 VALID_FROM 2025年4月1日",
+      "改正規則 VALID_FROM 2024年1月"
+    ]},
+    {"name": "COMPARED_TO", "definition": "Aは Bと比較される (前年比・対比)", "examples": [
+      "2024年度上期売上 COMPARED_TO 2023年度上期売上 (+3.4%)",
+      "令和7年5月搬送人員 COMPARED_TO 前年同月 (微減)"
+    ]},
+
+    {"name": "DESCRIBED_IN", "definition": "Aは文書Bに記載されている", "examples": [
+      "セグメント別事業概況 DESCRIBED_IN 富士通統合レポート2024",
+      "緊急時対応 DESCRIBED_IN 暑熱避難施設運営事例集"
+    ]},
+    {"name": "USES", "definition": "AはBを使用する (技術・ツール・手法)", "examples": [
+      "Analytics Master USES RFM分析テンプレート",
+      "災害情報配信 USES 放送ネットワーク"
+    ]},
+    {"name": "RELATED_TO", "definition": "AとBは関連がある (他に適切な関係がない場合の最終手段)", "examples": [
+      "(他で表現できない関連性のみ使用)"
+    ]}
+  ],
+
+  "schema_design_principles": [
+    "1. デフォルト12関係を維持しつつ、各ドメインで頻出する関係を追加",
+    "2. HAS_ATTRIBUTE への過剰収束を防ぐため、Indicator用に HAS_VALUE/MEASURED_IN、Document用に DESCRIBED_IN/ISSUED_BY/ENACTED_BY を分離",
+    "3. 手順 (HAS_STEP) と時系列 (FOLLOWS/PRECEDES) を分離: HACCP/要件定義のような工程系で精度向上を期待",
+    "4. 因果系を CAUSES/AFFECTS/PREVENTS/MITIGATES の4つに分割: 熱中症対策・HACCP・セキュリティで威力",
+    "5. 時間軸 (OCCURRED_IN/VALID_FROM/COMPARED_TO) を独立: 決算・統計・規則改正で重要",
+    "6. ノードタイプを8種に分類: HAS_VALUE が Indicator にだけ向かう、ENACTED_BY が Standard にだけ来る、といった構造化を促す",
+    "7. RELATED_TO は最終手段 (12関係版でも 21本/合計445本と 4.7% を占めて精度低下要因。本スキーマで明示的に減らす狙い)"
+  ]
+}

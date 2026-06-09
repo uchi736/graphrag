@@ -29,7 +29,7 @@ FROM information_schema.columns
 WHERE table_name = 'テーブル名';
 ```
 
-4. `check_schema.py` を使用してスキーマを確認してから修正を行う
+4. `scripts/check_schema.py` を使用してスキーマを確認してから修正を行う
 
 ## 共有DB環境
 
@@ -37,9 +37,10 @@ WHERE table_name = 'テーブル名';
 - 他プログラムは `uuid` をプライマリキーとして使用
 - langchain-postgres は `id` (TEXT) を識別子として使用
 - コレクション (`collection_id`) でデータを分離
+- `EMBEDDING_PROVIDER` 切替時は次元が変わるため、`scripts/reset_pgvector_tables.py` → `scripts/build_kg.py` で再構築必須（Azure text-embedding-3-small=1536, Qwen3-Embedding-8B=4096, bge-m3=1024）
 
 ## コード変更時のルール
 
 - **変更後は必ず動作チェックを行うこと**（スキップ不可）
 - Pythonコードの変更後は最低限 `python -c "..."` で該当機能の動作確認を実行する
-- グラフ関連の変更は `graph.pkl` を使った実データでの検証を含めること
+- グラフ関連の変更は Neo4j の実データで検証すること
