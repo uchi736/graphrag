@@ -34,14 +34,22 @@ logger = logging.getLogger(__name__)
 DEFAULT_CONFIG = {
     "graph_hop_count": 2,
     "retrieval_top_k": 5,
+    "rerank_pool_size": 20,
     "enable_japanese_search": True,
     "enable_rerank": True,
     "enable_entity_vector": False,
     "entity_similarity_threshold": 0.7,
     "search_mode": "hybrid",
     "include_kg_source_chunks": True,
+    "kg_chunk_top_k": 5,
     "path_max_candidates": 30,
     "include_graph_lines": True,
+    # 参照追跡（「P.98参照」「『◯◯』をご覧ください」を1ホップ辿る）。
+    # 機構はSIM質問等で実証済みだが、FJ-Hard 100問ベンチでは正味効果が
+    # 中立〜微負（FJH-11参照）だったためデフォルトOFF。明示的な参照を
+    # 辿る必要があるマニュアル・規程QAでは有効化を検討
+    "enable_reference_follow": False,
+    "reference_follow_top_k": 5,
 }
 
 
@@ -82,10 +90,24 @@ def extract_entities_from_question(
     try:
         response = llm.invoke(extraction_prompt, config=get_langfuse_callback())
         llm_entities = [e.strip() for e in response.content.split(',') if e.strip()]
+        # プロンプトは該当なし時に「なし」と出力させるため、エンティティとして扱わない
+        llm_entities = [e for e in llm_entities if e not in ("なし", "None", "N/A", "n/a")]
         result["llm_entities"] = llm_entities
         entities.extend(llm_entities)
     except Exception:
-        fallback_entities = [w for w in question.split() if len(w) > 1]
+        # 日本語質問はスペース区切りされないため、Sudachiトークン化でフォールバック
+        fallback_entities = []
+        try:
+            from graphrag_core.text.japanese import get_japanese_processor
+            processor = get_japanese_processor()
+            if processor:
+                fallback_entities = [
+                    t for t in processor.tokenize(question).split() if len(t) > 1
+                ]
+        except Exception:
+            pass
+        if not fallback_entities:
+            fallback_entities = [w for w in question.split() if len(w) > 1]
         result["llm_entities"] = fallback_entities
         entities.extend(fallback_entities)
 
@@ -126,6 +148,69 @@ def extract_entities_from_question(
     return result
 
 
+# ── トリプル/パスの自然文化（cross-encoder入力用）──────────────────────
+# cross-encoderリランカー（bge-reranker等）は自然文ペアで学習されているため、
+# "A -[IS_A]-> B" のような記号表記より自然文の方がスコアリングが安定する。
+# 表示用テキスト(path_text)は従来の記号表記のまま変えない。
+
+_REL_TEMPLATES = {
+    "IS_A": "{s}は{o}の一種である",
+    "BELONGS_TO_CATEGORY": "{s}は{o}に属する",
+    "PART_OF": "{s}は{o}の一部である",
+    "HAS_PART": "{s}は{o}を含む",
+    "HAS_STEP": "{s}には{o}という手順がある",
+    "FOLLOWS": "{s}は{o}の後に行う",
+    "PRECEDES": "{s}は{o}の前に行う",
+    "REQUIRES_BEFORE": "{s}の前に{o}が必要である",
+    "HAS_ATTRIBUTE": "{s}は{o}という属性を持つ",
+    "HAS_VALUE": "{s}の値は{o}である",
+    "MEASURED_IN": "{s}は{o}で測定される",
+    "CAUSES": "{s}は{o}を引き起こす",
+    "AFFECTS": "{s}は{o}に影響する",
+    "PREVENTS": "{s}は{o}を防ぐ",
+    "MITIGATES": "{s}は{o}を軽減する",
+    "DEPENDS_ON": "{s}は{o}に依存する",
+    "REQUIRES": "{s}は{o}を必要とする",
+    "ENABLES": "{s}は{o}を可能にする",
+    "APPLIES_TO": "{s}は{o}に適用される",
+    "COVERS": "{s}は{o}を対象に含む",
+    "EXCLUDES": "{s}は{o}を対象外とする",
+    "TARGETS": "{s}は{o}を対象とする",
+    "DEFINED_BY": "{s}は{o}で定義される",
+    "REFERENCES": "{s}は{o}を参照する",
+    "SAME_AS": "{s}は{o}と同義である",
+    "ALIAS_OF": "{s}は{o}の別名である",
+    "OWNED_BY": "{s}は{o}が所有する",
+    "MANAGED_BY": "{s}は{o}が管理する",
+    "ISSUED_BY": "{s}は{o}が発行する",
+    "ENACTED_BY": "{s}は{o}が制定する",
+    "OPERATED_BY": "{s}は{o}が運営する",
+    "OCCURRED_IN": "{s}は{o}に行われた",
+    "VALID_FROM": "{s}は{o}から有効である",
+    "COMPARED_TO": "{s}は{o}と比較される",
+    "DESCRIBED_IN": "{s}は{o}に記載されている",
+    "USES": "{s}は{o}を使用する",
+    "RELATED_TO": "{s}は{o}と関連する",
+}
+
+
+def triple_to_natural_text(t: dict) -> str:
+    """トリプル1件を自然文に変換（未知の関係タイプは汎用表現）"""
+    s, rel, o = t.get("start", ""), t.get("type", ""), t.get("end", "")
+    template = _REL_TEMPLATES.get(rel)
+    if template:
+        return template.format(s=s, o=o)
+    return f"{s}と{o}は{rel}の関係にある"
+
+
+def path_to_natural_text(path: dict) -> str:
+    """パス（トリプル列）を自然文に変換"""
+    triples = path.get("triples", [])
+    if not triples:
+        return path.get("path_text", "")
+    return "。".join(triple_to_natural_text(t) for t in triples)
+
+
 # ── リレーションリランキング ──────────────────────────────────────────
 
 @observe(name="relation_ranking")
@@ -145,7 +230,7 @@ def rank_relations_by_relevance(
     if is_reranker_enabled():
         return rerank_by_score(
             question, relations,
-            text_fn=lambda r: f"{r['start']} -[{r['type']}]-> {r['end']}",
+            text_fn=triple_to_natural_text,
             top_k=top_k,
         )
 
@@ -199,8 +284,9 @@ def parse_neo4j_paths(result: list, max_candidates: int = 30) -> list:
         if not node_ids or not rels:
             continue
 
-        # 重複除去（ノード列で判定）
-        path_key = tuple(node_ids)
+        # 重複除去（ノード列 + 関係タイプ列で判定。
+        # ノード列だけだと同一ノード間の異なる関係のパスが消える）
+        path_key = (tuple(node_ids), tuple(r.get("type", "") for r in rels))
         if path_key in seen:
             continue
         seen.add(path_key)
@@ -224,8 +310,9 @@ def parse_neo4j_paths(result: list, max_candidates: int = 30) -> list:
             "length": len(node_ids) - 1,
         })
 
-    # マルチホップ優先
-    paths.sort(key=lambda p: -p["length"])
+    # 注: 以前はパス長降順（マルチホップ優先）でソートしていたが、
+    # 質問に直接答える1-hopの事実エッジほど落とされやすく逆効果のため廃止。
+    # Cypher側のスコア順（extraction_count/pagerank）をそのまま保持する。
     return paths[:max_candidates]
 
 
@@ -254,10 +341,11 @@ def rank_paths_by_relevance(
     from graphrag_core.retrieval.reranker import is_reranker_enabled, score_candidates
     if is_reranker_enabled():
         log.append(f"**候補パス {len(paths)}件 → reranker(cross-encoder)でスコアリング (top_k={top_k})**")
-        texts = [p["path_text"] for p in paths]
-        doc_ctx = (doc_context or "").strip()
-        query = f"{question}\n{doc_ctx}" if doc_ctx else question
-        scores = score_candidates(query, texts)
+        # cross-encoderには自然文化したパスを渡す（記号表記はスコアが不安定）。
+        # doc_context の連結はクエリが長くなり質問の信号が薄まるため行わない
+        # （doc_contextはLLM rerankフォールバック側でのみ使用）。
+        texts = [path_to_natural_text(p) for p in paths]
+        scores = score_candidates(question, texts)
         if scores is not None:
             ranked = sorted(zip(scores, paths), key=lambda t: -t[0])
             result = [p for _, p in ranked[:top_k]]
@@ -347,6 +435,27 @@ def get_graph_context(
     if not entities:
         return {"triples": [], "paths": [], "extracted_entities": entity_result}
 
+    # 1.5. 照合用エンティティの正規化
+    # ノード側の search_keys（NFKC+小文字化、enrichmentでバックフィル済み）と
+    # 同じ正規化を質問側エンティティにも適用して表記揺れミスマッチを防ぐ。
+    # かな揺れ骨格キー（送り仮名・助詞の揺れ: 「ガス軸受け」→「ガス軸受」）も
+    # 追加し、ノード側のかな揺れキーと双方向で照合できるようにする。
+    # CONTAINS で過剰一致する1文字エンティティは除外。
+    from graphrag_core.text.japanese import normalize_entity_text, kana_variant_key
+    match_entities = []
+    _seen_me = set()
+    for e in entities:
+        ne = normalize_entity_text(e)
+        if len(ne) >= 2 and ne not in _seen_me:
+            _seen_me.add(ne)
+            match_entities.append(ne)
+        kv = kana_variant_key(e)
+        if kv and len(kv) >= 2 and kv not in _seen_me:
+            _seen_me.add(kv)
+            match_entities.append(kv)
+    if not match_entities:
+        return {"triples": [], "paths": [], "extracted_entities": entity_result}
+
     # 2. ホップ数を取得
     hop_count = _cfg(config, 'graph_hop_count')
     top_k_map = {1: 15, 2: 20, 3: 25}
@@ -359,17 +468,44 @@ def get_graph_context(
     top_k = top_k_map.get(hop_count, 15)
     limit_map = {1: 30, 2: 50, 3: 80}
     limit = limit_map.get(hop_count, 50)
-    _hex = "NOT n.id =~ '[0-9a-f]{32,}'"
-    _hex_node = "NOT node.id =~ '[0-9a-f]{32,}'"
+    max_start_nodes = 20  # CONTAINS過剰一致による起点ノード爆発の抑制
+    # チャンクノード(hex id)を除外。値ノード(is_value: 数値・日付のみ)は
+    # 「起点・中継としては禁止 / パスの終端(葉)としては許可」:
+    # - 中継禁止: 「令和6年度」のような日付ハブ経由で無関係パスに飛ぶのを防ぐ
+    # - 終端許可: スペック値・数値の出典チャンク取得(値ノード→MENTIONS)は
+    #   数値質問の救済に効くため残す（完全排除したら数値系で退行した実測あり）
+    # 照応ノード(is_anaphor: 「本製品」等の偽統合ハブ)は起点・中継・終端すべて禁止
+    _hex = ("NOT n.id =~ '[0-9a-f]{32,}' AND COALESCE(n.is_value, false) = false "
+            "AND COALESCE(n.is_anaphor, false) = false")
+    _hex_node = ("NOT node.id =~ '[0-9a-f]{32,}' "
+                 "AND COALESCE(node.is_anaphor, false) = false")
+    # search_keys（正規化済みid+aliases+canonical_form）に対して照合。
+    # 未バックフィルのグラフでは toLower(n.id) にフォールバック
+    _key_match = "ANY(k IN COALESCE(n.search_keys, [toLower(n.id)]) WHERE k CONTAINS entity)"
+    # 起点ノード選択: 完全一致を最優先し、次いでpagerank降順で上位に絞る。
+    # 旧実装は無作為に collect していたため、汎用語の部分一致ノードが
+    # 起点を占有してパス候補が関連度と無関係に LIMIT で切られていた。
+    _start_select = (
+        "WITH n, max(CASE WHEN ANY(k IN COALESCE(n.search_keys, [toLower(n.id)]) WHERE k = entity) "
+        "THEN 1 ELSE 0 END) AS exact "
+        "ORDER BY exact DESC, COALESCE(n.pagerank, 0.0) DESC "
+        f"WITH collect(n)[0..{max_start_nodes}] AS matched_nodes "
+        "UNWIND matched_nodes AS start_node "
+    )
 
     if hop_count == 1:
         query = (
             "UNWIND $entities AS entity "
-            "MATCH (n) WHERE n.id CONTAINS entity AND " + _hex + " "
-            "WITH collect(DISTINCT n) AS matched_nodes "
-            "UNWIND matched_nodes AS start_node "
+            "MATCH (n) WHERE " + _key_match + " AND " + _hex + " "
+            + _start_select +
             "MATCH path = (start_node)-[r]-(end_node) "
             "WHERE type(r) <> 'MENTIONS' AND NOT end_node.id =~ '[0-9a-f]{32,}' "
+            "AND COALESCE(end_node.is_anaphor, false) = false "
+            # extraction_count（同一エッジが何チャンクから抽出されたか）と
+            # pagerank でスコアリングしてから LIMIT（無作為truncationを排除）
+            "WITH path, COALESCE(r.extraction_count, 1.0) AS rel_score, "
+            "COALESCE(start_node.pagerank, 0.0) + COALESCE(end_node.pagerank, 0.0) AS pr_score "
+            "ORDER BY rel_score DESC, pr_score DESC "
             "RETURN [node IN nodes(path) | node.id] AS node_ids, "
             "[rel IN relationships(path) | {start: startNode(rel).id, type: type(rel), end: endNode(rel).id}] AS rels "
             f"LIMIT {limit}"
@@ -377,20 +513,26 @@ def get_graph_context(
     else:
         query = (
             "UNWIND $entities AS entity "
-            "MATCH (n) WHERE n.id CONTAINS entity AND " + _hex + " "
-            "WITH collect(DISTINCT n) AS matched_nodes "
-            "UNWIND matched_nodes AS start_node "
+            "MATCH (n) WHERE " + _key_match + " AND " + _hex + " "
+            + _start_select +
             f"MATCH path = (start_node)-[*1..{hop_count}]-(end_node) "
             "WHERE ALL(r IN relationships(path) WHERE type(r) <> 'MENTIONS') "
             "AND ALL(node IN nodes(path) WHERE " + _hex_node + ") "
+            # 値ノードは中継(先頭・末尾以外)に置かない
+            "AND ALL(node IN nodes(path)[1..-1] WHERE COALESCE(node.is_value, false) = false) "
             "AND start_node <> end_node "
+            # パス長で正規化した平均スコアで順位付け（長さ自体への加点はしない）
+            "WITH path, size(relationships(path)) AS plen, "
+            "reduce(s = 0.0, rel IN relationships(path) | s + COALESCE(rel.extraction_count, 1.0)) AS rel_sum, "
+            "reduce(s = 0.0, nd IN nodes(path) | s + COALESCE(nd.pagerank, 0.0)) AS pr_sum "
+            "ORDER BY rel_sum / plen DESC, pr_sum / (plen + 1) DESC "
             "RETURN [node IN nodes(path) | node.id] AS node_ids, "
             "[rel IN relationships(path) | {start: startNode(rel).id, type: type(rel), end: endNode(rel).id}] AS rels "
             f"LIMIT {limit}"
         )
 
     try:
-        result = graph.query(query, params={"entities": entities})
+        result = graph.query(query, params={"entities": match_entities})
         if not result:
             return {"triples": [], "paths": [], "extracted_entities": entity_result}
 
@@ -418,7 +560,7 @@ def get_graph_context(
             log.append("パスなし → 従来方式(個別トリプル)にフォールバック")
             fb_query = (
                 "UNWIND $entities AS entity "
-                "MATCH (n) WHERE n.id CONTAINS entity AND " + _hex + " "
+                "MATCH (n) WHERE " + _key_match + " AND " + _hex + " "
                 "WITH collect(DISTINCT n) AS matched_nodes "
                 "UNWIND matched_nodes AS start_node "
                 "MATCH (start_node)-[r]-(connected_node) "
@@ -427,7 +569,7 @@ def get_graph_context(
                 "RETURN DISTINCT actual_start.id AS start, type(r) AS type, actual_end.id AS end "
                 f"LIMIT {limit}"
             )
-            result = graph.query(fb_query, params={"entities": entities})
+            result = graph.query(fb_query, params={"entities": match_entities})
             if result and len(result) > top_k:
                 result = rank_relations_by_relevance(question, result, llm, top_k=top_k, doc_context=doc_context)
             return {"triples": result if result else [], "paths": [], "extracted_entities": entity_result}
@@ -437,14 +579,16 @@ def get_graph_context(
         # フォールバック: 単純な1-hopマッチング
         fallback_query = """
         MATCH (n)-[r]->(m)
-        WHERE (ANY(entity IN $entities WHERE n.id CONTAINS entity OR m.id CONTAINS entity))
+        WHERE ANY(entity IN $entities WHERE
+            ANY(k IN COALESCE(n.search_keys, [toLower(n.id)]) WHERE k CONTAINS entity)
+            OR ANY(k IN COALESCE(m.search_keys, [toLower(m.id)]) WHERE k CONTAINS entity))
         AND type(r) <> 'MENTIONS'
         AND NOT n.id =~ '[0-9a-f]{32,}' AND NOT m.id =~ '[0-9a-f]{32,}'
         RETURN DISTINCT n.id AS start, type(r) AS type, m.id AS end
         LIMIT 20
         """
         try:
-            result = graph.query(fallback_query, params={"entities": entities})
+            result = graph.query(fallback_query, params={"entities": match_entities})
             if result:
                 result = rank_relations_by_relevance(question, result, llm, top_k=15, doc_context=doc_context)
             return {"triples": result if result else [], "paths": [], "extracted_entities": entity_result}
@@ -479,18 +623,26 @@ def retriever_and_merge(
                 query_embedding = embeddings.embed_query(question)
                 search_type = _cfg(config, 'search_mode')
                 retrieval_top_k = _cfg(config, 'retrieval_top_k')
+                enable_rerank = _cfg(config, 'enable_rerank')
+
+                # リランク有効時は広めにプールを取り、リランカーで retrieval_top_k に絞る
+                fetch_k = retrieval_top_k
+                if enable_rerank:
+                    fetch_k = max(retrieval_top_k, int(_cfg(config, 'rerank_pool_size') or 0))
 
                 hybrid_results = hybrid_retriever.search(
                     query_text=question,
                     query_vector=query_embedding,
-                    k=retrieval_top_k,
+                    k=fetch_k,
                     search_type=search_type
                 )
 
-                if _cfg(config, 'enable_rerank') and len(hybrid_results) > retrieval_top_k:
+                if enable_rerank and len(hybrid_results) > retrieval_top_k:
                     hybrid_results = rerank_with_llm(
                         question, hybrid_results, llm, k=retrieval_top_k
                     )
+                else:
+                    hybrid_results = hybrid_results[:retrieval_top_k]
 
                 return [
                     Document(page_content=r['text'], metadata=r['metadata'])
@@ -542,6 +694,11 @@ def retriever_and_merge(
     if triples and _cfg(config, 'include_kg_source_chunks'):
         existing_texts = {d.page_content for d in docs}
 
+        # 旧実装は無順位の LIMIT 5 で任意のチャンクを注入していた。
+        # 広めに取得してから質問との関連度でリランクして絞る。
+        kg_chunk_top_k = int(_cfg(config, 'kg_chunk_top_k') or 5)
+        kg_chunk_fetch = max(30, kg_chunk_top_k * 3)
+
         # ── 試行① edge.source_chunks 直引き ──
         triple_keys = [
             {"s": t.get("start"), "p": t.get("type"), "o": t.get("end")}
@@ -553,7 +710,7 @@ def retriever_and_merge(
             try:
                 cypher_strict = """
                 UNWIND $triples AS tk
-                MATCH (a:Term {id: tk.s})-[r]-(b:Term {id: tk.o})
+                MATCH (a {id: tk.s})-[r]-(b {id: tk.o})
                 WHERE type(r) = tk.p AND r.source_chunks IS NOT NULL
                 UNWIND r.source_chunks AS cid
                 MATCH (d:Document {id: cid})
@@ -562,9 +719,11 @@ def retriever_and_merge(
                   substring(d.text, 0, 2000) AS text,
                   d.source AS source,
                   d.page AS page
-                LIMIT 5
+                LIMIT $limit
                 """
-                chunk_results = graph.query(cypher_strict, params={"triples": triple_keys}) or []
+                chunk_results = graph.query(
+                    cypher_strict, params={"triples": triple_keys, "limit": kg_chunk_fetch}
+                ) or []
             except Exception as e:
                 logger.warning("source_chunks 直引き失敗 → MENTIONS にフォールバック: %s", e)
                 chunk_results = []
@@ -578,20 +737,40 @@ def retriever_and_merge(
             if entity_names:
                 try:
                     if hasattr(graph, 'get_source_chunks_list'):
-                        chunk_results = graph.get_source_chunks_list(entity_names, limit=5)
+                        chunk_results = graph.get_source_chunks_list(entity_names, limit=kg_chunk_fetch)
                     else:
+                        # 「言及している対象エンティティ数」が多いチャンク優先。
+                        # 無順位LIMITだと、MENTIONSが集約されたハブエンティティの
+                        # チャンク群から任意の数件が返り、候補プールが不安定になる
                         chunk_query = """
                         UNWIND $entity_names AS entity_name
                         MATCH (e {id: entity_name})<-[:MENTIONS]-(doc:Document)
-                        RETURN DISTINCT doc.id AS chunk_id,
+                        WITH doc, count(DISTINCT entity_name) AS entity_hits
+                        ORDER BY entity_hits DESC
+                        RETURN doc.id AS chunk_id,
                                substring(doc.text, 0, 2000) AS text,
                                doc.source AS source,
                                doc.page AS page
-                        LIMIT 5
+                        LIMIT $limit
                         """
-                        chunk_results = graph.query(chunk_query, params={"entity_names": entity_names}) or []
+                        chunk_results = graph.query(
+                            chunk_query,
+                            params={"entity_names": entity_names, "limit": kg_chunk_fetch},
+                        ) or []
                 except Exception:
                     chunk_results = []
+
+        # ── 質問との関連度で絞り込み（reranker無効時は先頭から）──
+        if len(chunk_results) > kg_chunk_top_k:
+            from graphrag_core.retrieval.reranker import is_reranker_enabled, rerank_by_score
+            if is_reranker_enabled():
+                chunk_results = rerank_by_score(
+                    question, chunk_results,
+                    text_fn=lambda r: (r.get('text') or '')[:1000],
+                    top_k=kg_chunk_top_k,
+                )
+            else:
+                chunk_results = chunk_results[:kg_chunk_top_k]
 
         for r in chunk_results:
             if r.get('text') and r['text'] not in existing_texts:
@@ -604,6 +783,44 @@ def retriever_and_merge(
                     }
                 ))
                 existing_texts.add(r['text'])
+
+    # 3.5. 参照追跡: ヒットチャンク中の「◯◯参照/ご覧ください」を1ホップ辿り、
+    # 参照先チャンクをコンテキスト候補に加える（節/ページ参照は直接、
+    # 文書名参照は参照先文書スコープの再検索に展開）。リランカーで質問関連度ゲート
+    if graph is not None and docs and _cfg(config, 'enable_reference_follow'):
+        try:
+            from graphrag_core.graph.references import follow_references
+            ref_results = follow_references(
+                graph, docs, question,
+                embeddings=embeddings, pg_conn=pg_conn, pg_collection=pg_collection,
+            )
+            if ref_results:
+                ref_top_k = int(_cfg(config, 'reference_follow_top_k') or 3)
+                if len(ref_results) > ref_top_k:
+                    from graphrag_core.retrieval.reranker import is_reranker_enabled, rerank_by_score
+                    if is_reranker_enabled():
+                        ref_results = rerank_by_score(
+                            question, ref_results,
+                            text_fn=lambda r: (r.get('text') or '')[:1000],
+                            top_k=ref_top_k,
+                        )
+                    else:
+                        ref_results = ref_results[:ref_top_k]
+                existing_texts = {d.page_content for d in docs} | {d.page_content for d in kg_chunks}
+                for r in ref_results:
+                    if r.get('text') and r['text'] not in existing_texts:
+                        kg_chunks.append(Document(
+                            page_content=r['text'],
+                            metadata={
+                                'id': r.get('chunk_id'),
+                                'source': r.get('source', 'REF'),
+                                'page': r.get('page'),
+                                'via': f"reference({r.get('kind', 'ref')})",
+                            }
+                        ))
+                        existing_texts.add(r['text'])
+        except Exception as e:
+            logger.warning("reference follow failed: %s", e)
 
     # 4. トリプル/パスに出典情報を付与
     graph_lines = []

@@ -40,6 +40,29 @@ DEFAULT_DOMAIN: str = "default/builtin"
 DEFAULT_VERSION: str = "builtin-v1"
 
 
+def entity_node_predicate(var: str) -> str:
+    """エンティティノード判定の共通Cypher述語（ラベル非依存）。
+
+    KGのノードタイプは外部スキーマで差し替わる（Term だけとは限らない）ため、
+    ラベルのホワイトリストではなく「チャンク/管理ノードの除外」で判定する:
+    - id を持たないノード（ProcessedChunk 等）を除外
+    - 管理ノード (ProcessedChunk, SchemaMeta) を除外
+    - チャンクノード（idが32桁以上のhex）を除外
+    - 値ノード（is_value=true: 数値・日付のみのノード、consolidate.pyで付与）を除外。
+      値ノードはトラバーサルのノイズ源で、数値の根拠はチャンク側にあるため
+      KGの検索・enrichment・entity vectorの対象にしない
+    - 照応ノード（is_anaphor=true: 「本製品」「当社」等で解決不能なもの）を除外。
+      複数文書の別対象を1ノードに偽統合した誤ハブになるため
+    """
+    return (
+        f"{var}.id IS NOT NULL "
+        f"AND NOT {var}:ProcessedChunk AND NOT {var}:SchemaMeta "
+        f"AND NOT {var}.id =~ '[0-9a-f]{{32,}}' "
+        f"AND COALESCE({var}.is_value, false) = false "
+        f"AND COALESCE({var}.is_anaphor, false) = false"
+    )
+
+
 def _schema_path() -> Optional[Path]:
     """SHARED_SCHEMA_PATH の解決。相対なら graphrag ルート基準"""
     s = get_settings()

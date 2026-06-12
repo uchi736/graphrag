@@ -1,0 +1,63 @@
+{
+  "domain": "fujitsu-rag-hard-benchmark/multi-domain",
+  "version": "fjrag-v2.0",
+  "generated_at": "2026-06-11T00:00:00Z",
+  "generated_by": "claude (v1の実測分布診断に基づく整理: _bench/_schema_diag.py)",
+  "notes": [
+    "v1 (36関係) からの変更: 実グラフ診断で判明した問題への対処。",
+    "1) 逆方向ペアを削除 (HAS_PART/PRECEDES等): 検索は無向マッチのため情報量ゼロで重複だけ生む。",
+    "2) HAS_VALUE/MEASURED_IN を削除: 値のノード化は数値ゴミノード5,715件の元凶。値はチャンク検索に任せる。",
+    "3) 使用率0.5%未満の近接関係を統合 (DEPENDS_ON→REQUIRES, MITIGATES→PREVENTS, COVERS/TARGETS→APPLIES_TO等)。",
+    "4) 数値・日付・年度・単位のみの値はノードとして抽出禁止 (プロンプト指示 + consolidate.flag_value_nodes)。",
+    "5) strict_mode=True で運用 (v1では野良関係~90種が混入)。",
+    "残存する野良関係・逆関係は graphrag_core/graph/consolidate.py の正規化マップで吸収する。"
+  ],
+
+  "node_types": [
+    "Person",
+    "Organization",
+    "Product",
+    "Process",
+    "Standard",
+    "Indicator",
+    "Concept",
+    "Document"
+  ],
+
+  "node_type_definitions": {
+    "Person": "個人 (役員、担当者、責任者など)。例: 時田隆仁、CFO、食品衛生責任者",
+    "Organization": "組織・団体・自治体・政府機関・部署。例: 富士通株式会社、厚生労働省、世田谷区",
+    "Product": "製品・サービス・ブランド。例: LIFEBOOK U7614/R、Windows 11、保証延長パック",
+    "Process": "手順・工程・プロセス・業務。例: HACCPの手順4、要件定義プロセス、BIOSセットアップ",
+    "Standard": "規格・法律・規則・ガイドライン・基準。例: 労基法第89条、ISO 22000、衛生管理基準",
+    "Indicator": "指標・統計項目の名称 (値そのものではない)。例: 売上収益、前年比、暑さ指数。数値はノード化しない",
+    "Concept": "一般概念・専門用語 (上記に該当しないもの)。例: 重要管理点、リユース部品、ICTリテラシー",
+    "Document": "文書・報告書・規程・カタログ。例: 統合レポート2024、HACCPプラン、就業規則"
+  },
+
+  "relations": [
+    {"name": "IS_A", "definition": "AはBの一種である (上位概念への分類。カテゴリ所属も含む)", "examples": ["牛乳 IS_A 乳製品", "LIFEBOOK U7614/R IS_A LIFEBOOK"]},
+    {"name": "PART_OF", "definition": "AはBの構成要素・一部である (全体→部分はこの逆向きで表現する)", "examples": ["始業時刻 PART_OF 労働時間関係", "CFO PART_OF 富士通経営陣"]},
+    {"name": "HAS_STEP", "definition": "Aには手順・工程Bがある", "examples": ["HACCP導入 HAS_STEP 危害要因の分析"]},
+    {"name": "FOLLOWS", "definition": "Aは順番でBの後に続く (時系列・手順。前に続く場合は向きを逆にする)", "examples": ["手順7(CCP決定) FOLLOWS 手順6(危害要因分析)"]},
+    {"name": "HAS_ATTRIBUTE", "definition": "AにはBという属性・特徴がある (Bは概念名。数値・日付は不可)", "examples": ["LIFEBOOK HAS_ATTRIBUTE 軽量性", "売上収益 HAS_ATTRIBUTE 増収傾向"]},
+    {"name": "CAUSES", "definition": "AはBの原因になる", "examples": ["高温多湿 CAUSES 熱中症"]},
+    {"name": "AFFECTS", "definition": "AはBに影響する", "examples": ["為替変動 AFFECTS 売上収益"]},
+    {"name": "PREVENTS", "definition": "AはBを防止・軽減する", "examples": ["加熱殺菌 PREVENTS 病原微生物", "暑熱避難施設 PREVENTS 熱中症"]},
+    {"name": "REQUIRES", "definition": "AはBを必要とする・依存する", "examples": ["輸出 REQUIRES HACCP導入", "BIOS更新 REQUIRES 管理者パスワード"]},
+    {"name": "ENABLES", "definition": "AはBを可能にする", "examples": ["eSIM ENABLES 無線WAN接続"]},
+    {"name": "APPLIES_TO", "definition": "AはBに適用される・Bを対象とする", "examples": ["HACCP APPLIES_TO 食品事業者", "調査 APPLIES_TO 被災地住民"]},
+    {"name": "EXCLUDES", "definition": "AはBを対象外とする (否定関係。肯定関係と混同しない)", "examples": ["統計 EXCLUDES 通信制課程"]},
+    {"name": "SAME_AS", "definition": "AとBは同義・同一指示", "examples": ["労基法 SAME_AS 労働基準法"]},
+    {"name": "DEFINED_BY", "definition": "AはBで定義される (条文・定義参照)", "examples": ["管理基準 DEFINED_BY HACCPプラン"]},
+    {"name": "REFERENCES", "definition": "AはBを参照する", "examples": ["就業規則第5条 REFERENCES 労基法第89条"]},
+    {"name": "DESCRIBED_IN", "definition": "AはB (文書) に記載されている", "examples": ["セグメント別事業概況 DESCRIBED_IN 決算報告"]},
+    {"name": "ISSUED_BY", "definition": "AはBが発行・制定・公表した", "examples": ["衛生管理基準 ISSUED_BY 厚生労働省"]},
+    {"name": "MANAGED_BY", "definition": "AはBが管理・運営する", "examples": ["暑熱避難施設 MANAGED_BY 世田谷区"]},
+    {"name": "OWNED_BY", "definition": "AはBが所有する (子会社・資産関係)", "examples": ["FDK OWNED_BY 富士通"]},
+    {"name": "USES", "definition": "AはBを使用・搭載する", "examples": ["LIFEBOOK USES Windows 11 Pro"]},
+    {"name": "OCCURRED_IN", "definition": "AはB (場所・機会) で発生・実施された (日付ノードは作らない)", "examples": ["決算説明会 OCCURRED_IN 東京"]},
+    {"name": "COMPARED_TO", "definition": "AはBと比較される", "examples": ["2024年度売上 COMPARED_TO 前年度売上"]},
+    {"name": "RELATED_TO", "definition": "AとBは関連がある (他に適切な関係がない場合の最終手段)", "examples": []}
+  ]
+}

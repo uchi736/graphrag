@@ -214,11 +214,10 @@ class EntityVectorizer:
 
             logger.info(f"Filtered to {len(filtered_results)} results with threshold {score_threshold}")
 
-            # 結果が少ない場合、閾値を緩めて再検索
-            if len(filtered_results) < 3 and score_threshold > 0.5:
-                logger.info("Too few results, trying with relaxed threshold")
-                return self.search_similar_entities(query, k, score_threshold * 0.8)
-
+            # 注: 以前は結果<3件で閾値を0.8倍に緩めて再帰検索していたが、
+            # 呼び出し側の「高閾値で同義語のみ補完する」意図（pipeline.py参照）を
+            # 破って低類似エンティティを混入させるため撤廃した。
+            # 同義語が見つからないのは正常な結果として扱う。
             return filtered_results
 
         except Exception as e:
@@ -321,6 +320,8 @@ class EntityVectorizer:
 
                     # 各トークンでエンティティ名を部分一致検索
                     # cmetadata->>'entity_id' にエンティティ名が格納されている
+                    # 注: document (関連チャンク本文を含む) への ILIKE は、
+                    # 汎用トークン1つで無関係エンティティが大量ヒットするため行わない
                     for token in tokens:
                         if len(token) < 2:  # 1文字は除外
                             continue
@@ -329,12 +330,9 @@ class EntityVectorizer:
                             SELECT DISTINCT cmetadata->>'entity_id' as entity_id
                             FROM langchain_pg_embedding
                             WHERE collection_id = %s
-                              AND (
-                                  cmetadata->>'entity_id' ILIKE %s
-                                  OR document ILIKE %s
-                              )
+                              AND cmetadata->>'entity_id' ILIKE %s
                             LIMIT %s
-                        """, (collection_uuid, f'%{token}%', f'%{token}%', k))
+                        """, (collection_uuid, f'%{token}%', k))
 
                         for row in cur.fetchall():
                             entity_id = row[0]
@@ -446,23 +444,36 @@ class EntityVectorizer:
         entities = []
 
         try:
-            # 静的な `n:Term OR n:CSVNode` はラベル未登録時にWARN (01N50) を出すため、
-            # labels(n) 比較に置換して回避（クエリ結果は同等）。
-            query = """
+            # ノードタイプは外部スキーマで可変（Term/CSVNodeとは限らない）ため、
+            # ラベルのホワイトリストではなく共通述語（チャンク/管理ノード除外）で対象を決める。
+            # 全エンティティを漏れなく対象にするため SKIP/LIMIT でページネーションする
+            # （ORDER BY n.id でページ間の安定性を保証）。
+            from graphrag_core.graph.schema import entity_node_predicate
+            query = f"""
             MATCH (n)
-            WHERE n.id IS NOT NULL
-              AND ANY(lbl IN labels(n) WHERE lbl IN ['Term', 'CSVNode'])
+            WHERE {entity_node_predicate("n")}
+            WITH n ORDER BY n.id
+            SKIP $skip LIMIT $batch
             OPTIONAL MATCH (n)<-[:MENTIONS]-(doc:Document)
             WITH n, COLLECT(DISTINCT substring(doc.text, 0, 500)) AS chunk_texts
             RETURN n.id AS entity_id,
                    labels(n) AS types,
                    properties(n) AS props,
                    chunk_texts
-            LIMIT 1000
             """
 
             logger.info("Extracting entities from Neo4j graph")
-            results = graph.query(query)
+            batch_size = 1000
+            results = []
+            skip = 0
+            while True:
+                page = graph.query(query, params={"skip": skip, "batch": batch_size})
+                if not page:
+                    break
+                results.extend(page)
+                if len(page) < batch_size:
+                    break
+                skip += batch_size
             logger.info(f"Neo4j query returned {len(results)} entities")
 
             for result in results:

@@ -197,14 +197,18 @@ def build_knowledge_graph(
         _kg_additional = (
             "抽出する: 技術用語、概念、固有名詞、プロセス名、規格名。"
             "抽出しない: 一般的な名詞（「こと」「もの」「方法」）、代名詞、動詞。"
+            "抽出しない: 数値・日付・年度・単位のみの値（「210円」「53」「令和6年度」）。"
+            "値はノードにしない。"
             "RELATED_TOは他に適切な関係がない場合の最終手段として使用。"
         )
         from graphrag_core.graph.schema import get_allowed_node_types, get_allowed_relations
+        # strict_mode=True: スキーマ外の野良関係タイプ（typo含め125種が混入した実績）を
+        # 抽出時点でフィルタする。post-hocのrename（consolidate.py）は残存分の保険
         _kg_kwargs = dict(
             llm=llm,
             allowed_nodes=get_allowed_node_types(),
             allowed_relationships=get_allowed_relations(),
-            strict_mode=False,
+            strict_mode=True,
             ignore_tool_usage=(llm_provider == "vllm"),
         )
         if llm_provider == "vllm":
@@ -368,30 +372,65 @@ def build_knowledge_graph(
     except Exception as e:
         print(f"⚠️ PGVector保存エラー: {e}")
 
-    # プロパティ後付け: mention_count, pagerank
+    # KG統合処理: 値ノードflag・型分裂マージ・関係正規化
+    # （辞書適用・enrichmentより先に実行: マージ後のノードに適用するため）
     print(f"\n{'='*50}")
-    print("🔧 KGプロパティ集計中...")
+    print("🔧 KG統合処理（値ノード/型分裂/関係正規化）...")
     print(f"{'='*50}")
     try:
-        from graphrag_core.graph.enrichment import enrich_post_build
-        stats = enrich_post_build(graph)
-        print(f"✅ mention_count: {stats['mention_count']} Term更新")
-        print(f"✅ pagerank: {stats['pagerank']} Term更新")
+        from graphrag_core.graph.consolidate import consolidate_post_build
+        cstats = consolidate_post_build(graph)
+        print(f"✅ 値ノードflag: {cstats['value_nodes_flagged']}件")
+        print(f"✅ 型分裂マージ: {cstats['duplicate_merge']['merged_ids']}id "
+              f"({cstats['duplicate_merge']['removed_nodes']}ノード削除)")
+        print(f"✅ かな揺れマージ: {cstats['kana_variant_merge']['merged_groups']}組 "
+              f"({cstats['kana_variant_merge']['removed_nodes']}ノード削除)")
+        print(f"✅ 関係正規化: {sum(cstats['relation_normalize'].values())}エッジ")
     except Exception as e:
-        print(f"⚠️ プロパティ集計エラー: {e}")
+        print(f"⚠️ KG統合処理エラー: {e}")
+
+    # 参照グラフ構築（節/ページ/文書名参照のREFERS_TOエッジ）+ 照応解決
+    print(f"\n{'='*50}")
+    print("🔗 参照グラフ構築 + 照応解決...")
+    print(f"{'='*50}")
+    try:
+        from graphrag_core.graph.references import build_reference_graph
+        from graphrag_core.graph.consolidate import resolve_anaphora_nodes
+        ref_stats = build_reference_graph(graph)
+        print(f"✅ 参照エッジ: {ref_stats['edges_written']}本, "
+              f"文書名参照チャンク: {ref_stats['doc_ref_chunks']}件")
+        ana_stats = resolve_anaphora_nodes(graph, ref_stats.get("alias_maps", {}))
+        print(f"✅ 照応解決: {ana_stats['resolved']}件, 検索除外フラグ: {ana_stats['flagged']}件")
+    except Exception as e:
+        print(f"⚠️ 参照グラフ構築エラー: {e}")
 
     # 専門用語辞書の適用（KG_DICTIONARY_PATH が指定されていれば）
+    # 注: enrich_post_build の search_keys が aliases/canonical_form を取り込むため、
+    # 辞書適用は enrichment より先に実行する
     if s.kg_dictionary_path:
         try:
             from graphrag_core.graph.dictionary import load_dictionary, apply_dictionary
             entries = load_dictionary(s.kg_dictionary_path)
             stats = apply_dictionary(graph, entries)
             print(f"✅ 用語辞書適用: {stats['applied_entries']}/{len(entries)}entries 適用 → "
-                  f"{stats['term_updates']}Term更新（未マッチentries: {stats['untouched_entries']}）")
+                  f"{stats['term_updates']}ノード更新（未マッチentries: {stats['untouched_entries']}）")
         except FileNotFoundError as e:
             print(f"⚠️ 辞書ファイルが見つかりません: {e}")
         except Exception as e:
             print(f"⚠️ 辞書適用エラー: {e}")
+
+    # プロパティ後付け: mention_count, pagerank, search_keys
+    print(f"\n{'='*50}")
+    print("🔧 KGプロパティ集計中...")
+    print(f"{'='*50}")
+    try:
+        from graphrag_core.graph.enrichment import enrich_post_build
+        stats = enrich_post_build(graph)
+        print(f"✅ mention_count: {stats['mention_count']} ノード更新")
+        print(f"✅ pagerank: {stats['pagerank']} ノード更新")
+        print(f"✅ search_keys: {stats['search_keys']} ノード更新")
+    except Exception as e:
+        print(f"⚠️ プロパティ集計エラー: {e}")
 
     # スキーマメタ情報を Neo4j に刻印（EDC連携時の追跡用）
     try:

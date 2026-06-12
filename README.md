@@ -32,9 +32,13 @@
 
 ### 高度な検索機能
 - **日本語ハイブリッド検索**: Sudachiによる形態素解析 + RRFスコア統合
+- **cross-encoderリランキング**: bge-reranker-v2-m3等によるドキュメント/パス/KGチャンクの再評価（LLMリランクはフォールバック）。広めに取得（rerank_pool_size）→ top_k に絞る2段構成
+- **正規化エンティティ照合**: NFKC正規化済み `search_keys`（id + 辞書aliases + canonical_form + かな揺れ骨格キー）に対するCONTAINS照合で表記揺れ（全角半角・大小文字・送り仮名・助詞・長音）を吸収
 - **エンティティベクトル検索**: エンティティの類似度検索（類義語・関連語対応）
-- **可変ホップ検索**: 1〜3ホップのグラフ探索
-- **パス探索**: BFS取得トリプルをパスに再構成し、LLMがチェーン単位で評価
+- **可変ホップ検索**: 1〜3ホップのグラフ探索。起点ノードは完全一致優先 + pagerank順で選択、パス候補は extraction_count / pagerank でスコアリングしてから取得
+- **ノイズノード除外**: 数値・日付のみの値ノード（is_value）と「本製品」等の照応ノード（is_anaphor）をトラバーサルから除外（値ノードはパス終端のみ許可）
+- **KGソースチャンク取得**: triple→source_chunks直引き、フォールバックはMENTIONS共起順（言及エンティティ数降順）+ cross-encoderリランク
+- **参照追跡（オプション）**: 「P.98参照」「『◯◯』をご覧ください」を REFERS_TO エッジで1ホップ追跡（`enable_reference_follow`、デフォルトOFF）
 
 ### 高度なグラフ可視化
 - **可視化エンジン**: Neo4j公式 `neo4j-viz` ライブラリ（ネイティブなグラフDBスタイル）
@@ -89,18 +93,24 @@ graphrag/
 │   ├── db/                     # データベース
 │   │   └── utils.py            # PostgreSQL接続・インデックス管理
 │   ├── text/                   # テキスト処理
-│   │   ├── japanese.py         # Sudachi形態素解析
-│   │   └── chunking.py         # Markdown対応チャンク処理
+│   │   ├── japanese.py         # Sudachi形態素解析（スレッドセーフ）+ エンティティ正規化
+│   │   └── chunking.py         # Markdown対応チャンク処理（見出しパンくず付与）
 │   ├── graph/                  # Neo4jグラフ操作
 │   │   ├── base.py             # GraphBackend Protocol
 │   │   ├── neo4j_ops.py        # Neo4j CRUD操作 + JSONエクスポート
-│   │   └── crud.py             # 統一CRUDディスパッチャ
+│   │   ├── crud.py             # 統一CRUDディスパッチャ
+│   │   ├── schema.py           # KGスキーマ管理（外部JSON差し替え対応）+ 共通Cypher述語
+│   │   ├── enrichment.py       # ビルド後プロパティ付与（mention_count/pagerank/search_keys/source_chunks）
+│   │   ├── consolidate.py      # KG統合（値ノードflag/型分裂・かな揺れマージ/関係正規化/照応解決）
+│   │   ├── references.py       # 参照グラフ（節/ページ/文書名参照のルールベース抽出）
+│   │   └── dictionary.py       # 専門用語辞書の適用（canonical_form/aliases付与）
 │   ├── retrieval/              # 検索
 │   │   ├── hybrid.py           # 日本語ハイブリッド検索（BM25 + Vector、RRF統合）
+│   │   ├── reranker.py         # cross-encoderリランカークライアント（vLLM /score互換）
 │   │   ├── entity_vector.py    # エンティティベクトル化・類似度検索
 │   │   └── pipeline.py         # 共通QAパイプライン
 │   ├── document/               # ドキュメント処理
-│   │   └── azure_di.py         # Azure Document Intelligence
+│   │   └── azure_di.py         # Azure Document Intelligence ほか
 │   └── ui/                     # Streamlit UIコンポーネント
 │       ├── css.py              # スタイル定義
 │       ├── sidebar.py          # サイドバー設定UI
@@ -109,12 +119,14 @@ graphrag/
 │       └── dialogs.py          # 編集ダイアログ
 ├── scripts/                    # エントリーポイント
 │   ├── app.py                  # Streamlit WebUI
-│   ├── build_kg.py             # CLIナレッジグラフ構築
+│   ├── build_kg.py             # CLIナレッジグラフ構築（統合・参照グラフ・enrichment込み）
+│   ├── build_reference_graph.py # 既存グラフへの参照グラフ後付け（再構築不要）
 │   ├── batch_eval.py           # CSVバッチ評価
 │   ├── init_japanese_search.py # 日本語検索初期化
 │   ├── check_pg_connection.py  # PostgreSQL接続テスト
 │   ├── check_schema.py         # スキーマ確認ユーティリティ
 │   └── reset_pgvector_tables.py # PGVectorテーブルリセット
+├── _bench/                     # Fujitsu RAG Hard Bench 実験一式（EXPERIMENTS.md に記録）
 ├── tests/                      # テスト
 │   └── test_vllm.py            # VLLM接続テスト
 ├── docs/                       # ドキュメント
@@ -191,6 +203,17 @@ VLLM_MAX_TOKENS=4096
 EMBEDDING_PROVIDER=azure_openai
 VLLM_EMBEDDING_ENDPOINT=http://localhost:8001/v1
 VLLM_EMBEDDING_MODEL=Qwen/Qwen3-Embedding-8B
+
+# Cross-encoder Reranker (vLLM /v1/score 互換、未設定時はLLMリランクにフォールバック)
+RERANKER_ENABLED=true
+VLLM_RERANKER_ENDPOINT=http://localhost:8006/v1
+VLLM_RERANKER_MODEL=BAAI/bge-reranker-v2-m3
+
+# KG Schema (外部JSONでノードタイプ・関係セットを差し替え。未設定時はTerm+12関係)
+SHARED_SCHEMA_PATH=_bench/fujitsu_kg_schema_v2.json
+
+# 専門用語辞書 (canonical_form/aliases を Term に付与、search_keys 経由で検索に反映)
+KG_DICTIONARY_PATH=
 
 # PDF Preprocessing (onprem / azure_di / pymupdf)
 PDF_PROCESSOR=onprem
@@ -286,8 +309,19 @@ python scripts/build_kg.py --input ./docs --ext pdf,md
 - フォルダ内のファイルを再帰的に処理
 - 再開機能対応（--freshなしで実行すると続きから）
 - PGVectorへの自動保存
-- エンティティベクトル化対応
+- エンティティベクトル化対応（全エンティティ対象、ページネーション取得）
+- **ビルド後処理を自動実行**:
+  1. KG統合（consolidate）: 値ノードflag・型分裂ノードのマージ・かな揺れマージ（送り仮名/助詞/長音のみの差分を文字種限定編集距離で統合）・関係タイプ正規化（逆関係/同義/typoの27ルール）
+  2. 参照グラフ構築: 節/ページ/文書名参照の REFERS_TO エッジ + 略称定義による照応解決
+  3. 用語辞書適用（KG_DICTIONARY_PATH 指定時）
+  4. enrichment: mention_count / pagerank / search_keys（正規化照合キー）の付与
 - 完了時に `graph.json` を自動エクスポート
+
+既存グラフに参照グラフ・照応解決だけ後付けする場合（再構築不要、LLMコストゼロ）:
+
+```bash
+python scripts/build_reference_graph.py
+```
 
 ### バッチ評価 (batch_eval.py)
 
@@ -365,14 +399,14 @@ source,target,label
 ```
 - `edges.csv`をアップロードするだけで自動取り込み
 
-### LLMリランキング
+### リランキング（cross-encoder優先）
 
-グラフ検索で取得した関係性をLLMで再評価し、質問に関連度の高いものだけを抽出:
+検索結果（ドキュメント・グラフパス・KGチャンク）を質問との関連度で再評価:
 
 **仕組み**:
-1. グラフから候補となる関係性を取得（30〜80件）
-2. LLMが各関係性を0-10でスコアリング
-3. 高スコアの関係性のみをコンテキストとして使用
+1. `RERANKER_ENABLED=true` なら cross-encoder（bge-reranker-v2-m3等、vLLM /v1/score）でスコアリング（LLMリランクの10〜100倍高速）
+2. 未設定時は LLM によるID順位付けにフォールバック
+3. グラフパスは「AはBの一種である」のような**自然文に変換してから**スコアリング（記号表記より安定）
 
 **ホップ数ごとの設定**:
 | ホップ数 | 取得上限 | リランク後 |
@@ -380,6 +414,8 @@ source,target,label
 | 1-hop | 30件 | 15件 |
 | 2-hop | 50件 | 20件 |
 | 3-hop | 80件 | 25件 |
+
+候補はDB側で extraction_count（エッジの抽出回数）/ pagerank によりスコアリングしてから取得するため、無作為なLIMIT切り捨ては発生しません。
 
 ### Langfuseトレーシング
 
@@ -390,67 +426,50 @@ LLM呼び出しの全フローをLangfuseでトレース可能（SDK v4対応）
 - 未設定時はゼロオーバーヘッドで従来通り動作
 - セルフホスト（Docker Compose）・クラウド両対応
 
-### カスタムKG抽出プロンプト
+### KGスキーマの外部化
 
-専門用語に特化したナレッジグラフを構築できます。
+ノードタイプと関係タイプのセットは外部JSON（`SHARED_SCHEMA_PATH`）で差し替えられます。
+未設定時はデフォルトの `Term` 1タイプ + 12関係
+（`IS_A` / `BELONGS_TO_CATEGORY` / `PART_OF` / `HAS_STEP` / `HAS_ATTRIBUTE` / `RELATED_TO` /
+`AFFECTS` / `CAUSES` / `DEPENDS_ON` / `APPLIES_TO` / `OWNED_BY` / `SAME_AS`）。
 
-**対応する関係タイプ (16種類)**:
+スキーマJSON例は [_bench/fujitsu_kg_schema_v2.json](_bench/fujitsu_kg_schema_v2.json)
+（8ノードタイプ + 23関係、マルチドメインコーパス向け）を参照。
+適用中のスキーマは Neo4j の `:SchemaMeta` ノードに刻印されます。
 
-**階層・分類関係**
-- `IS_A`: 上位下位関係（MySQL → データベース）
-- `BELONGS_TO_CATEGORY`: カテゴリ所属
-- `PART_OF`: 部分構成関係（エンジン → 自動車）
-- `HAS_STEP`: プロセスのステップ
-
-**属性・特性関係**
-- `HAS_ATTRIBUTE`: 属性保持
-- `RELATED_TO`: 一般的な関連性
-
-**因果・依存関係**
-- `AFFECTS`: 影響関係
-- `CAUSES`: 原因結果
-- `DEPENDS_ON`: 依存関係
-
-**適用・制約関係**
-- `APPLIES_TO`: 適用対象
-- `APPLIES_WHEN`: 適用条件
-- `REQUIRES_QUALITY_GATE`: 品質ゲート要求
-- `REQUIRES_APPROVAL_FROM`: 承認要求
-
-**所有・責任関係**
-- `OWNED_BY`: 所有者
-
-**同義語関係**
-- `SAME_AS`: 完全同義
-- `ALIAS_OF`: エイリアス・略称
+**スキーマ設計の指針**（実測に基づく、詳細は [_bench/EXPERIMENTS.md](_bench/EXPERIMENTS.md)）:
+- 数値・日付・単位のみの値はノードにしない（プロンプトで禁止 + consolidateで除外）
+- 逆方向ペア関係（HAS_PART等）は定義しない（検索は無向マッチのため重複だけ生む）
+- `strict_mode=True` で運用し、スキーマ外の野良関係を抽出時にブロック
 
 ## アーキテクチャ
 
 ```
-PDF/Text → Azure DI / PyMuPDF → Markdown対応チャンキング
+PDF/Text → Azure DI / PyMuPDF → Markdownチャンキング（見出しパンくず付与）
                                        ↓
-                         LLMGraphTransformer (カスタムプロンプト)
+                         LLMGraphTransformer (スキーマ外部化 + strict_mode)
                                        ↓
                             ┌──────────┴──────────┐
                             ↓                     ↓
                          Neo4j               PGVector
                       (グラフDB)            (ベクトルDB)
                             ↓                     ↓
-                  KGリレーション作成       エンティティベクトル化
+              ビルド後処理:              エンティティベクトル化
+              ・consolidate（値ノード/型分裂/関係正規化）
+              ・参照グラフ（REFERS_TO）+ 照応解決
+              ・辞書適用 → enrichment（pagerank/search_keys）
                             ↓                     ↓
                             └──────────┬──────────┘
                                        ↓
                               質問応答フロー
                                        ↓
-                   エンティティ抽出 + ベクトル検索
+        エンティティ抽出（正規化） ∥ 日本語ハイブリッド検索（並列実行）
                                        ↓
-                     1-3 hop グラフ探索 (Cypher)
+          1-3 hop グラフ探索 (search_keys照合・スコア順パス取得)
                                        ↓
-                             LLMリランキング
+              cross-encoderリランキング（パスは自然文化）
                                        ↓
-                    関連チャンク取得 (MENTIONS)
-                                       ↓
-               フォールバック: 日本語ハイブリッド検索
+        KGソースチャンク取得（source_chunks / MENTIONS共起順 + リランク）
                                        ↓
                         Context Merge + 回答生成
 ```
@@ -516,26 +535,42 @@ langfuse>=4.0.0
 
 `graphrag_core/prompts.py`の`KG_SYSTEM_PROMPT`を編集することで、抽出ルールをカスタマイズできます。
 
-### 関係タイプの追加
+### 関係タイプ・ノードタイプの追加
 
-`allowed_relationships`リストに新しい関係タイプを追加:
+コードを変更せず、スキーマJSONを作って `.env` の `SHARED_SCHEMA_PATH` で指定します:
 
-```python
-transformer = LLMGraphTransformer(
-    llm=llm,
-    prompt=kg_prompt,
-    allowed_nodes=["Term"],
-    allowed_relationships=[
-        "IS_A", "PART_OF", "YOUR_NEW_RELATION",
-        ...
-    ]
-)
+```json
+{
+  "domain": "your-domain",
+  "version": "v1.0",
+  "node_types": ["Term"],
+  "relations": [
+    {"name": "IS_A", "definition": "AはBの一種である", "examples": ["..."]},
+    {"name": "YOUR_NEW_RELATION", "definition": "...", "examples": ["..."]}
+  ]
+}
 ```
+
+`build_kg.py` が自動でこのスキーマを `allowed_nodes` / `allowed_relationships` に反映します。
+逆方向関係や値ノードを作らない等の設計指針は「KGスキーマの外部化」の節を参照してください。
+
+## 評価・ベンチマーク
+
+Fujitsu RAG Hard Benchmark（100問）による継続評価を `_bench/` で実施しています:
+
+- 実験記録・スコア推移・設計判断の根拠: [_bench/EXPERIMENTS.md](_bench/EXPERIMENTS.md)
+- 実行: `_bench/fujitsu_runner_kg.py`（KG込みパイプライン）/ `_bench/fujitsu_runner.py`（hybrid+rerankのみ）
+- 採点: `_bench/evaluate_qa_local.py`（gemma judge）+ `_bench/_judge_azure.py`（第2judge）
+- 解析: `_bench/analyze_by_axes.py`（軸別スライス）/ `_bench/_pair_compare.py`（ペア勝敗）/ `_bench/_schema_diag.py`（KG構造診断）
+
+主な知見: KGの寄与は multi-hop推論・多文書entity比較で +7〜8pt、single-hop・数値表では中立〜負。
+judge1系統のスコアは言い回しで±2〜5pt揺れるため、2judge + 参照カバレッジ（決定的指標）の併用を推奨。
 
 ## 関連ドキュメント
 
 - [.env.sample](.env.sample): 環境変数の設定例（全オプション記載）
 - [docs/langfuse_plan.md](docs/langfuse_plan.md): Langfuse統合の設計ドキュメント
+- [_bench/EXPERIMENTS.md](_bench/EXPERIMENTS.md): ベンチマーク実験記録（FJH-01〜FJH-11）
 
 ---
 

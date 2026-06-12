@@ -104,10 +104,11 @@ def apply_dictionary(graph, entries: list[dict]) -> dict:
         # canonical または aliases のいずれかに一致する Term を探す
         keys = [entry["canonical"]] + entry["aliases"]
         try:
+            from graphrag_core.graph.schema import entity_node_predicate
             rows = graph.query(
-                """
-                MATCH (t:Term)
-                WHERE t.id IN $keys
+                f"""
+                MATCH (t)
+                WHERE t.id IN $keys AND {entity_node_predicate("t")}
                 RETURN COLLECT(t.id) AS ids
                 """,
                 {"keys": keys},
@@ -136,7 +137,7 @@ def apply_dictionary(graph, entries: list[dict]) -> dict:
             graph.query(
                 """
                 UNWIND $ids AS tid
-                MATCH (t:Term {id: tid})
+                MATCH (t {id: tid})
                 SET t.canonical_form = $canonical,
                     t.aliases = $aliases,
                     t.category = $category,

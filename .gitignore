@@ -73,3 +73,4 @@ _bench/_pp_test/
 
 # Claude Code 一時ファイル
 .claude/scheduled_tasks.lock
+.env.mojibake_backup

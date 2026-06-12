@@ -24,10 +24,26 @@ def _normalize_markdown_headers(text: str) -> str:
     return text
 
 
+def _prepend_breadcrumb(chunk: Document) -> None:
+    """チャンク本文の先頭に見出し階層（h1 > h2 > h3）を付与する。
+
+    長いセクションを文字数で再分割すると、2番目以降のサブチャンクには
+    見出しが残らず「どの章の話か」の文脈なしで埋め込まれてしまう。
+    埋め込み・BM25の両方に効くよう本文側に付与する（メタデータだけでは
+    ベクトル化されない）。
+    """
+    parts = [chunk.metadata.get(k) for k in ("h1", "h2", "h3") if chunk.metadata.get(k)]
+    if not parts:
+        return
+    crumb = " > ".join(parts)
+    chunk.page_content = f"[{crumb}]\n{chunk.page_content.lstrip()}"
+
+
 def create_markdown_chunks(
     docs: List[Document],
     chunk_size: int = 1024,
-    chunk_overlap: int = 100
+    chunk_overlap: int = 100,
+    add_breadcrumb: bool = True,
 ) -> List[Document]:
     """
     2段階Markdown対応チャンキング
@@ -36,6 +52,7 @@ def create_markdown_chunks(
         docs: 入力ドキュメントリスト
         chunk_size: 最大チャンクサイズ（デフォルト: 1024文字）
         chunk_overlap: オーバーラップ（デフォルト: 100文字）
+        add_breadcrumb: 各チャンク本文の先頭に見出し階層を付与する
 
     Returns:
         チャンク化されたドキュメントリスト（メタデータにh1, h2, h3を含む）
@@ -89,6 +106,10 @@ def create_markdown_chunks(
                 if h1_title:
                     md_chunk.metadata["h1"] = h1_title
                 all_chunks.append(md_chunk)
+
+    if add_breadcrumb:
+        for chunk in all_chunks:
+            _prepend_breadcrumb(chunk)
 
     return all_chunks
 

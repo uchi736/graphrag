@@ -295,9 +295,12 @@ def rerank_with_llm(
     # cross-encoder リランカーが使えるなら優先（LLM呼び出しより10-100倍速い）
     from graphrag_core.retrieval.reranker import is_reranker_enabled, rerank_by_score
     if is_reranker_enabled():
+        # チャンクは最大1024字。500字で切ると後半に根拠がある場合に
+        # リランカーから見えなくなるため、ほぼ全文の1000字まで渡す
+        # （bge-reranker-v2-m3 は長文入力に対応）
         return rerank_by_score(
             query, docs,
-            text_fn=lambda d: d.get('text', '')[:500],
+            text_fn=lambda d: d.get('text', '')[:1000],
             top_k=k,
         )
 

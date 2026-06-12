@@ -14,6 +14,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Iterable
 
+from graphrag_core.graph.schema import entity_node_predicate
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,13 +50,13 @@ def attach_source_chunks(graph, chunk_docs: Iterable[Any], chunk_hash: str) -> i
             if not safe_type:
                 continue
             try:
+                # ノードタイプは外部スキーマで可変（Termとは限らない）ため、
+                # add_graph_documents が作成済みの既存エッジを id ベースで MATCH して
+                # プロパティを後付けする（MERGEだと別ラベル同名ノード間に誤エッジを作り得る）
                 graph.query(
                     f"""
-                    MATCH (a:Term {{id: $start}})
-                    MATCH (b:Term {{id: $end}})
-                    MERGE (a)-[r:`{safe_type}`]->(b)
-                    ON CREATE SET r.source_chunks = [$chunk_id], r.extraction_count = 1
-                    ON MATCH SET r.source_chunks =
+                    MATCH (a {{id: $start}})-[r:`{safe_type}`]->(b {{id: $end}})
+                    SET r.source_chunks =
                         CASE
                             WHEN $chunk_id IN COALESCE(r.source_chunks, [])
                                 THEN r.source_chunks
@@ -72,23 +74,25 @@ def attach_source_chunks(graph, chunk_docs: Iterable[Any], chunk_hash: str) -> i
 
 
 def compute_mention_count(graph) -> int:
-    """全Termに `mention_count` (どれだけのDocumentから MENTIONS されているか) を書き込む。
+    """全エンティティノードに `mention_count` (どれだけのDocumentから MENTIONS されているか) を書き込む。
 
     Returns:
-        更新した Term 件数
+        更新したノード件数
     """
+    _pred = entity_node_predicate("t")
     try:
         graph.query(
-            """
-            MATCH (t:Term)
+            f"""
+            MATCH (t)
+            WHERE {_pred}
             OPTIONAL MATCH (t)<-[:MENTIONS]-(d:Document)
             WITH t, COUNT(DISTINCT d) AS n
             SET t.mention_count = n
             """
         )
-        r = graph.query("MATCH (t:Term) WHERE t.mention_count IS NOT NULL RETURN COUNT(t) AS n")
+        r = graph.query(f"MATCH (t) WHERE {_pred} AND t.mention_count IS NOT NULL RETURN COUNT(t) AS n")
         n = r[0]["n"] if r else 0
-        logger.info("compute_mention_count: updated %d Term nodes", n)
+        logger.info("compute_mention_count: updated %d entity nodes", n)
         return n
     except Exception as e:
         logger.error("compute_mention_count failed: %s", e)
@@ -96,9 +100,9 @@ def compute_mention_count(graph) -> int:
 
 
 def compute_pagerank(graph, alpha: float = 0.85, max_iter: int = 100) -> int:
-    """Termノード間の関係グラフでPageRankを計算しTerm.pagerankに書き込む。
+    """エンティティノード間の関係グラフでPageRankを計算し pagerank プロパティに書き込む。
 
-    APOC非依存・NetworkX実装。MENTIONS は除外し Term-Term の意味的エッジのみ使用。
+    APOC非依存・NetworkX実装。MENTIONS は除外しエンティティ間の意味的エッジのみ使用。
     """
     try:
         import networkx as nx
@@ -108,14 +112,16 @@ def compute_pagerank(graph, alpha: float = 0.85, max_iter: int = 100) -> int:
 
     try:
         edges = graph.query(
-            """
-            MATCH (a:Term)-[r]->(b:Term)
+            f"""
+            MATCH (a)-[r]->(b)
             WHERE type(r) <> 'MENTIONS'
+              AND {entity_node_predicate("a")}
+              AND {entity_node_predicate("b")}
             RETURN a.id AS s, b.id AS t
             """
         )
         if not edges:
-            logger.info("compute_pagerank: Term-Term edges が0件、スキップ")
+            logger.info("compute_pagerank: エンティティ間edgeが0件、スキップ")
             return 0
 
         nx_g = nx.DiGraph()
@@ -132,19 +138,90 @@ def compute_pagerank(graph, alpha: float = 0.85, max_iter: int = 100) -> int:
         for i in range(0, len(rows), batch_size):
             batch = rows[i:i + batch_size]
             graph.query(
-                """
+                f"""
                 UNWIND $rows AS row
-                MATCH (t:Term {id: row.id})
+                MATCH (t {{id: row.id}})
+                WHERE {entity_node_predicate("t")}
                 SET t.pagerank = row.score
                 """,
                 {"rows": batch},
             )
             updated += len(batch)
-        logger.info("compute_pagerank: updated %d Term nodes", updated)
+        logger.info("compute_pagerank: updated %d entity nodes", updated)
         return updated
     except Exception as e:
         logger.error("compute_pagerank failed: %s", e)
         return 0
+
+
+def compute_search_keys(graph, batch_size: int = 2000) -> int:
+    """全エンティティノードに `norm_id` と `search_keys` を書き込む。
+
+    - norm_id: id の正規化形（NFKC + 小文字化 + 空白圧縮）
+    - search_keys: norm_id + 正規化済み aliases + canonical_form の重複除去リスト
+
+    検索側（pipeline.get_graph_context）はこのリストに対して CONTAINS 照合する。
+    辞書適用（dictionary.apply_dictionary）の後に実行すること。
+
+    Returns:
+        更新したノード件数
+    """
+    from graphrag_core.text.japanese import normalize_entity_text, kana_variant_key
+
+    _pred = entity_node_predicate("n")
+    updated = 0
+    skip = 0
+    try:
+        while True:
+            rows = graph.query(
+                f"""
+                MATCH (n)
+                WHERE {_pred}
+                WITH n ORDER BY n.id
+                SKIP $skip LIMIT $batch
+                RETURN n.id AS id, n.aliases AS aliases, n.canonical_form AS canonical
+                """,
+                {"skip": skip, "batch": batch_size},
+            )
+            if not rows:
+                break
+
+            payload = []
+            for r in rows:
+                keys = [normalize_entity_text(r["id"])]
+                for alias in (r.get("aliases") or []):
+                    keys.append(normalize_entity_text(alias))
+                if r.get("canonical"):
+                    keys.append(normalize_entity_text(r["canonical"]))
+                # かな揺れ骨格キー（送り仮名・助詞・末尾長音の揺れを照合で吸収）
+                for base in list(keys):
+                    kv = kana_variant_key(base)
+                    if kv:
+                        keys.append(kv)
+                # 順序保持の重複除去 + 空文字除外
+                seen = set()
+                keys = [k for k in keys if k and not (k in seen or seen.add(k))]
+                payload.append({"id": r["id"], "norm_id": keys[0] if keys else "", "keys": keys})
+
+            graph.query(
+                f"""
+                UNWIND $rows AS row
+                MATCH (n {{id: row.id}})
+                WHERE {_pred}
+                SET n.norm_id = row.norm_id, n.search_keys = row.keys
+                """,
+                {"rows": payload},
+            )
+            updated += len(payload)
+            if len(rows) < batch_size:
+                break
+            skip += batch_size
+
+        logger.info("compute_search_keys: updated %d entity nodes", updated)
+        return updated
+    except Exception as e:
+        logger.error("compute_search_keys failed: %s", e)
+        return updated
 
 
 def enrich_post_build(graph) -> dict:
@@ -156,4 +233,5 @@ def enrich_post_build(graph) -> dict:
     return {
         "mention_count": compute_mention_count(graph),
         "pagerank": compute_pagerank(graph),
+        "search_keys": compute_search_keys(graph),
     }

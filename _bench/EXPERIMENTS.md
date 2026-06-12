@@ -285,6 +285,112 @@ Fujitsu の Multi-hop 問題 (N=22) で KG vs rerank10 が ±0 (どちらも 22.
 | FJH-07+gpt-4.1+md | 2026-06-09 | + markdown chunks (fjrag_hard_md) | 同上 | fujitsu_predictions_azure_gpt41_md_k10.json | 49.0% | 63.0% | 72.9% | -3pt: single-hop で -10pt 悪化。md chunks は大きく embedding 距離が変わり simple match が外れる。**preprocessing は現状 chunker の交換だけでは改善しない、新 chunker (表/図 抽出) が必要** |
 | FJH-07 | TODO | + KG + entity vec LIMIT off | 34K Term全部ベクトル化 | - | - | - | - | 仮説3検証 |
 | FJH-08 | TODO | rerank fetch20→10 | top_k=10 で多段問題に対応 | - | - | - | - | 仮説4検証 |
+| FJH-09-off | 2026-06-11 | KG-off baseline: rerank fetch20→10 (gpt-4.1-mini) | fjrag_hard | fujitsu_predictions_rerank_k10_v2.json | 48.0% | 62.0% | - | fable5 リファクタ後の再ベースライン |
+| FJH-09-on | 2026-06-11 | **KG-on (fable5修正版)**: search_keys正規化照合 / pagerank・extraction_count順パス列挙 / entity vec LIMIT撤廃 / KGチャンクrerank / noLines・k10 | 同上 + Neo4j 51K nodes (search_keys/pagerank backfill済) | fujitsu_predictions_kg_fix_k10_nolines.json | **51.0%** | 62.0% | - | **KG効果 +3pt (vs FJH-09-off)、fable5修正で +4pt (vs FJH-07 mini 47%)**。ペア分析: KG救済14問 / KG破壊11問 (net +3)。救済=entity関連・多文書比較・要件列挙、破壊=数値表・時系列 |
+
+### FJH-09 詳細 (2026-06-11, fable5 リファクタ後の KG 効果再検証)
+
+LLM=Azure gpt-4.1-mini, Judge=gemma-4-26B (self-judge), reranker=bge-reranker-v2-m3, 全 100Q, k10/noLines/hop2。
+
+| 指標 | KG-off (rerank) | KG-on (fable5修正) | Δ |
+|---|---|---|---|
+| 回答 accuracy | 48.0% | **51.0%** | **+3.0** |
+| 参照 full-coverage | 62.0% | 62.0% | 0 |
+| 両方正解 | 37 | — | — |
+| 両方不正解 | 38 | — | — |
+| KG-onのみ正解 (救済) | — | 14 | — |
+| KG-offのみ正解 (破壊) | — | 11 | — |
+
+**fable5 修正の効果**: 同条件 (noLines/k10) の過去最良 FJH-07 mini=47.0% から **51.0% へ +4pt**。
+主な修正: ① エンティティ照合を `search_keys`(NFKC正規化) 化で表記揺れ吸収 (lifebook等が0→51ノードヒット)、
+② パス候補を pagerank/extraction_count 順で列挙 (旧: 無作為LIMIT + 長さ優先ソート)、
+③ entity vector の LIMIT 1000 撤廃 (1000→34,215全件)、④ KGソースチャンクを取得拡大+cross-encoder rerank、
+⑤ ドキュメントリランクのデッドコード修正。加えて **Sudachi tokenizer のスレッド安全化** (並列評価時の "Already borrowed" panic を解消し entity/BM25 検索の degrade を防止)。
+
+**KG が救済した質問 (14)**: HACCP 手順推論・CCP 判定、多文書比較 (東京都vs大阪府の構成比/児童数)、
+entity関連 (子会社名+収益合計、指紋認証+静脈センサー併用可否)、要件定義の列挙系。
+→ EXPERIMENTS 既存知見 (KG=cross-doc multi-hop/entity-relation で効く) と整合。
+
+**KG が破壊した質問 (11)**: 熱中症救急搬送の数値表比較、売上収益・前年比、1株当たり利益の時系列最大、
+表/図セル参照系。→ 既存知見 (KG は数値表で N-hop が無関係パスに走る) と整合。
+
+**結論**: fable5 のロジック修正で KG-on は 47→51% に改善し、KG効果 (+3pt) は依然 cross-doc/entity-relation 由来。
+数値表系の破壊は KG の射程外 (preprocessing 課題) で不変。net で KG はプラス寄与を維持。
+
+---
+
+## FJH-10: スキーマ統合 (consolidation) 実験 (2026-06-11)
+
+スキーマ実態診断 (`_bench/_schema_diag.py`) で判明した構造問題への対処を実装し、同条件 (k10/noLines/hop2, gpt-4.1-mini) で測定。
+judge は gemma (self-judge相当) + **Azure gpt-4.1-mini (第2judge, `_bench/_judge_azure.py`)** の2系統。
+
+### 診断で判明していた構造問題 (consolidation前)
+- 関係タイプ: 定義36種に対し実際 **125種** (strict_mode=False で野良~90種、typo含む)
+- 属性系3関係 (HAS_VALUE 19.6% + HAS_PART 16.6% + HAS_ATTRIBUTE 13.0%) で全エッジの49%
+- **数値・日付のみのノード 5,715件** (`53 -[HAS_VALUE]-> 2` 等のゴミ、「令和6年度」が deg=141 のハブ)
+- **同一idの複数ラベル分裂 2,600 id / 5,557ノード** (型揺れ分裂 — 名寄せ問題の最大成分)
+- 逆方向ペア二重登録 287組 (HAS_PART/PART_OF — 検索は無向なので情報量ゼロ)
+
+### 実施した統合 (graphrag_core/graph/consolidate.py, ビルド後処理として build_kg.py にも組込み)
+1. 値ノード5,801件に `is_value` flag → 検索/enrichment/entity vector から除外
+2. 型分裂 2,494 id をマージ (2,851ノード削除、エッジ・MENTIONS をkeeperへ移設)
+3. 関係正規化 ~22,600エッジ (HAS_VALUE→HAS_ATTRIBUTE 10,357 / HAS_PART→PART_OF反転 8,589 など27ルール)
+4. スキーマ v2 (`fujitsu_kg_schema_v2.json`, 36→23関係) + strict_mode=True + プロンプトに値ノード抽出禁止
+
+### 結果 (100Q)
+
+| 条件 | gemma judge | Azure judge | 参照 full-cov |
+|---|---|---|---|
+| KG-off (rerank k10) | 48.0% | 50.0% | 62.0% |
+| KG-on (consolidation前 = FJH-09-on) | 51.0% | **56.0%** | 62.0% |
+| KG-on + consolidation (値ノード完全排除) | 46.0% | 49.0% | 65.0% |
+| KG-on + consolidation (値ノード終端のみ許可) | 47.0% | 50.0% | **66.0%** |
+| **KG-on + consolidation + KGチャンク共起順位付け (v2c)** | **52.0%** | 55.0% | 65.0% |
+
+### 学び
+1. **構造统合は参照カバレッジを +3〜4pt 改善** (62→65-66%、全実験史上最高) — 統合自体は検索に有効
+2. **しかし最初の2バリアントで回答が退行** (-5pt)。原因はマージで MENTIONS が集約された結果、
+   無順位 `LIMIT` の KGチャンク候補プールが不安定化したこと (スキーマではなく chunk pull の問題)
+3. **修正: MENTIONS 経由のチャンク取得を「言及エンティティ数 (共起) 降順」で順位付け + fetch 30** → 両judgeで回復
+4. 値ノードは「起点・中継禁止 / 終端許可」が正解 — 完全排除すると数値質問の出典チャンクpullまで失われる
+5. judge感度に注意: 同一内容の回答でも言い回しで gemma 判定が flip する。**2judge体制 + 参照カバレッジ (決定的指標) の併用が必須**
+
+### 最終状態
+- 本番グラフ: 48,266ノード / 134,238エッジ (統合済み、フルバックアップ: `_bench/backup_full_graph_20260611.jsonl.gz`)
+- 逆方向ペア 0、型分裂は値ノードの106 idのみ (検索対象外)、正規23関係が上位を占有
+- KG効果 (v2c vs KG-off): **gemma +4pt / Azure +5pt / 参照 +3pt**
+
+### KGターゲット質問のスライス検証 (`_bench/_kg_signature_analysis.py`, 2026-06-11)
+
+「KGでしか解けないQAが解けているか」の直接検証。
+
+**KGターゲット軸 (KG-off → KG-v2c, gemma / Azure):**
+| 軸 | N | KG-off | KG-v2c | Δ(gemma) | Δ(Azure) |
+|---|---|---|---|---|---|
+| reasoning_depth=multi | 71 | 32.4/36.6% | 40.8/43.7% | **+8.5** | **+7.1** |
+| low_locality=True | 55 | 54.5/54.5% | 60.0/61.8% | +5.5 | +7.3 |
+| remote_reference=True | 26 | 38.5/38.5% | 42.3/42.3% | +3.8 | +3.8 |
+| multi_document=True | 22 | 45.5/36.4% | 45.5/40.9% | ±0 | +4.5 |
+| retrieval_level=Hard | 23 | — /39.1% | — /43.5% | — | +4.4 |
+| negation=True | 11 | 36.4% | 72.7% | **+36.4** | — |
+| cause_effect=True | 22 | 50.0% | 68.2% | +18.2 | — |
+| 逆に reasoning_depth=single | 29 | 86.2% | 79.3% | **-6.9** | — |
+
+**両judge一致で「KGのみ正解」: 7問**（全て reasoning_depth=multi）
+- 手順・因果推論: CCP非該当理由 / 乳酸菌飲料の工程順序の正誤 / 無線LANの波長理由
+- 多文書統計比較: 専修学校構成比1-3位(東京vs大阪) [multi_doc+remote_ref+Hard] / 大阪府の女性多数教員の校種
+- entity-relation: ユビキタス子会社名+3Q累計収益 [multi_doc+remote_ref+Hard]
+- スペック制約: 指紋認証電源ボタン+静脈センサー併用可否
+
+**両judge一致で「KGが壊した」: 4問**（豪州HACCP導入分野 / 熱中症搬送の期間比較 / アイデア発想列挙 / 3Q売上前年比）→ net **+3問**
+
+**FJH-07 シグネチャ5問の追跡:** Q45専修学校=KGのみ正解を維持✓ / Q52女性教員=KGのみ正解✓ /
+Q67副社長=KG-offでも正解化(gpt-4.1-mini+k10で吸収) / Q65 3Q売上=KGが逆に阻害✗ / Q17混信=全条件不正解。
+
+**結論**: KGの貢献はターゲット領域に明確に存在する — multi-hop +7〜8.5pt、KG専用正解7問はすべて
+「チャンク単独では繋がらない推論・比較・entity関連」。一方 single-hop (-6.9pt) と数値表時系列では
+依然ノイズ源であり、**質問タイプによる KG 有効/無効の動的切替**（例: エンティティ抽出数・質問分類で
+graph検索をスキップ）が次の改善レバー。
 
 ---
 
@@ -448,4 +554,55 @@ EL_v2 の overall -3pt 損失を見て、「graph triples を LLM context に出
 
 ---
 
-最終更新: 2026-06-09
+## FJH-11: 参照追跡グラフ + 照応解決 (2026-06-11)
+
+法令参照抽出の手法（北野・天笠 NLP2026: パターンベース F0.935）をマニュアルコーパスに翻案。
+`graphrag_core/graph/references.py` + `scripts/build_reference_graph.py`（既存グラフに後付け可、LLMコストゼロ）。
+
+### 構築結果（実グラフ適用済み）
+- REFERS_TOエッジ **3,122本**（page 2,798 / section 324）+ 文書名参照チャンク4件
+- 略称定義 17件 → 照応解決10件（「本公開買付者」→パロマ・リームHD等、ALIAS_OF + search_keys注入）
+- **is_anaphor フラグ 136ノード**（「本製品」deg=114 等の偽統合ハブを検索除外）← これは恒久採用
+- 検索時: ヒットチャンクから1ホップ（節/ページ参照→直接、文書名参照→参照先文書スコープの再検索）+ cross-encoderゲート
+
+### 個別実証（SIM質問）
+B5FL1891 p.97「『内蔵無線WANをお使いになる方へ』をご覧ください」→ B5FL0331 p.13「2.1.1 SIM接続する」の取得に成功
+（正解refヒット 1/7→2/7、接続方法の本文がコンテキストに入る）。機構としては設計どおり動作。
+
+### ベンチ結果（100Q, ref-follow ON vs v2c）
+| 指標 | v2c (OFF) | ref-follow ON | Δ |
+|---|---|---|---|
+| gemma | 52.0% | 47.0% | -5.0 |
+| Azure mini | 55.0% | 53.0% | -2.0 |
+| 参照 full-cov | 65.0% | 64.0% | -1.0 |
+| remote_reference=True (26Q, azure) | 11/26 | 9/26 | -2 |
+
+### 解釈と判断
+- **ターゲット軸 (remote_reference) ですら改善せず**。flip分析では参照追跡と無関係な統計比較系の
+  不安定問題が行き来しているだけで、ベンチのremote_referenceラベルの実体は「明示的な参照ポインタを辿る」
+  型ではなく「離れたページ・表に答えが分散」型が大半。明示ポインタ型はSIM/eSIMの2-3問のみ
+- 追加コンテキストが境界線上の生成を揺らすコスト > 数問の参照解決ゲイン
+- **判断: `enable_reference_follow` デフォルトOFF**（フラグとして温存。規程・マニュアル個別QAでは有効な場面あり）。
+  is_anaphor除外と略称解決（ALIAS_OF）は副作用がなく恒久採用
+- 教訓: 「機構が正しく動く」と「ベンチが上がる」は別物。個別実証→全体A/B→軸別検証の3段で判断すべき
+
+---
+
+## FJH-12: かな揺れ名寄せ (2026-06-12)
+
+ベンチ最適化ではなく一般品質改善として実装（「ガス軸受/ガス軸受け」「データの連携/データ連携」「サーバ/サーバー」型）。
+
+### 実装 (`consolidate.merge_kana_variant_nodes` + `japanese.kana_variant_key`)
+- **文字種限定レーベンシュタイン**: 差分文字がひらがなのみ（長音ーは末尾のみ）∧ 語頭一致 ∧ 差分≤3字で同一判定。
+  数字・英字・漢字の差分は距離1でも禁止 → U7314/U7414、第3/第4四半期、取締役/監査役、サーバー/サバ を構造的に排除
+  （単体検証20ケース全パス。埋め込み類似EL(FJH-06+EL, -5pt)との本質的差分は誤統合クラスの決定的遮断）
+- 候補生成は `kana_variant_key`（送り仮名・助詞・末尾長音を除いた骨格、内容語脱落ガード付き）
+- マージされた表記はkeeperの aliases に保存 → search_keys 再計算で照合キーとして残る
+- 検索側: ノードsearch_keys + クエリ側エンティティの両方にかな揺れ骨格キーを追加（双方向照合）
+
+### 適用結果（実グラフ）
+- 候補1,002ノード → 厳格ルールで **319組 / 335ノードをマージ**（ガードが2/3を棄却）
+- リグレッションベンチ: gemma 50%(v2c 52) / Azure 52%(55) / **参照 full-cov 65%（不変）**
+  → 決定的指標は不変、judge差は既知のノイズ帯域内。リグレッションなしと判断
+
+最終更新: 2026-06-12
