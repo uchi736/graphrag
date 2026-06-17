@@ -140,7 +140,15 @@ def main():
                     help="cross-encoder (bge-reranker-v2-m3) で fetch_k → top_k 再ランキング")
     ap.add_argument("--fetch-k", type=int, default=30,
                     help="rerank時の1次検索数 (default: 30)")
+    ap.add_argument("--prompt-file", default=None,
+                    help="生成プロンプトのテンプレ({context}/{question}必須)。未指定で内蔵版")
     args = ap.parse_args()
+
+    if args.prompt_file:
+        global GENERATION_PROMPT
+        GENERATION_PROMPT = Path(args.prompt_file).read_text(encoding="utf-8")
+        assert "{context}" in GENERATION_PROMPT and "{question}" in GENERATION_PROMPT
+        print(f"  生成プロンプト差し替え: {args.prompt_file}")
 
     yaml_path = Path(args.yaml)
     if not yaml_path.is_absolute():

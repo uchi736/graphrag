@@ -1,0 +1,3973 @@
+[
+  {
+    "qid": "2138f0638f363e75593d09df560db76c",
+    "type": "comparison",
+    "question": "『ダンガンロンパ 希望の学園と絶望の高校生』と『ファイナルファンタジーXIII』、発売日が早いのはどちらでしょう？",
+    "predicted_answer": "ファイナルファンタジーXIII",
+    "gold_answer": "ファイナルファンタジーXIII",
+    "predicted_references": [
+      "2236928",
+      "543287"
+    ],
+    "gold_references": [
+      "543287",
+      "2236928"
+    ],
+    "derivations": [
+      [
+        "ダンガンロンパ 希望の学園と絶望の高校生",
+        "発売日",
+        [
+          "2010年11月25日"
+        ]
+      ],
+      [
+        "ファイナルファンタジーXIII",
+        "発売日",
+        [
+          "2009年12月17日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "a6c300397ad4c16dd02702a32bf6ebd6",
+    "type": "comparison",
+    "question": "奥州市と酒田市はどちらも東北地方の都市ですか？",
+    "predicted_answer": "はい、奥州市も酒田市も東北地方の都市です。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "469368",
+      "70066"
+    ],
+    "gold_references": [
+      "469368",
+      "70066"
+    ],
+    "derivations": [
+      [
+        "奥州市",
+        "地方",
+        [
+          "東北地方"
+        ]
+      ],
+      [
+        "酒田市",
+        "地方",
+        [
+          "東北地方"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "e5582b3a5d2f1726c266cb918d017814",
+    "type": "compositional",
+    "question": "IPodを製作している企業の本社所在地は？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "カリフォルニア州クパチーノ",
+    "predicted_references": [
+      "52220",
+      "14706"
+    ],
+    "gold_references": [
+      "52220",
+      "14706"
+    ],
+    "derivations": [
+      [
+        "IPod",
+        "開発・販売元",
+        [
+          "Apple"
+        ]
+      ],
+      [
+        "Apple",
+        "本社所在地",
+        [
+          "カリフォルニア州クパチーノ"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "4cc219f606a1ed5e943b5d9e85b51e67",
+    "type": "compositional",
+    "question": "東條英機が死没した施設は何という戦争の後に設置されましたか？",
+    "predicted_answer": "横浜市本牧に設置された野戦病院は太平洋戦争の後に設置されました。",
+    "gold_answer": "第二次世界大戦",
+    "predicted_references": [
+      "16042"
+    ],
+    "gold_references": [
+      "16042",
+      "36525"
+    ],
+    "derivations": [
+      [
+        "東條英機",
+        "死没地",
+        [
+          "巣鴨拘置所"
+        ]
+      ],
+      [
+        "巣鴨拘置所",
+        "設置されたきっかけとなった戦争",
+        [
+          "第二次世界大戦"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "a5dda44918d33681714638f30fba1663",
+    "type": "compositional",
+    "question": "『ワイルド・スピード/スーパーコンボ』の前の話にあたる作品の監督はは誰？",
+    "predicted_answer": "F・ゲイリー・グレイ",
+    "gold_answer": "クリス・モーガン",
+    "predicted_references": [
+      "3917637",
+      "3547299",
+      "504412"
+    ],
+    "gold_references": [
+      "3917637",
+      "3547299"
+    ],
+    "derivations": [
+      [
+        "ワイルド・スピード/スーパーコンボ",
+        "前の話にあたる作品",
+        [
+          "ワイルド・スピード ICE BREAK"
+        ]
+      ],
+      [
+        "ワイルド・スピード ICE BREAK",
+        "監督",
+        [
+          "F・ゲイリー・グレイ"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "d33b70ec831f7c8893993ff5fd31d00f",
+    "type": "compositional",
+    "question": "藤島ジュリー景子の母親が死亡した年月日はいつですか？",
+    "predicted_answer": "藤島ジュリー景子の母親は2021年8月14日に死亡しました。",
+    "gold_answer": "2021年8月14日",
+    "predicted_references": [
+      "2272993",
+      "1094474",
+      "1155225",
+      "171424"
+    ],
+    "gold_references": [
+      "2272993",
+      "1094474"
+    ],
+    "derivations": [
+      [
+        "藤島ジュリー景子",
+        "母親",
+        [
+          "メリー喜多川"
+        ]
+      ],
+      [
+        "メリー喜多川",
+        "死亡日",
+        [
+          "2021年8月14日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "8e48bb8ad84ab240cdb6fabc2aa82e32",
+    "type": "comparison",
+    "question": "豊岡市と伊丹市の管轄区域は、どちらも但馬県民局ですか？",
+    "predicted_answer": "いいえ。豊岡市は但馬県民局管轄地域、伊丹市は阪神北県民局管轄区域です。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "8874",
+      "41510"
+    ],
+    "gold_references": [
+      "8874",
+      "41510"
+    ],
+    "derivations": [
+      [
+        "豊岡市",
+        "管轄区域",
+        [
+          "但馬県民局"
+        ]
+      ],
+      [
+        "伊丹市",
+        "管轄区域",
+        [
+          "阪神北県民局"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "4b1946d316e4a51965a48160c8df27dd",
+    "type": "comparison",
+    "question": "『侍戦隊シンケンジャー』と『仮面ライダーディケイド』、先に放送開始したのは『侍戦隊シンケンジャー』ですか？",
+    "predicted_answer": "いいえ。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "1962934",
+      "1741118"
+    ],
+    "gold_references": [
+      "1741118",
+      "1962934"
+    ],
+    "derivations": [
+      [
+        "侍戦隊シンケンジャー",
+        "放送開始",
+        [
+          "2009年2月15日"
+        ]
+      ],
+      [
+        "仮面ライダーディケイド",
+        "放送開始",
+        [
+          "2009年1月25日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "113634a9e20a68e84d97ee6a6588b622",
+    "type": "comparison",
+    "question": "『キイハンター』と『池袋ウエストゲートパーク』、毎週土曜日に放送されていたのは『池袋ウエストゲートパーク』ですか？",
+    "predicted_answer": "いいえ。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "218682",
+      "1085638"
+    ],
+    "gold_references": [
+      "1085638",
+      "218682"
+    ],
+    "derivations": [
+      [
+        "キイハンター",
+        "放送日",
+        [
+          "毎週土曜日"
+        ]
+      ],
+      [
+        "池袋ウエストゲートパーク (テレビドラマ)",
+        "放送日",
+        [
+          "毎週金曜日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "93d3fc0bc13841e928af6e8f03190b68",
+    "type": "comparison",
+    "question": "『ジョーズ』と『Mr.ノーバディ』はどちらもユニバーサル・ピクチャーズ配給の映画ですか？",
+    "predicted_answer": "はい。『ジョーズ』も『Mr.ノーバディ』もユニバーサル・ピクチャーズ配給の映画です。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "4338737",
+      "139212"
+    ],
+    "gold_references": [
+      "139212",
+      "4338737"
+    ],
+    "derivations": [
+      [
+        "ジョーズ",
+        "配給会社",
+        [
+          "ユニバーサル・ピクチャーズ"
+        ]
+      ],
+      [
+        "Mr.ノーバディ",
+        "配給会社",
+        [
+          "ユニバーサル・ピクチャーズ"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "c1f9f140633c4b48f48c9d682d1532c4",
+    "type": "comparison",
+    "question": "松前藩と岡山藩では、どちらが北に位置していましたか？",
+    "predicted_answer": "松前藩が北に位置していました。",
+    "gold_answer": "松前藩",
+    "predicted_references": [
+      "20900",
+      "90670"
+    ],
+    "gold_references": [
+      "20900",
+      "90670"
+    ],
+    "derivations": [
+      [
+        "松前藩",
+        "所在地",
+        [
+          "北海道松前郡松前町"
+        ]
+      ],
+      [
+        "岡山藩",
+        "所在地",
+        [
+          "岡山県岡山市北区"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "73cb6fa0b26d0b6fdc71249cfd5966eb",
+    "type": "comparison",
+    "question": "漫画『テセウスの船』と『来世ではちゃんとします』、『来世ではちゃんとします』の方が先の掲載ですか？",
+    "predicted_answer": "いいえ。『テセウスの船』は2017年30号から連載開始、『来世ではちゃんとします』は2018年5号に読み切り掲載。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "4038823",
+      "3962415"
+    ],
+    "gold_references": [
+      "3962415",
+      "4038823"
+    ],
+    "derivations": [
+      [
+        "テセウスの船 (漫画)",
+        "発表年月日",
+        [
+          "2017年6月22日"
+        ]
+      ],
+      [
+        "来世ではちゃんとします",
+        "発表年月日",
+        [
+          "2018年2月7日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "e880e1f4ddf6bc55090b19da86679d5d",
+    "type": "comparison",
+    "question": "馳浩は谷本正憲よりも年下ですか？",
+    "predicted_answer": "はい。馳浩（1961年生まれ）は谷本正憲（1945年生まれ）より年下です。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "143246",
+      "204688"
+    ],
+    "gold_references": [
+      "143246",
+      "204688"
+    ],
+    "derivations": [
+      [
+        "馳浩",
+        "生年月日",
+        [
+          "1961年5月5日"
+        ]
+      ],
+      [
+        "谷本正憲",
+        "生年月日",
+        [
+          "1945年4月16日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "b06dcd0961ac1e76735e9b458f81eb9c",
+    "type": "comparison",
+    "question": "J1リーグとプリメーラ・ディビシオンは、どちらもAFCに加盟していますか？",
+    "predicted_answer": "J1リーグはAFCに加盟しているが、プリメーラ・ディビシオンは加盟していない。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "2231415",
+      "288065"
+    ],
+    "gold_references": [
+      "2231415",
+      "288065"
+    ],
+    "derivations": [
+      [
+        "J1リーグ",
+        "加盟している大陸連盟",
+        [
+          "アジアサッカー連盟(AFC)"
+        ]
+      ],
+      [
+        "プリメーラ・ディビシオン",
+        "加盟している大陸連盟",
+        [
+          "UEFA"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "149c56a498be054bc3966e3fbc19a5a1",
+    "type": "comparison",
+    "question": "宮川彬良よりも小澤征爾のほうが年上ですか？",
+    "predicted_answer": "はい。小澤征爾（1935年生まれ）は宮川彬良（1961年生まれ）より年上です。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "98034",
+      "3160"
+    ],
+    "gold_references": [
+      "98034",
+      "3160"
+    ],
+    "derivations": [
+      [
+        "小澤征爾",
+        "生年月日",
+        [
+          "1935年9月1日"
+        ]
+      ],
+      [
+        "宮川彬良",
+        "生年月日",
+        [
+          "1961年2月18日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "e932407e748af5aa17fd0394bbb7020b",
+    "type": "comparison",
+    "question": "映画『レ・ミゼラブル』(2012年)と『ワイルド・スピードX3 TOKYO DRIFT』、後に公開されたのは、『ワイルド・スピードX3 TOKYO DRIFT』ですか？",
+    "predicted_answer": "いいえ。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "504412",
+      "2480184"
+    ],
+    "gold_references": [
+      "504412",
+      "2480184"
+    ],
+    "derivations": [
+      [
+        "レ・ミゼラブル (2012年の映画)",
+        "公開",
+        [
+          "2012年"
+        ]
+      ],
+      [
+        "ワイルド・スピードX3 TOKYO DRIFT",
+        "公開",
+        [
+          "2006年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "1c5904fb10c6a2feeaf2a06cc4c109a9",
+    "type": "comparison",
+    "question": "東近江市と近江八幡市はどちらも近畿地方でしょうか？",
+    "predicted_answer": "はい",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "204868",
+      "39552"
+    ],
+    "gold_references": [
+      "204868",
+      "39552"
+    ],
+    "derivations": [
+      [
+        "東近江市",
+        "地方",
+        [
+          "近畿地方"
+        ]
+      ],
+      [
+        "近江八幡市",
+        "地方",
+        [
+          "近畿地方"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "c98d5fb85e53ee2c3719c0582825ff25",
+    "type": "comparison",
+    "question": "徳川慶喜と徳川恒孝、どちらが先に生まれましたか？",
+    "predicted_answer": "徳川慶喜",
+    "gold_answer": "徳川慶喜",
+    "predicted_references": [
+      "16713",
+      "211270",
+      "11099"
+    ],
+    "gold_references": [
+      "11099",
+      "16713"
+    ],
+    "derivations": [
+      [
+        "徳川慶喜",
+        "生年月日",
+        [
+          "1837年10月28日"
+        ]
+      ],
+      [
+        "徳川恒孝",
+        "生年月日",
+        [
+          "1940年2月26日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "f872deb6e5b2019559ba02781b9f3d23",
+    "type": "compositional",
+    "question": "『男はつらいよ』の主演俳優の誕生日は何月何日？",
+    "predicted_answer": "3月10日",
+    "gold_answer": "3月10日",
+    "predicted_references": [
+      "3748",
+      "55319"
+    ],
+    "gold_references": [
+      "55319",
+      "3748"
+    ],
+    "derivations": [
+      [
+        "男はつらいよ",
+        "主演",
+        [
+          "渥美清"
+        ]
+      ],
+      [
+        "渥美清",
+        "誕生した日付",
+        [
+          "3月10日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "7f4ec51000b09d70bea540dc460ba79b",
+    "type": "compositional",
+    "question": "長瀬智也の所属していたアイドルグループの活動開始年は？",
+    "predicted_answer": "1994年",
+    "gold_answer": "1990年",
+    "predicted_references": [
+      "68016",
+      "48223",
+      "4136735"
+    ],
+    "gold_references": [
+      "68016",
+      "48223"
+    ],
+    "derivations": [
+      [
+        "長瀬智也",
+        "所属していたアイドルグループ",
+        [
+          "TOKIO"
+        ]
+      ],
+      [
+        "TOKIO",
+        "活動開始年",
+        [
+          "1990年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "82dda3a4b5879b38edb1213491204b0d",
+    "type": "comparison",
+    "question": "本田技研工業と東海旅客鉄道はどちらも通称がありますか？",
+    "predicted_answer": "はい。  \n本田技研工業の通称は「ホンダ」、東海旅客鉄道の通称は「JR東海」です。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "1211226",
+      "969364"
+    ],
+    "gold_references": [
+      "1211226",
+      "969364"
+    ],
+    "derivations": [
+      [
+        "本田技研工業",
+        "略称",
+        [
+          "Honda",
+          "ホンダ"
+        ]
+      ],
+      [
+        "東海旅客鉄道",
+        "略称",
+        [
+          "JR東海",
+          "JR海､JR-Central",
+          "JRC",
+          "JR-C",
+          "CJR"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "cc2b0c6d4689e87cd2814cdf55b03f61",
+    "type": "comparison",
+    "question": "北マケドニアよりもギリシャのほうが人口が少ないですか？",
+    "predicted_answer": "いいえ。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "8437",
+      "4381"
+    ],
+    "gold_references": [
+      "8437",
+      "4381"
+    ],
+    "derivations": [
+      [
+        "ギリシャ",
+        "人口",
+        [
+          "10,815,197人"
+        ]
+      ],
+      [
+        "北マケドニア",
+        "人口",
+        [
+          "2,103,721人"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "2d7fdc6ecc532f3667a55d0e3cb4b492",
+    "type": "comparison",
+    "question": "アヴァン・ジョーギアはロビー・アメルよりも年上ですか？",
+    "predicted_answer": "いいえ。アヴァン・ジョーギア（1992年2月9日生まれ）はロビー・アメル（1988年4月21日生まれ）より年下です。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "2278300",
+      "3151831",
+      "606296",
+      "3268832",
+      "4183183",
+      "3097844",
+      "70479",
+      "3810550",
+      "2378631"
+    ],
+    "gold_references": [
+      "2278300",
+      "3151831"
+    ],
+    "derivations": [
+      [
+        "アヴァン・ジョーギア",
+        "生年月日",
+        [
+          "1992年2月9日"
+        ]
+      ],
+      [
+        "ロビー・アメル",
+        "生年月日",
+        [
+          "1988年4月21日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "c0237b876d1389aed323df38b871c8ea",
+    "type": "compositional",
+    "question": "IPhone 11を開発した会社のCOOは誰ですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "ジェフ・ウィリアムズ",
+    "predicted_references": [
+      "4003884",
+      "14706",
+      "319401",
+      "60086",
+      "4060"
+    ],
+    "gold_references": [
+      "4003884",
+      "14706"
+    ],
+    "derivations": [
+      [
+        "IPhone 11",
+        "製品開発会社",
+        [
+          "Apple"
+        ]
+      ],
+      [
+        "Apple",
+        "COO",
+        [
+          "ジェフ・ウィリアムズ"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "05767e69f5285f2b1221f7a0516424dd",
+    "type": "comparison",
+    "question": "長嶋茂雄と小林旭、どちらが年上ですか？",
+    "predicted_answer": "長嶋茂雄。",
+    "gold_answer": "長嶋茂雄",
+    "predicted_references": [
+      "116922",
+      "532953"
+    ],
+    "gold_references": [
+      "116922",
+      "532953"
+    ],
+    "derivations": [
+      [
+        "長嶋茂雄",
+        "年齢",
+        [
+          "86歳"
+        ]
+      ],
+      [
+        "小林旭",
+        "年齢",
+        [
+          "84歳"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "d266f9dec42316f4492f7b10af61f554",
+    "type": "comparison",
+    "question": "エアバスA380とボーイング747はどちらも客室は2階建てですか？",
+    "predicted_answer": "はい、エアバスA380もボーイング747も客室は2階建てです。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "12135",
+      "763349"
+    ],
+    "gold_references": [
+      "763349",
+      "12135"
+    ],
+    "derivations": [
+      [
+        "エアバスA380",
+        "客室",
+        [
+          "2階建て"
+        ]
+      ],
+      [
+        "ボーイング747",
+        "客室",
+        [
+          "2階建て"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "66d615938fe77a4a782accdeadfd0a86",
+    "type": "compositional",
+    "question": "佐久間大介が所属するグループは何年に活動開始しましたか？",
+    "predicted_answer": "2012年",
+    "gold_answer": "2012年",
+    "predicted_references": [
+      "3212820",
+      "3221464"
+    ],
+    "gold_references": [
+      "3212820",
+      "3221464"
+    ],
+    "derivations": [
+      [
+        "佐久間大介",
+        "所属グループ",
+        [
+          "Snow Man"
+        ]
+      ],
+      [
+        "Snow Man",
+        "活動開始日",
+        [
+          "2012年5月3日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "c9f9e88867d36de5e325abb46ec2bc7c",
+    "type": "compositional",
+    "question": "杉咲花の父の職業は？",
+    "predicted_answer": "ギタリスト",
+    "gold_answer": "ギタリスト",
+    "predicted_references": [
+      "2416939"
+    ],
+    "gold_references": [
+      "2416939",
+      "942824"
+    ],
+    "derivations": [
+      [
+        "杉咲花",
+        "父",
+        [
+          "木暮武彦"
+        ]
+      ],
+      [
+        "木暮武彦",
+        "職業",
+        [
+          "ギタリスト"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "e6dfd98ee15f830ad7bf5818348e2cc3",
+    "type": "comparison",
+    "question": "ギリシャと北マケドニアの政治体制はどちらも共和制ですか？",
+    "predicted_answer": "はい。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "8437",
+      "4381"
+    ],
+    "gold_references": [
+      "8437",
+      "4381"
+    ],
+    "derivations": [
+      [
+        "ギリシャ",
+        "政治体制",
+        [
+          "共和制"
+        ]
+      ],
+      [
+        "北マケドニア",
+        "政治体制",
+        [
+          "共和制"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "5c1533a4f35c124c196cd700f6e77b95",
+    "type": "compositional",
+    "question": "大橋和也の出身都道府県の県庁所在地は何市ですか？",
+    "predicted_answer": "福岡市",
+    "gold_answer": "福岡市",
+    "predicted_references": [
+      "3869398",
+      "419",
+      "25886",
+      "16539"
+    ],
+    "gold_references": [
+      "3869398",
+      "254551"
+    ],
+    "derivations": [
+      [
+        "大橋和也",
+        "出身都道府県",
+        [
+          "福岡県"
+        ]
+      ],
+      [
+        "福岡県",
+        "県庁所在地",
+        [
+          "福岡市"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "e5e57bd3bbe330ed647d2203bce7ac93",
+    "type": "compositional",
+    "question": "島津斉興が藩主となった藩の藩庁があった城は？",
+    "predicted_answer": "鹿児島城",
+    "gold_answer": "鹿児島城",
+    "predicted_references": [
+      "222218",
+      "21132",
+      "13307",
+      "153213",
+      "90670",
+      "94758",
+      "61962"
+    ],
+    "gold_references": [
+      "222218",
+      "21132"
+    ],
+    "derivations": [
+      [
+        "島津斉興",
+        "藩主となった藩",
+        [
+          "薩摩藩"
+        ]
+      ],
+      [
+        "薩摩藩",
+        "藩庁",
+        [
+          "鹿児島城"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "e89f21317cb10b53e02a4bdd86e7590c",
+    "type": "comparison",
+    "question": "関口メンディーと渡部建で年齢が上なのは、渡部建ですか？",
+    "predicted_answer": "渡部建",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "1944369",
+      "2976256",
+      "2711605"
+    ],
+    "gold_references": [
+      "2976256",
+      "1944369"
+    ],
+    "derivations": [
+      [
+        "関口メンディー",
+        "生年月日",
+        [
+          "1991年1月25日"
+        ]
+      ],
+      [
+        "渡部建",
+        "生年月日",
+        [
+          "1972年〈昭和47年〉9月23日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "d94be291c20e232c7f67bd67a2584595",
+    "type": "compositional",
+    "question": "犬飼貴丈が所属する事務所の代表者は誰ですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "周防郁雄",
+    "predicted_references": [
+      "3111525"
+    ],
+    "gold_references": [
+      "3111525",
+      "1904241"
+    ],
+    "derivations": [
+      [
+        "犬飼貴丈",
+        "所属事務所",
+        [
+          "バーニングプロダクション"
+        ]
+      ],
+      [
+        "バーニングプロダクション",
+        "代表者",
+        [
+          "周防郁雄"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "9721e60fa6b7ce95616481ae624b15be",
+    "type": "comparison",
+    "question": "此花区と西成区、小学校の数が多いのはどちらの区ですか？",
+    "predicted_answer": "西成区",
+    "gold_answer": "西成区",
+    "predicted_references": [
+      "40594",
+      "40612"
+    ],
+    "gold_references": [
+      "40594",
+      "40612"
+    ],
+    "derivations": [
+      [
+        "此花区",
+        "小学校の数",
+        [
+          "8校"
+        ]
+      ],
+      [
+        "西成区",
+        "小学校の数",
+        [
+          "10校"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "ebf921f8f87081d171f2fb8650ad7171",
+    "type": "comparison",
+    "question": "立山と御嶽山、その形体が連峰群であるのはどちら？",
+    "predicted_answer": "立山",
+    "gold_answer": "立山",
+    "predicted_references": [
+      "16619",
+      "18336"
+    ],
+    "gold_references": [
+      "16619",
+      "18336"
+    ],
+    "derivations": [
+      [
+        "立山",
+        "形体",
+        [
+          "群峰・連峰群"
+        ]
+      ],
+      [
+        "御嶽山",
+        "形体",
+        [
+          "独立峰"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "feddbcfda8ee7a59cd9b069543218256",
+    "type": "comparison",
+    "question": "六代目中村勘九郎と二代目中村獅童は、どちらの屋号も中村屋ですか？",
+    "predicted_answer": "いいえ。六代目中村勘九郎の屋号は中村屋、二代目中村獅童の屋号は萬屋（旧播磨屋）です。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "242248",
+      "1045267"
+    ],
+    "gold_references": [
+      "242248",
+      "1045267"
+    ],
+    "derivations": [
+      [
+        "中村勘九郎 (6代目)",
+        "屋号",
+        [
+          "中村屋"
+        ]
+      ],
+      [
+        "中村獅童 (2代目)",
+        "屋号",
+        [
+          "萬屋"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "dff616eff5f7d5de12d37561efcbe0de",
+    "type": "comparison",
+    "question": "香取神宮と日光二荒山神社、千葉県にあるのはどちらですか？",
+    "predicted_answer": "香取神宮です。",
+    "gold_answer": "香取神宮",
+    "predicted_references": [
+      "185101",
+      "103306",
+      "37369"
+    ],
+    "gold_references": [
+      "37369",
+      "185101"
+    ],
+    "derivations": [
+      [
+        "香取神宮",
+        "所在地",
+        [
+          "千葉県"
+        ]
+      ],
+      [
+        "日光二荒山神社",
+        "所在地",
+        [
+          "栃木県"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "2fc01087de4ed31e4a0a3d6c39557363",
+    "type": "compositional",
+    "question": "『しあわせの保護色』の楽曲でセンターポジションを務めた人物が所属する事務所は何ですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "乃木坂46合同会社",
+    "predicted_references": [
+      "4087288",
+      "746582",
+      "3569686",
+      "2553995"
+    ],
+    "gold_references": [
+      "4087288",
+      "2680311"
+    ],
+    "derivations": [
+      [
+        "しあわせの保護色",
+        "楽曲のセンターポジションを務めた人物",
+        [
+          "白石麻衣"
+        ]
+      ],
+      [
+        "白石麻衣",
+        "事務所",
+        [
+          "乃木坂46合同会社"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "ca6dbade876424baa561599336b2c4cd",
+    "type": "comparison",
+    "question": "YOSHIKIとPATA、誕生日が早いのはYOSHIKIですか？",
+    "predicted_answer": "いいえ。PATAの誕生日は1965年11月4日で、YOSHIKIの誕生日は参考情報に記載がないため比較できない。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "187993",
+      "69749"
+    ],
+    "gold_references": [
+      "187993",
+      "69749"
+    ],
+    "derivations": [
+      [
+        "YOSHIKI",
+        "誕生日",
+        [
+          "1965年11月20日"
+        ]
+      ],
+      [
+        "PATA",
+        "誕生日",
+        [
+          "1965年11月4日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "b8a7ecd34506a4c1cc33c29be5b6f260",
+    "type": "compositional",
+    "question": "佐々木主浩が所属する団体の現組織の設立年月日はいつですか？",
+    "predicted_answer": "2010年10月15日",
+    "gold_answer": "40466",
+    "predicted_references": [
+      "27352",
+      "78912"
+    ],
+    "gold_references": [
+      "27352",
+      "78912"
+    ],
+    "derivations": [
+      [
+        "佐々木主浩",
+        "所属団体",
+        [
+          "日本プロ野球名球会"
+        ]
+      ],
+      [
+        "日本プロ野球名球会",
+        "現組織の設立年月日",
+        [
+          "2010年10月15日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "f1841714a714178ae914c4fda96e4da6",
+    "type": "comparison",
+    "question": "『世界に捧ぐ』と『シアー・ハート・アタック』は、どちらもクイーンのアルバムですか？",
+    "predicted_answer": "はい、どちらもクイーンのアルバムです。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "69387",
+      "69372",
+      "27635",
+      "69513"
+    ],
+    "gold_references": [
+      "69387",
+      "69372"
+    ],
+    "derivations": [
+      [
+        "世界に捧ぐ",
+        "バンド名",
+        [
+          "クイーン"
+        ]
+      ],
+      [
+        "シアー・ハート・アタック",
+        "バンド名",
+        [
+          "クイーン"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "196745e97f5fd9efcad8283679040112",
+    "type": "comparison",
+    "question": "法政大学と東海大学の校歌の作詞をしたのはどちらも詩人である佐藤春夫ですか？",
+    "predicted_answer": "いいえ。法政大学の校歌の作詞は佐藤春夫ですが、東海大学の大学歌・校歌の作詞は松前重義です。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "1924341",
+      "48579"
+    ],
+    "gold_references": [
+      "48579",
+      "1924341"
+    ],
+    "derivations": [
+      [
+        "法政大学",
+        "校歌の作詞",
+        [
+          "佐藤春夫"
+        ]
+      ],
+      [
+        "東海大学",
+        "校歌の作詞",
+        [
+          "松前重義"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "866b32f2fe8a9dec061240b71c6f1d7e",
+    "type": "compositional",
+    "question": "映画『コクリコ坂』からを配給した会社が入っているビルの名前は何ですか？",
+    "predicted_answer": "徳丸ビル",
+    "gold_answer": "東宝日比谷ビル",
+    "predicted_references": [
+      "5444",
+      "2043575"
+    ],
+    "gold_references": [
+      "2043575",
+      "47216"
+    ],
+    "derivations": [
+      [
+        "コクリコ坂から",
+        "配給会社",
+        [
+          "東宝"
+        ]
+      ],
+      [
+        "東宝",
+        "本社所在地",
+        [
+          "東宝日比谷ビル"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "631f439488a6bd9a61e4dd62dbfc3ddf",
+    "type": "comparison",
+    "question": "小山駅と長野駅の所在する県は違いますか？",
+    "predicted_answer": "はい。小山駅は栃木県、長野駅は長野県に所在します。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "37034",
+      "1424986",
+      "421"
+    ],
+    "gold_references": [
+      "1424986",
+      "37034"
+    ],
+    "derivations": [
+      [
+        "小山駅",
+        "所在する県",
+        [
+          "栃木県"
+        ]
+      ],
+      [
+        "長野駅",
+        "所在する県",
+        [
+          "長野県"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "2357fcc843d8c5635405b292b84498e0",
+    "type": "comparison",
+    "question": "フランシスコ・ザビエルと新島襄は、どちらが先に生まれましたか?",
+    "predicted_answer": "フランシスコ・ザビエル。",
+    "gold_answer": "フランシスコ・ザビエル",
+    "predicted_references": [
+      "1487214",
+      "61637"
+    ],
+    "gold_references": [
+      "61637",
+      "1487214"
+    ],
+    "derivations": [
+      [
+        "フランシスコ・ザビエル",
+        "生年月日",
+        [
+          "1506年頃4月7日"
+        ]
+      ],
+      [
+        "新島襄",
+        "生年月日",
+        [
+          "1843年2月12日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "78e153e52b1deef02e94585cf07dd51f",
+    "type": "compositional",
+    "question": "ジープの親会社が登記された国はどこですか？",
+    "predicted_answer": "オランダ（ステランティス N.V.）",
+    "gold_answer": "オランダ",
+    "predicted_references": [
+      "155098",
+      "81695"
+    ],
+    "gold_references": [
+      "155098",
+      "4287020"
+    ],
+    "derivations": [
+      [
+        "ジープ",
+        "親会社",
+        [
+          "ステランティス"
+        ]
+      ],
+      [
+        "ステランティス",
+        "登記された国",
+        [
+          "オランダ"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "d96de874464c5b768733b2d7b79cb82c",
+    "type": "comparison",
+    "question": "川崎重工業と任天堂、本社が京都にあるのは？",
+    "predicted_answer": "任天堂が京都に本社がある。川崎重工業は神戸市中央区（登記上の本店）および東京都港区に本社がある。",
+    "gold_answer": "任天堂",
+    "predicted_references": [
+      "1149",
+      "54946",
+      "49921",
+      "289153"
+    ],
+    "gold_references": [
+      "54946",
+      "1149"
+    ],
+    "derivations": [
+      [
+        "川崎重工業",
+        "本社所在地",
+        [
+          "東京都港区海岸1丁目14番5号",
+          "兵庫県神戸市中央区東川崎町1丁目1番3号神戸クリスタルタワー"
+        ]
+      ],
+      [
+        "任天堂",
+        "本社所在地",
+        [
+          "京都府京都市南区上鳥羽鉾立町11-1"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "75a4fd8581011b4232fb543e2ee0e7c3",
+    "type": "comparison",
+    "question": "『ガラスを割れ!』と『帰り道は遠回りしたくなる』、先に発売されたシングルは『帰り道は遠回りしたくなる』ですか？",
+    "predicted_answer": "いいえ。『ガラスを割れ!』が2018年3月7日発売、『帰り道は遠回りしたくなる』が2018年11月14日発売です。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "3850949",
+      "3742152",
+      "3935784",
+      "3293162"
+    ],
+    "gold_references": [
+      "3850949",
+      "3742152"
+    ],
+    "derivations": [
+      [
+        "ガラスを割れ!",
+        "発売日",
+        [
+          "2018年3月7日"
+        ]
+      ],
+      [
+        "帰り道は遠回りしたくなる",
+        "発売日",
+        [
+          "2018年11月14日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "06bca1e5e1b653339009ef45715ed71f",
+    "type": "comparison",
+    "question": "LiSAと松本人志はどちらが先に生まれましたか？",
+    "predicted_answer": "松本人志",
+    "gold_answer": "松本人志",
+    "predicted_references": [
+      "62845",
+      "1918817"
+    ],
+    "gold_references": [
+      "1918817",
+      "62845"
+    ],
+    "derivations": [
+      [
+        "LiSA",
+        "生年月日",
+        [
+          "1987年6月24日"
+        ]
+      ],
+      [
+        "松本人志",
+        "生年月日",
+        [
+          "1963年9月8日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "b99e7a131bd1720ff43d2a71dbaffdc3",
+    "type": "compositional",
+    "question": "ウサーマ・ビン・ラーディンが生まれた都市を本拠地とする王家の名前は？",
+    "predicted_answer": "サウード家",
+    "gold_answer": "サウード家",
+    "predicted_references": [
+      "3855"
+    ],
+    "gold_references": [
+      "3855",
+      "81740"
+    ],
+    "derivations": [
+      [
+        "ウサーマ・ビン・ラーディン",
+        "生誕地",
+        [
+          "リヤド"
+        ]
+      ],
+      [
+        "リヤド",
+        "本拠地とする王家",
+        [
+          "サウード家"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "7fe82249607f4e242f52524fd3c7132e",
+    "type": "comparison",
+    "question": "明石海峡大橋と大鳴門橋はどちらも吊橋ですか？",
+    "predicted_answer": "はい、明石海峡大橋も大鳴門橋も吊橋です。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "26099",
+      "147146"
+    ],
+    "gold_references": [
+      "147146",
+      "26099"
+    ],
+    "derivations": [
+      [
+        "明石海峡大橋",
+        "橋の形式",
+        [
+          "吊橋"
+        ]
+      ],
+      [
+        "大鳴門橋",
+        "橋の形式",
+        [
+          "吊橋"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "b3c7706dc9ad1773babf23e2c17be650",
+    "type": "comparison",
+    "question": "サム・ライミとジョディ・フォスターはどちらも映画監督ですか？",
+    "predicted_answer": "サム・ライミは映画監督、ジョディ・フォスターも映画監督である。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "129555",
+      "157958"
+    ],
+    "gold_references": [
+      "157958",
+      "129555"
+    ],
+    "derivations": [
+      [
+        "サム・ライミ",
+        "職業",
+        [
+          "映画監督",
+          "映画プロデューサー",
+          "脚本家"
+        ]
+      ],
+      [
+        "ジョディ・フォスター",
+        "職業",
+        [
+          "女優",
+          "映画監督",
+          "映画プロデューサー"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "d3601aa68d870746ac7802dfc0aee8fc",
+    "type": "compositional",
+    "question": "長岡京に遷都される前の都の所在地は現在の何県何市にあたるでしょうか？",
+    "predicted_answer": "奈良県奈良市",
+    "gold_answer": "奈良県奈良市",
+    "predicted_references": [
+      "2095039",
+      "7171",
+      "1836228",
+      "82397",
+      "82426"
+    ],
+    "gold_references": [
+      "2095039",
+      "82426"
+    ],
+    "derivations": [
+      [
+        "長岡京",
+        "遷都前の都",
+        [
+          "平城京"
+        ]
+      ],
+      [
+        "平城京",
+        "所在地",
+        [
+          "奈良県奈良市"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "0db707837b3611c4f3365cf869bf799f",
+    "type": "compositional",
+    "question": "徳川家宣の父方の祖父の墓所は何というお寺にありますか？",
+    "predicted_answer": "増上寺",
+    "gold_answer": "輪王寺",
+    "predicted_references": [
+      "37222",
+      "11331",
+      "44361",
+      "16713"
+    ],
+    "gold_references": [
+      "37222",
+      "11182"
+    ],
+    "derivations": [
+      [
+        "徳川家宣",
+        "父方の祖父",
+        [
+          "徳川家光"
+        ]
+      ],
+      [
+        "徳川家光",
+        "墓所",
+        [
+          "輪王寺"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "dd49c0a8ca7aae0c067e3f919e97dcf0",
+    "type": "comparison",
+    "question": "2代目 若乃花 幹士と貴ノ浪貞博では、どちらがより若くして初土俵を踏んだでしょうか？",
+    "predicted_answer": "2代目 若乃花 幹士。",
+    "gold_answer": "2代目 若乃花 幹士",
+    "predicted_references": [
+      "71064",
+      "176710",
+      "1280141"
+    ],
+    "gold_references": [
+      "176710",
+      "71064"
+    ],
+    "derivations": [
+      [
+        "若乃花幹士 (2代)",
+        "生年月日",
+        [
+          "1953年4月3日"
+        ]
+      ],
+      [
+        "若乃花幹士 (2代)",
+        "初土俵",
+        [
+          "1968年7月場所"
+        ]
+      ],
+      [
+        "貴ノ浪貞博",
+        "生年月日",
+        [
+          "1971年10月27日"
+        ]
+      ],
+      [
+        "貴ノ浪貞博",
+        "初土俵",
+        [
+          "1987年3月場所"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "7c2835b80c7c139df0c1d59c01b3a34a",
+    "type": "comparison",
+    "question": "飛騨市と関市で市町村合併を実施した時期の早いのはどちらですか？",
+    "predicted_answer": "飛騨市",
+    "gold_answer": "飛騨市",
+    "predicted_references": [
+      "31969",
+      "93360",
+      "73533"
+    ],
+    "gold_references": [
+      "93360",
+      "31969"
+    ],
+    "derivations": [
+      [
+        "飛騨市",
+        "市町村合併年",
+        [
+          "2004年"
+        ]
+      ],
+      [
+        "関市",
+        "市町村合併年",
+        [
+          "2005年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "1ec8a9aa07a422db8d82f6d2e5d0d4b8",
+    "type": "comparison",
+    "question": "『フォレスト・ガンプ/一期一会』とレオンはどちらも主演はトム・ハンクスですか？",
+    "predicted_answer": "いいえ。『フォレスト・ガンプ/一期一会』の主演はトム・ハンクスだが、『レオン』の主演はジャン・レノである。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "130334",
+      "136517",
+      "2273372"
+    ],
+    "gold_references": [
+      "136517",
+      "130334"
+    ],
+    "derivations": [
+      [
+        "フォレスト・ガンプ/一期一会",
+        "主演",
+        [
+          "トム・ハンクス"
+        ]
+      ],
+      [
+        "レオン (映画)",
+        "主演",
+        [
+          "ジャン・レノ"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "5174cafc990f7fc692cbb7efdc87139c",
+    "type": "compositional",
+    "question": "チキンラーメンを販売している会社の創業年はいつですか？",
+    "predicted_answer": "日清食品の創業年は1948年です。",
+    "gold_answer": "1948年",
+    "predicted_references": [
+      "1262489",
+      "1625892",
+      "151318"
+    ],
+    "gold_references": [
+      "1262489",
+      "1625892"
+    ],
+    "derivations": [
+      [
+        "チキンラーメン",
+        "販売会社",
+        [
+          "日清食品"
+        ]
+      ],
+      [
+        "日清食品",
+        "創業年",
+        [
+          "1948年9月4日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "915892424255afea08854fb07af166ac",
+    "type": "compositional",
+    "question": "漫画『チェンソーマン』作者の出身地の都道府県はどこですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "秋田県",
+    "predicted_references": [
+      "3874199",
+      "3424284",
+      "331412",
+      "252305"
+    ],
+    "gold_references": [
+      "3874199",
+      "3424284"
+    ],
+    "derivations": [
+      [
+        "チェンソーマン",
+        "作者",
+        [
+          "藤本タツキ"
+        ]
+      ],
+      [
+        "藤本タツキ",
+        "出身地",
+        [
+          "秋田県にかほ市"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "cba59b2b94a2069b63bd548ed25f9dcc",
+    "type": "comparison",
+    "question": "小芝風花と唐沢寿明はどちらが先にうまれましたか？",
+    "predicted_answer": "唐沢寿明",
+    "gold_answer": "唐沢寿明",
+    "predicted_references": [
+      "2605631",
+      "30936"
+    ],
+    "gold_references": [
+      "2605631",
+      "30936"
+    ],
+    "derivations": [
+      [
+        "小芝風花",
+        "生年月日",
+        [
+          "1997年4月16日"
+        ]
+      ],
+      [
+        "唐沢寿明",
+        "生年月日",
+        [
+          "1963年6月3日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "eb39f28f51fdd6db26d8894d5558abee",
+    "type": "compositional",
+    "question": "映画『風の谷のナウシカ』のプロデューサーが手掛けた、赤毛の少女を主人公とする作品のタイトルは何でしょうか？",
+    "predicted_answer": "『柳川堀割物語』",
+    "gold_answer": "赤毛のアン",
+    "predicted_references": [
+      "2378256",
+      "22740",
+      "2602172",
+      "5444"
+    ],
+    "gold_references": [
+      "2378256",
+      "22740"
+    ],
+    "derivations": [
+      [
+        "風の谷のナウシカ (映画)",
+        "プロデューサー",
+        [
+          "高畑勲"
+        ]
+      ],
+      [
+        "高畑勲",
+        "脚本・演出",
+        [
+          "赤毛のアン"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "1f4c6912934693e1aac9e0354817c04d",
+    "type": "compositional",
+    "question": "徳川家宣の父方の祖父の死没年月日は西暦でいつですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "1651年6月8日",
+    "predicted_references": [
+      "37222",
+      "44361",
+      "264557",
+      "16713"
+    ],
+    "gold_references": [
+      "37222",
+      "11182"
+    ],
+    "derivations": [
+      [
+        "徳川家宣",
+        "父方の祖父",
+        [
+          "徳川家光"
+        ]
+      ],
+      [
+        "徳川家光",
+        "西暦の死没日",
+        [
+          "1651年6月8日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "5a9028d4502f45d7dc8824bc737bac44",
+    "type": "comparison",
+    "question": "墨田区と台東区はどちらとも東京都区部の北東部に位置するというのは正しいですか？",
+    "predicted_answer": "はい。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "12594",
+      "55"
+    ],
+    "gold_references": [
+      "55",
+      "12594"
+    ],
+    "derivations": [
+      [
+        "墨田区",
+        "位置",
+        [
+          "東京都区部の東部"
+        ]
+      ],
+      [
+        "台東区",
+        "位置",
+        [
+          "東京都区部の北東部"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "f9673326362325b919bf74c864bb55aa",
+    "type": "comparison",
+    "question": "月亭方正と松尾諭、どちらが立教大学出身ですか？",
+    "predicted_answer": "いいえ。",
+    "gold_answer": "月亭方正",
+    "predicted_references": [
+      "78759",
+      "1309474"
+    ],
+    "gold_references": [
+      "78759",
+      "1309474"
+    ],
+    "derivations": [
+      [
+        "月亭方正",
+        "出身大学",
+        [
+          "立教大学"
+        ]
+      ],
+      [
+        "松尾諭",
+        "出身大学",
+        [
+          "関西学院大学"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "19809a1499b6692cc9d40dc1e2a7937e",
+    "type": "comparison",
+    "question": "サム・ライミとジョディ・フォスターのうち、先に出生したのはどっち？",
+    "predicted_answer": "サム・ライミ",
+    "gold_answer": "サム・ライミ",
+    "predicted_references": [
+      "129555",
+      "157958"
+    ],
+    "gold_references": [
+      "157958",
+      "129555"
+    ],
+    "derivations": [
+      [
+        "サム・ライミ",
+        "生年月日",
+        [
+          "1959年10月23日"
+        ]
+      ],
+      [
+        "ジョディ・フォスター",
+        "生年月日",
+        [
+          "1962年11月19日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "be1b038973f3bdcae8cd23645805f6e4",
+    "type": "comparison",
+    "question": "『シアー・ハート・アタック』と『クイーン II』、ロックフィールド・スタジオでレコーディングが行われたのはどちらですか？",
+    "predicted_answer": "『シアー・ハート・アタック』です。",
+    "gold_answer": "シアー・ハート・アタック",
+    "predicted_references": [
+      "69372",
+      "27635",
+      "69366",
+      "69387",
+      "69356"
+    ],
+    "gold_references": [
+      "69366",
+      "69372"
+    ],
+    "derivations": [
+      [
+        "シアー・ハート・アタック",
+        "レコーディングスタジオ",
+        [
+          "ロックフィールド・スタジオ"
+        ]
+      ],
+      [
+        "クイーン II",
+        "録音スタジオ",
+        [
+          "トライデント・スタジオ"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "fe518cc9f768acdb19418cb13e34a080",
+    "type": "comparison",
+    "question": "武漢市と杭州市で、人口が多いのは武漢市ですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "201565"
+    ],
+    "gold_references": [
+      "54445",
+      "201565"
+    ],
+    "derivations": [
+      [
+        "武漢市",
+        "人口",
+        [
+          "1,089.29万人"
+        ]
+      ],
+      [
+        "杭州市",
+        "人口",
+        [
+          "1036万人"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "967b3e66408c7f7b9898f577361494ee",
+    "type": "compositional",
+    "question": "太陽の塔の設計者の死亡した年月日はいつですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "1996年1月7日",
+    "predicted_references": [
+      "136905",
+      "2906"
+    ],
+    "gold_references": [
+      "136905",
+      "2906"
+    ],
+    "derivations": [
+      [
+        "太陽の塔",
+        "設計者",
+        [
+          "岡本太郎"
+        ]
+      ],
+      [
+        "岡本太郎",
+        "死没日",
+        [
+          "1996年1月7日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "64c73934b8fce5b31d14a297bd08320a",
+    "type": "comparison",
+    "question": "中元すず香は和田正人よりも若いでしょうか？",
+    "predicted_answer": "中元すず香は和田正人よりも若い。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "1669694",
+      "320885"
+    ],
+    "gold_references": [
+      "320885",
+      "1669694"
+    ],
+    "derivations": [
+      [
+        "中元すず香",
+        "生誕",
+        [
+          "1997年12月20日"
+        ]
+      ],
+      [
+        "和田正人",
+        "生誕",
+        [
+          "1979年8月25日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "a9eafd148a2d87fb1b966a5c6345d9eb",
+    "type": "comparison",
+    "question": "小沢健二のアルバム『犬は吠えるがキャラバンは進む』と『LIFE』、どちらもプロデュースは小沢健二のみですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "1130450",
+      "84745",
+      "1130704",
+      "1131961"
+    ],
+    "gold_references": [
+      "1130704",
+      "1130450"
+    ],
+    "derivations": [
+      [
+        "犬は吠えるがキャラバンは進む",
+        "プロデュース",
+        [
+          "小沢健二"
+        ]
+      ],
+      [
+        "LIFE (小沢健二のアルバム)",
+        "プロデュース",
+        [
+          "小沢健二&スチャダラパー(M-6)"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "4a58ecbebdea9ba4e63f508a84bcdd02",
+    "type": "comparison",
+    "question": "『カードキャプターさくら』と『ピアノの森』はどちらも少女漫画ですか？",
+    "predicted_answer": "いいえ。『カードキャプターさくら』は少女漫画であるが、『ピアノの森』についての記載は参考情報にないため判断できない。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "32948"
+    ],
+    "gold_references": [
+      "619276",
+      "32948"
+    ],
+    "derivations": [
+      [
+        "カードキャプターさくら",
+        "ジャンル",
+        [
+          "少女漫画",
+          "魔法少女"
+        ]
+      ],
+      [
+        "ピアノの森",
+        "ジャンル",
+        [
+          "青年漫画",
+          "音楽"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "7527b7332fa4302b62188991bcccce20",
+    "type": "comparison",
+    "question": "ハリソン・フォードとドウェイン・ジョンソンで、先に生まれたのはどちらでしょうか？",
+    "predicted_answer": "ハリソン・フォード",
+    "gold_answer": "ハリソン・フォード",
+    "predicted_references": [
+      "44427",
+      "119484"
+    ],
+    "gold_references": [
+      "119484",
+      "44427"
+    ],
+    "derivations": [
+      [
+        "ハリソン・フォード",
+        "生年月日",
+        [
+          "1942年7月13日"
+        ]
+      ],
+      [
+        "ドウェイン・ジョンソン",
+        "生年月日",
+        [
+          "1972年5月2日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "fed47e77baf9cce969a5adf2abd6051a",
+    "type": "compositional",
+    "question": "上皇后美智子の3人目の孫にあたる人物の生年月日は？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "2001年12月1日",
+    "predicted_references": [
+      "30327",
+      "2110896",
+      "1976507"
+    ],
+    "gold_references": [
+      "30327",
+      "2110896"
+    ],
+    "derivations": [
+      [
+        "上皇后美智子",
+        "3人目の孫",
+        [
+          "愛子内親王"
+        ]
+      ],
+      [
+        "愛子内親王",
+        "出生年月日",
+        [
+          "2001年12月1日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "888d47d71d99634ecbb0de253cde79fd",
+    "type": "comparison",
+    "question": "小泉進次郎と小泉孝太郎のうち、先に出生したのはどっち？",
+    "predicted_answer": "小泉孝太郎",
+    "gold_answer": "小泉孝太郎",
+    "predicted_references": [
+      "1875027",
+      "31897",
+      "1875030"
+    ],
+    "gold_references": [
+      "31897",
+      "1875027"
+    ],
+    "derivations": [
+      [
+        "小泉進次郎",
+        "出生年",
+        [
+          "1981年"
+        ]
+      ],
+      [
+        "小泉孝太郎",
+        "出生年",
+        [
+          "1978年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "2e93117ffb4996d40d4c8815ce342a2a",
+    "type": "comparison",
+    "question": "『アベンジャーズ/インフィニティ・ウォー』と『ジュラシック・ワールド』はどちらも続編ですか？",
+    "predicted_answer": "はい。『アベンジャーズ/インフィニティ・ウォー』は『アベンジャーズ』（2012年）の続編であり、『ジュラシック・ワールド』は「ジュラシック・パーク」シリーズの第4作目であり第1作目の続編です。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "2333941",
+      "3627813",
+      "3810788",
+      "3034230"
+    ],
+    "gold_references": [
+      "3627813",
+      "3034230"
+    ],
+    "derivations": [
+      [
+        "アベンジャーズ/インフィニティ・ウォー",
+        "前作",
+        [
+          "アベンジャーズ/エイジ・オブ・ウルトロン"
+        ]
+      ],
+      [
+        "ジュラシック・ワールド",
+        "前作",
+        [
+          "ジュラシック・パークIII"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "8e03238ce78ca4c4cbd68e623edd7bd4",
+    "type": "compositional",
+    "question": "女優杏さんの兄が卒業したのは何という大学ですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "青山学院大学",
+    "predicted_references": [
+      "2825916",
+      "22740",
+      "3748",
+      "149711",
+      "41593",
+      "43459",
+      "102621"
+    ],
+    "gold_references": [
+      "2825916",
+      "542309"
+    ],
+    "derivations": [
+      [
+        "杏 (女優)",
+        "兄",
+        [
+          "渡辺大"
+        ]
+      ],
+      [
+        "渡辺大",
+        "卒業大学",
+        [
+          "青山学院大学教育人間科学部"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "c5a487ff9660a2ec01489607d4582941",
+    "type": "compositional",
+    "question": "原田美枝子さんの配偶者の血液型は何型ですか？",
+    "predicted_answer": "AB型",
+    "gold_answer": "AB型",
+    "predicted_references": [
+      "1162468",
+      "157964"
+    ],
+    "gold_references": [
+      "1162468",
+      "157964"
+    ],
+    "derivations": [
+      [
+        "原田美枝子",
+        "配偶者",
+        [
+          "石橋凌"
+        ]
+      ],
+      [
+        "石橋凌",
+        "血液型",
+        [
+          "AB型"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "2ec3f7f1f916c3ad4b87c98d716f3814",
+    "type": "compositional",
+    "question": "蓮佛美沙子が初出演した連続テレビ小説のオープニング曲のアーティストは？",
+    "predicted_answer": "大友良英",
+    "gold_answer": "Mr.Children",
+    "predicted_references": [
+      "2825886",
+      "2588518"
+    ],
+    "gold_references": [
+      "2825886",
+      "3347496"
+    ],
+    "derivations": [
+      [
+        "蓮佛美沙子",
+        "初出演したNHK連続テレビ小説",
+        [
+          "べっぴんさん"
+        ]
+      ],
+      [
+        "べっぴんさん",
+        "オープニング主題歌アーティスト",
+        [
+          "Mr.Children"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "ddc80d8b2f0d56d669ba57856cd511e5",
+    "type": "compositional",
+    "question": "少年漫画『BLEACH』が連載されていた掲載誌が創刊された年月日は？",
+    "predicted_answer": "1968年7月11日",
+    "gold_answer": "1968年7月11日",
+    "predicted_references": [
+      "1420111",
+      "533062"
+    ],
+    "gold_references": [
+      "1420111",
+      "533062"
+    ],
+    "derivations": [
+      [
+        "BLEACH",
+        "掲載誌",
+        [
+          "週刊少年ジャンプ"
+        ]
+      ],
+      [
+        "週刊少年ジャンプ",
+        "創刊",
+        [
+          "1968年7月11日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "fb7d0c6793038e6a884e9d3f69fa8cb3",
+    "type": "comparison",
+    "question": "『仮面ライダーW』『仮面ライダー龍騎』、先に放送開始されたのは『仮面ライダーW』ですか？",
+    "predicted_answer": "いいえ。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "1044",
+      "2288331",
+      "2598056"
+    ],
+    "gold_references": [
+      "2288331",
+      "1044"
+    ],
+    "derivations": [
+      [
+        "仮面ライダーW",
+        "放送開始",
+        [
+          "2009年9月6日"
+        ]
+      ],
+      [
+        "仮面ライダー龍騎",
+        "放送開始",
+        [
+          "2002年2月3日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "b68c244631ee46988dc270d85208656c",
+    "type": "comparison",
+    "question": "関西学院大学と東海大学は、どちらも東京都内にキャンパスがありますか？",
+    "predicted_answer": "はい。関西学院大学は大阪梅田キャンパスと東京丸の内キャンパスがあり、東海大学は渋谷キャンパスと品川キャンパスが東京都内にあります。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "48579",
+      "302861"
+    ],
+    "gold_references": [
+      "48579",
+      "302861"
+    ],
+    "derivations": [
+      [
+        "関西学院大学",
+        "東京都内のキャンパス",
+        [
+          "東京丸の内キャンパス"
+        ]
+      ],
+      [
+        "東海大学",
+        "東京都内のキャンパス",
+        [
+          "代々木キャンパス",
+          "高輪キャンパス"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "8d415850cb886e5e63121a8bd1f05e6f",
+    "type": "comparison",
+    "question": "橋本龍太郎と徳川家広のうち、先に出生したのはどっち？",
+    "predicted_answer": "橋本龍太郎",
+    "gold_answer": "橋本龍太郎",
+    "predicted_references": [
+      "211270",
+      "19074"
+    ],
+    "gold_references": [
+      "211270",
+      "19074"
+    ],
+    "derivations": [
+      [
+        "橋本龍太郎",
+        "出生年",
+        [
+          "1937年"
+        ]
+      ],
+      [
+        "徳川家広",
+        "出生年",
+        [
+          "1965年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "c25cc35f1c1a27940d24041ffafe17a2",
+    "type": "compositional",
+    "question": "ミュージカル『テニスの王子様』の原作者の出身地は？",
+    "predicted_answer": "大阪府豊中市",
+    "gold_answer": "大阪府",
+    "predicted_references": [
+      "1276127",
+      "117632"
+    ],
+    "gold_references": [
+      "1276127",
+      "117632"
+    ],
+    "derivations": [
+      [
+        "ミュージカル・テニスの王子様",
+        "原作者",
+        [
+          "許斐剛"
+        ]
+      ],
+      [
+        "許斐剛",
+        "出身地",
+        [
+          "大阪府豊中市"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "58c03204b452aafe27f1b5c7980b811d",
+    "type": "comparison",
+    "question": "白濱亜嵐と杏、日本テレビのドラマに出演したのが早いのはどちらでしょう？",
+    "predicted_answer": "杏",
+    "gold_answer": "杏",
+    "predicted_references": [
+      "2825916",
+      "2300418"
+    ],
+    "gold_references": [
+      "2825916",
+      "2300418"
+    ],
+    "derivations": [
+      [
+        "白濱亜嵐",
+        "ドラマに初出演した年",
+        [
+          "2011年"
+        ]
+      ],
+      [
+        "杏 (女優)",
+        "ドラマに初出演した年",
+        [
+          "2009年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "18bac68273bc49b6e7051caa54de881e",
+    "type": "compositional",
+    "question": "藤原寛の出身校を設置した学校法人の名称は？",
+    "predicted_answer": "学校法人関西学院",
+    "gold_answer": "学校法人関西学院",
+    "predicted_references": [
+      "790707",
+      "1623064",
+      "2758569",
+      "57474",
+      "1924341"
+    ],
+    "gold_references": [
+      "790707",
+      "302861"
+    ],
+    "derivations": [
+      [
+        "藤原寛",
+        "出身校",
+        [
+          "関西学院大学"
+        ]
+      ],
+      [
+        "関西学院大学",
+        "設置者",
+        [
+          "学校法人関西学院"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "317262ffbc1415bb71ad4eafb7fef15f",
+    "type": "comparison",
+    "question": "西安市と武漢市、面積が広いのはどちらですか？",
+    "predicted_answer": "西安市の方が広いです。  \n（西安市：9983平方キロメートル、武漢市：8569.15平方キロメートル）",
+    "gold_answer": "西安市",
+    "predicted_references": [
+      "201565",
+      "26248"
+    ],
+    "gold_references": [
+      "26248",
+      "201565"
+    ],
+    "derivations": [
+      [
+        "西安市",
+        "総面積",
+        [
+          "10,752km²"
+        ]
+      ],
+      [
+        "武漢市",
+        "総面積",
+        [
+          "8,569.15km²"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "44075e20f9ac9d318ce3d1096c639e11",
+    "type": "comparison",
+    "question": "新城市と犬山市はどちらも市の木がありますか？",
+    "predicted_answer": "新城市には市の木の記載があるが、犬山市には市の木の記載がないため、犬山市は市の木があるか情報なし。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "28120",
+      "430008"
+    ],
+    "gold_references": [
+      "430008",
+      "28120"
+    ],
+    "derivations": [
+      [
+        "新城市",
+        "市の木",
+        [
+          "ヤマザクラ"
+        ]
+      ],
+      [
+        "犬山市",
+        "市の木",
+        [
+          "カナメモチ"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "f69a8dfb1261e02255d75d77cb188a3b",
+    "type": "compositional",
+    "question": "熊谷麻衣子の所属事務所の本社は何区にありますか？",
+    "predicted_answer": "圭三プロダクションの本社所在地は情報なし。",
+    "gold_answer": "渋谷区",
+    "predicted_references": [
+      "740411",
+      "84398",
+      "2600578",
+      "82349",
+      "2600569",
+      "10742"
+    ],
+    "gold_references": [
+      "740411",
+      "84398"
+    ],
+    "derivations": [
+      [
+        "熊谷麻衣子",
+        "所属事務所",
+        [
+          "圭三プロダクション"
+        ]
+      ],
+      [
+        "圭三プロダクション",
+        "本社所在地",
+        [
+          "東京都渋谷区"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "6bb2785b498ebecffdf462805827e680",
+    "type": "comparison",
+    "question": "日光街道と甲州街道、宿場が多かったのは？",
+    "predicted_answer": "甲州街道。",
+    "gold_answer": "甲州街道",
+    "predicted_references": [
+      "20076",
+      "27416"
+    ],
+    "gold_references": [
+      "20076",
+      "27416"
+    ],
+    "derivations": [
+      [
+        "日光街道",
+        "宿場数",
+        [
+          "21"
+        ]
+      ],
+      [
+        "甲州街道",
+        "宿場数",
+        [
+          "44"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "99633295d9c26f43c1bbefe565e64a51",
+    "type": "compositional",
+    "question": "SUBARUの筆頭株主である企業の初代社長の名前は？",
+    "predicted_answer": "林虎雄",
+    "gold_answer": "豊田利三郎",
+    "predicted_references": [
+      "47292",
+      "2153324"
+    ],
+    "gold_references": [
+      "47292",
+      "1556672"
+    ],
+    "derivations": [
+      [
+        "SUBARU",
+        "筆頭株主",
+        [
+          "トヨタ自動車"
+        ]
+      ],
+      [
+        "トヨタ自動車",
+        "初代社長",
+        [
+          "豊田利三郎"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "09353979d3c2700a7e5fe52bf2d5f67c",
+    "type": "compositional",
+    "question": "トヨタ・マークXの先代車の発売年は？",
+    "predicted_answer": "1968年（昭和43年）9月21日",
+    "gold_answer": "1968年",
+    "predicted_references": [
+      "162857",
+      "66002"
+    ],
+    "gold_references": [
+      "162857",
+      "66002"
+    ],
+    "derivations": [
+      [
+        "トヨタ・マークX",
+        "先代車",
+        [
+          "トヨタ・マークII"
+        ]
+      ],
+      [
+        "トヨタ・マークII",
+        "販売期間",
+        [
+          "1968年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "982105aeb2a202a27f80f791a85fe529",
+    "type": "comparison",
+    "question": "テレビドラマ『HERO』と『ガリレオ』、木村拓哉が主演しているのは？",
+    "predicted_answer": "テレビドラマ『HERO』に木村拓哉が主演している。『ガリレオ』には木村拓哉は主演していない。",
+    "gold_answer": "HERO",
+    "predicted_references": [
+      "157546",
+      "1584874",
+      "318991"
+    ],
+    "gold_references": [
+      "157546",
+      "1584874"
+    ],
+    "derivations": [
+      [
+        "HERO (テレビドラマ)",
+        "主演",
+        [
+          "木村拓哉"
+        ]
+      ],
+      [
+        "ガリレオ (テレビドラマ)",
+        "主演",
+        [
+          "福山雅治"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "68a6dc2d3d25aef21fdf6b5a987906c5",
+    "type": "comparison",
+    "question": "シンボリルドルフとライスシャワーはどちらも生まれは日本ですか？",
+    "predicted_answer": "シンボリルドルフは日本生まれ、ライスシャワーは日本生まれ。はい。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "54975",
+      "53254"
+    ],
+    "gold_references": [
+      "54975",
+      "53254"
+    ],
+    "derivations": [
+      [
+        "シンボリルドルフ",
+        "生まれた国",
+        [
+          "日本"
+        ]
+      ],
+      [
+        "ライスシャワー",
+        "生まれた国",
+        [
+          "日本"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "460d72f766d44db3447a9683b9fef532",
+    "type": "comparison",
+    "question": "関越自動車道と中央自動車道は、どちらも起点が東京都ですか？",
+    "predicted_answer": "関越自動車道、中央自動車道ともに起点は東京都です。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "13402",
+      "14844"
+    ],
+    "gold_references": [
+      "13402",
+      "14844"
+    ],
+    "derivations": [
+      [
+        "関越自動車道",
+        "起点",
+        [
+          "東京都練馬区（練馬IC）"
+        ]
+      ],
+      [
+        "中央自動車道",
+        "起点",
+        [
+          "東京都杉並区（高井戸IC）"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "26944d1683656b6287d34d8486f62b4e",
+    "type": "compositional",
+    "question": "『パプリカ』の曲を作詞・作曲・プロデュースしたアーティストが音楽活動を始めた年はいつですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "2009年",
+    "predicted_references": [
+      "3838144",
+      "2405919",
+      "1819",
+      "4133209"
+    ],
+    "gold_references": [
+      "3838144",
+      "2594420"
+    ],
+    "derivations": [
+      [
+        "パプリカ (曲)",
+        "作詞・作曲・プロデュース",
+        [
+          "米津玄師"
+        ]
+      ],
+      [
+        "米津玄師",
+        "活動期間",
+        [
+          "2009年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "c0fc6d888b754fe75b3e707961a35a52",
+    "type": "compositional",
+    "question": "『HUNTER×HUNTER』の作者の出身地は何県何市ですか？",
+    "predicted_answer": "山形県新庄市",
+    "gold_answer": "山形県新庄市",
+    "predicted_references": [
+      "24127",
+      "246"
+    ],
+    "gold_references": [
+      "24127",
+      "246"
+    ],
+    "derivations": [
+      [
+        "HUNTER×HUNTER",
+        "作者",
+        [
+          "冨樫義博"
+        ]
+      ],
+      [
+        "冨樫義博",
+        "出身地",
+        [
+          "山形県新庄市"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "ad3089a89d02a1b3ffe7cd34a11fae1b",
+    "type": "compositional",
+    "question": "川島明の出身養成所の創立会社は？",
+    "predicted_answer": "吉本興業",
+    "gold_answer": "吉本興業",
+    "predicted_references": [
+      "2078741"
+    ],
+    "gold_references": [
+      "2078741",
+      "4381020"
+    ],
+    "derivations": [
+      [
+        "川島明",
+        "出身",
+        [
+          "吉本総合芸能学院"
+        ]
+      ],
+      [
+        "吉本総合芸能学院",
+        "創立会社",
+        [
+          "吉本興業"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "bee945c964838c11d0c5bb7f8905d600",
+    "type": "comparison",
+    "question": "『A』と『プロミス・シンデレラ』の作者はどちらも矢沢あいですか？",
+    "predicted_answer": "いいえ。『プロミス・シンデレラ』の作者は橘オレコであり、矢沢あいではありません。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "4371398",
+      "775",
+      "2762694",
+      "2809541",
+      "2512094"
+    ],
+    "gold_references": [
+      "13618",
+      "4371398"
+    ],
+    "derivations": [
+      [
+        "A",
+        "作者",
+        [
+          "矢沢あい"
+        ]
+      ],
+      [
+        "プロミス・シンデレラ",
+        "作者",
+        [
+          "橘オレコ"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "216294551af0e77451751ec1ccc5d7de",
+    "type": "comparison",
+    "question": "福山雅治と小山田圭吾、ミュージシャンとしてデビューしたのが早いのはどちらでしょう？",
+    "predicted_answer": "小山田圭吾",
+    "gold_answer": "小山田圭吾",
+    "predicted_references": [
+      "2029848",
+      "2801505"
+    ],
+    "gold_references": [
+      "2801505",
+      "2029848"
+    ],
+    "derivations": [
+      [
+        "福山雅治",
+        "歌手デビュー",
+        [
+          "1990年3月21日"
+        ]
+      ],
+      [
+        "小山田圭吾",
+        "バンドデビュー",
+        [
+          "1989年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "6b7edf5dfd1b43d75e9aea73992e072b",
+    "type": "compositional",
+    "question": "タレントである辺見えみりの兄の生年月日は？",
+    "predicted_answer": "1973年10月6日",
+    "gold_answer": "1973年10月6日",
+    "predicted_references": [
+      "110926",
+      "559468",
+      "130260"
+    ],
+    "gold_references": [
+      "110926",
+      "559468"
+    ],
+    "derivations": [
+      [
+        "辺見えみり",
+        "職業",
+        [
+          "タレント"
+        ]
+      ],
+      [
+        "辺見えみり",
+        "兄",
+        [
+          "辺見鑑孝"
+        ]
+      ],
+      [
+        "辺見鑑孝",
+        "生年月日",
+        [
+          "1973年10月6日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "2167328c8c66b2202232e77ee095944b",
+    "type": "compositional",
+    "question": "生田斗真の弟は何大学何学部を卒業しましたか？",
+    "predicted_answer": "中央大学法学部を卒業しました。",
+    "gold_answer": "中央大学法学部",
+    "predicted_references": [
+      "132763",
+      "2355708",
+      "1581400"
+    ],
+    "gold_references": [
+      "132763",
+      "2355708"
+    ],
+    "derivations": [
+      [
+        "生田斗真",
+        "弟",
+        [
+          "生田竜聖"
+        ]
+      ],
+      [
+        "生田竜聖",
+        "最終学歴",
+        [
+          "中央大学法学部"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "43495ff4fff3aefc80eb2bc4be27764b",
+    "type": "comparison",
+    "question": "安美錦竜児と千代鳳祐樹は二人とも九重部屋に所属していましたか？",
+    "predicted_answer": "いいえ。安美錦竜児は伊勢ヶ濱部屋（入門時は安治川部屋）所属、千代鳳祐樹は九重部屋所属です。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "2527823",
+      "301834"
+    ],
+    "gold_references": [
+      "2527823",
+      "301834"
+    ],
+    "derivations": [
+      [
+        "安美錦竜児",
+        "所属部屋",
+        [
+          "伊勢ヶ濱部屋"
+        ]
+      ],
+      [
+        "千代鳳祐樹",
+        "所属部屋",
+        [
+          "九重部屋"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "1471bd6dcc395592b34cb89ec301b102",
+    "type": "compositional",
+    "question": "『おちょやん』の主演俳優の父親は誰ですか？",
+    "predicted_answer": "竹井テルヲ（たけい テルヲ）",
+    "gold_answer": "木暮武彦",
+    "predicted_references": [
+      "4026915"
+    ],
+    "gold_references": [
+      "4026915",
+      "2416939"
+    ],
+    "derivations": [
+      [
+        "おちょやん",
+        "主演",
+        [
+          "杉咲花"
+        ]
+      ],
+      [
+        "杉咲花",
+        "職業",
+        [
+          "俳優"
+        ]
+      ],
+      [
+        "杉咲花",
+        "父",
+        [
+          "木暮武彦"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "be2ec37f2497e850aa6fc329e22a5db8",
+    "type": "comparison",
+    "question": "大阪市の西成区と中央区ではどちらが大きいですか？",
+    "predicted_answer": "西成区",
+    "gold_answer": "中央区",
+    "predicted_references": [
+      "40612",
+      "40618"
+    ],
+    "gold_references": [
+      "40618",
+      "40612"
+    ],
+    "derivations": [
+      [
+        "西成区",
+        "面積",
+        [
+          "7.37km2"
+        ]
+      ],
+      [
+        "中央区 (大阪市)",
+        "面積",
+        [
+          "8.87km2"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "d557aabd993f595803d7c01ab53921c7",
+    "type": "compositional",
+    "question": "榮倉奈々の義理叔母のその甥は誰？",
+    "predicted_answer": "賀来賢人",
+    "gold_answer": "賀来賢人",
+    "predicted_references": [
+      "2825892",
+      "3962415",
+      "2831481"
+    ],
+    "gold_references": [
+      "2825892",
+      "158290"
+    ],
+    "derivations": [
+      [
+        "榮倉奈々",
+        "義理叔母",
+        [
+          "賀来千香子"
+        ]
+      ],
+      [
+        "賀来千香子",
+        "甥",
+        [
+          "賀来賢人"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "7c8c4655dcdc29037a1eea485b83c618",
+    "type": "comparison",
+    "question": "ジャニー喜多川と石ノ森章太郎、先に生まれたのはどちらですか？",
+    "predicted_answer": "ジャニー喜多川。",
+    "gold_answer": "ジャニー喜多川",
+    "predicted_references": [
+      "384376",
+      "1119043",
+      "1094474",
+      "1155225"
+    ],
+    "gold_references": [
+      "384376",
+      "1119043"
+    ],
+    "derivations": [
+      [
+        "ジャニー喜多川",
+        "生誕日",
+        [
+          "1931年10月23日"
+        ]
+      ],
+      [
+        "石ノ森章太郎",
+        "生誕日",
+        [
+          "1938年1月25日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "4cb5923b5136845123b8e1f797fae76e",
+    "type": "comparison",
+    "question": "安美錦竜児よりも千代鳳祐樹のほうが年上ですか？",
+    "predicted_answer": "いいえ。安美錦竜児（1978年10月3日生まれ）は千代鳳祐樹（1992年10月11日生まれ）より年上です。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "301834",
+      "2527823"
+    ],
+    "gold_references": [
+      "2527823",
+      "301834"
+    ],
+    "derivations": [
+      [
+        "安美錦竜児",
+        "生年月日",
+        [
+          "1978年10月3日"
+        ]
+      ],
+      [
+        "千代鳳祐樹",
+        "生年月日",
+        [
+          "1992年10月11日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "583bb4c62413471e3edacea3d7492767",
+    "type": "compositional",
+    "question": "松下政経塾の創立者が亡くなったのは何年ですか？",
+    "predicted_answer": "1989年です。",
+    "gold_answer": "1989年",
+    "predicted_references": [
+      "77612",
+      "329660"
+    ],
+    "gold_references": [
+      "329660",
+      "77612"
+    ],
+    "derivations": [
+      [
+        "松下政経塾",
+        "創立者",
+        [
+          "松下幸之助"
+        ]
+      ],
+      [
+        "松下幸之助",
+        "没年",
+        [
+          "1989年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "d84ab29abe1197190f5ce47f581dd5cf",
+    "type": "compositional",
+    "question": "『ラブリー』のオリジナルアーティストが卒業した大学はどこですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "東京大学",
+    "predicted_references": [
+      "1131961",
+      "77286",
+      "41593",
+      "302933",
+      "3748"
+    ],
+    "gold_references": [
+      "1131961",
+      "84745"
+    ],
+    "derivations": [
+      [
+        "ラブリー (曲)",
+        "オリジナルアーティスト",
+        [
+          "小沢健二"
+        ]
+      ],
+      [
+        "小沢健二",
+        "学歴",
+        [
+          "東京大学文学部"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "64e9da76872346510817495d3ffff624",
+    "type": "comparison",
+    "question": "石清水八幡宮と京都市の豊国神社、旧社格が別格官幣社なのは？",
+    "predicted_answer": "石清水八幡宮は旧社格が官幣大社、京都市の豊国神社は旧社格が別格官幣社である。",
+    "gold_answer": "豊国神社",
+    "predicted_references": [
+      "429255",
+      "43517"
+    ],
+    "gold_references": [
+      "429255",
+      "43517"
+    ],
+    "derivations": [
+      [
+        "石清水八幡宮",
+        "旧社格",
+        [
+          "官幣大社"
+        ]
+      ],
+      [
+        "豊国神社 (京都市)",
+        "旧社格",
+        [
+          "別格官幣社"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "456c3cddd96c0952a90c7372f048a10b",
+    "type": "comparison",
+    "question": "クイーンの『ドント・ストップ・ミー・ナウ』と『愛にすべてを』はどちらも1970年代にリリースされた楽曲ですか？",
+    "predicted_answer": "はい。『ドント・ストップ・ミー・ナウ』は1978年、『愛にすべてを』は1976年にリリースされています。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "846017",
+      "887446",
+      "27635",
+      "69513"
+    ],
+    "gold_references": [
+      "887446",
+      "846017"
+    ],
+    "derivations": [
+      [
+        "ドント・ストップ・ミー・ナウ",
+        "リリース",
+        [
+          "1979年1月26日"
+        ]
+      ],
+      [
+        "愛にすべてを",
+        "リリース",
+        [
+          "1976年11月12日"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "dcbd44b3e2650170f5e70efcd25f055e",
+    "type": "comparison",
+    "question": "『MIU404』と『さくらの親子丼』、エンディングを米津玄師が歌っていたのは？",
+    "predicted_answer": "いいえ",
+    "gold_answer": "MIU404",
+    "predicted_references": [
+      "4080091",
+      "2594420",
+      "4150179"
+    ],
+    "gold_references": [
+      "4080091",
+      "3640572"
+    ],
+    "derivations": [
+      [
+        "MIU404",
+        "エンディングの歌手",
+        [
+          "米津玄師"
+        ]
+      ],
+      [
+        "さくらの親子丼",
+        "エンディングの歌手",
+        [
+          "Hilcrhyme"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "e1f71ee9006fc398b94a827fa9c05dfd",
+    "type": "comparison",
+    "question": "御嶽山と車山はどちらも岐阜県にありますか？",
+    "predicted_answer": "御嶽山は岐阜県にありますが、車山は岐阜県にはありません。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "18336",
+      "505268"
+    ],
+    "gold_references": [
+      "505268",
+      "18336"
+    ],
+    "derivations": [
+      [
+        "御嶽山",
+        "位置",
+        [
+          "長野県木曽郡木曽町・王滝村と岐阜県下呂市・高山市"
+        ]
+      ],
+      [
+        "車山",
+        "位置",
+        [
+          "長野県茅野市と諏訪市の境目"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "dbcf5275221502995b2242687ccf0f9d",
+    "type": "compositional",
+    "question": "阿部サダヲが所属している事務所の代表者（社長）のお名前は何ですか？",
+    "predicted_answer": "情報なし",
+    "gold_answer": "長坂まき子",
+    "predicted_references": [
+      "72973",
+      "1155225"
+    ],
+    "gold_references": [
+      "72973",
+      "73020"
+    ],
+    "derivations": [
+      [
+        "阿部サダヲ",
+        "所属",
+        [
+          "大人計画"
+        ]
+      ],
+      [
+        "大人計画",
+        "代表者（社長）の名前",
+        [
+          "長坂まき子"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "475ed5444fd30f0fb4e641857e26d4ad",
+    "type": "comparison",
+    "question": "東名阪自動車道と伊勢自動車道、高速道路ナンバリングによる路線番号は違いますか？",
+    "predicted_answer": "いいえ、東名阪自動車道と伊勢自動車道はともに「E23」が割り振られている。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "29235",
+      "29438",
+      "14855",
+      "29230",
+      "1695165",
+      "29446"
+    ],
+    "gold_references": [
+      "29438",
+      "29235"
+    ],
+    "derivations": [
+      [
+        "東名阪自動車道",
+        "高速道路ナンバリングによる路線番号",
+        [
+          "E23"
+        ]
+      ],
+      [
+        "伊勢自動車道",
+        "高速道路ナンバリングによる路線番号",
+        [
+          "E23"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "383d28e06acfe4f1ab9c64b9bfc336bf",
+    "type": "compositional",
+    "question": "1968年に販売されたトヨタ・マークIIの後継の販売開始年は？",
+    "predicted_answer": "2004年",
+    "gold_answer": "2004年",
+    "predicted_references": [
+      "66002",
+      "162857"
+    ],
+    "gold_references": [
+      "66002",
+      "162857"
+    ],
+    "derivations": [
+      [
+        "トヨタ・マークII",
+        "後継",
+        [
+          "トヨタ・マークX"
+        ]
+      ],
+      [
+        "トヨタ・マークII",
+        "販売期間",
+        [
+          "1968年"
+        ]
+      ],
+      [
+        "トヨタ・マークX",
+        "販売開始年",
+        [
+          "2004年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "fdea5a0cd8262f902a15858af16eb5bc",
+    "type": "compositional",
+    "question": "映画『ハニーレモンソーダ』の脚本家の出身校は？",
+    "predicted_answer": "日本映画学校",
+    "gold_answer": "日本映画学校",
+    "predicted_references": [
+      "4212997",
+      "2347745"
+    ],
+    "gold_references": [
+      "4212997",
+      "2347745"
+    ],
+    "derivations": [
+      [
+        "ハニーレモンソーダ",
+        "映画脚本",
+        [
+          "吉川菜美"
+        ]
+      ],
+      [
+        "吉川菜美",
+        "出身校",
+        [
+          "日本映画学校"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "09d835392d233fee86dee9942a252d1d",
+    "type": "comparison",
+    "question": "北海道コンサドーレ札幌とFC東京、Jリーグへの加盟はどちらも1990年代ですか？",
+    "predicted_answer": "はい。北海道コンサドーレ札幌は1998年にJリーグ正会員となり、FC東京は1999年にJリーグ加盟しています。",
+    "gold_answer": "YES",
+    "predicted_references": [
+      "4723",
+      "4720"
+    ],
+    "gold_references": [
+      "4723",
+      "4720"
+    ],
+    "derivations": [
+      [
+        "北海道コンサドーレ札幌",
+        "Jリーグへ加盟した年",
+        [
+          "1998年"
+        ]
+      ],
+      [
+        "FC東京",
+        "Jリーグへ加盟した年",
+        [
+          "1999年"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "7d2abbf6aebd42413827d9277c698440",
+    "type": "comparison",
+    "question": "若乃花幹士(2代)と貴ノ浪貞博は、どちらも横綱に昇進しましたか？",
+    "predicted_answer": "若乃花幹士は横綱に昇進したが、貴ノ浪貞博は横綱に昇進していない。",
+    "gold_answer": "NO",
+    "predicted_references": [
+      "71064",
+      "176710"
+    ],
+    "gold_references": [
+      "176710",
+      "71064"
+    ],
+    "derivations": [
+      [
+        "若乃花幹士 (2代)",
+        "最高番付",
+        [
+          "第56代横綱"
+        ]
+      ],
+      [
+        "貴ノ浪貞博",
+        "最高番付",
+        [
+          "大関"
+        ]
+      ]
+    ],
+    "success": true
+  },
+  {
+    "qid": "a6ab2fac9a6f8af51610e24808cf20fa",
+    "type": "compositional",
+    "question": "永山瑛太の実弟の職業は？",
+    "predicted_answer": "永山絢斗の職業は俳優です。",
+    "gold_answer": "俳優",
+    "predicted_references": [
+      "1685110",
+      "1458820"
+    ],
+    "gold_references": [
+      "1685110",
+      "1458820"
+    ],
+    "derivations": [
+      [
+        "永山瑛太",
+        "実弟",
+        [
+          "永山絢斗"
+        ]
+      ],
+      [
+        "永山絢斗",
+        "職業",
+        [
+          "俳優"
+        ]
+      ]
+    ],
+    "success": true
+  }
+]

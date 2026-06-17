@@ -1,0 +1,303 @@
+{
+  "answer_accuracy": 72.0,
+  "ref_full_coverage": 96.0,
+  "ref_match_rate": 98.0,
+  "n": 25,
+  "details": [
+    {
+      "qa_id": "auto_5e0e245c",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi"
+      ]
+    },
+    {
+      "qa_id": "auto_3f52d732",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_87f4d5de",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "04_atsuyoki_kouzou"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_fb7cc816",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_9a5eb985",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "45_tokutei_setsubi"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_8258c494",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_4260102a",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei",
+        "03_boiler_kouzou"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_35cf590e",
+      "judge": 1,
+      "pred_refs": [
+        "42_anewho_kisoku",
+        "02_boiler_anzen"
+      ],
+      "correct_refs": [
+        "42_anewho_kisoku",
+        "02_boiler_anzen"
+      ]
+    },
+    {
+      "qa_id": "auto_a92f42a0",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "05_kogata_boiler_kouzou"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_52214db0",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_40a7f64e",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "03_boiler_kouzou"
+      ],
+      "correct_refs": [
+        "34_yousetu_kaisyaku"
+      ]
+    },
+    {
+      "qa_id": "auto_43bc073a",
+      "judge": 1,
+      "pred_refs": [
+        "v54n3_24_ガスタービン発電プラント制御装置向け新型リモートシステムの開発I_O",
+        "v47n2_04_新型ガスタービン制御装置の開発",
+        "v54n3_14_IHI発電プラントの進化するロングセラー制御装置",
+        "v63n2_07_二酸化炭素削減を実現した発電所が稼働中"
+      ],
+      "correct_refs": [
+        "v54n3_24_ガスタービン発電プラント制御装置向け新型リモートシステムの開発I_O"
+      ]
+    },
+    {
+      "qa_id": "auto_88dd80e0",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_f7590bf4",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_c6f9f041",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ],
+      "correct_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_c29ab9ac",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "05_kogata_boiler_kouzou",
+        "45_tokutei_setsubi"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_03b39ebe",
+      "judge": 1,
+      "pred_refs": [
+        "v57n4_07_低品位炭とバイオマスをフリー水素やアンモニアへCO",
+        "v55n4_11_未利用エネルギーの有効利用̶二塔式ガス化炉の活用̶",
+        "v57n2_07_水素エネルギー利用技術で地球温暖化をSTOP！",
+        "v61n2_04_アンモニアによるカーボンニュートラルの実現に向けて",
+        "v52n1_10_使いにくい燃料を価値ある燃料に",
+        "v61n2_05_COフリー水素を活用しカーボンリサイクル技術開発を推進する",
+        "v54n4_02_エンジニアリング力と建設技術が大きなプラントを実現"
+      ],
+      "correct_refs": [
+        "v57n4_07_低品位炭とバイオマスをフリー水素やアンモニアへCO"
+      ]
+    },
+    {
+      "qa_id": "auto_7c67d9c4",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_907515d4",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "04_atsuyoki_kouzou",
+        "02_boiler_anzen"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen"
+      ]
+    },
+    {
+      "qa_id": "auto_d4f317dd",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_5234cd07",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "03_boiler_kouzou",
+        "04_atsuyoki_kouzou"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_ba5bc0a2",
+      "judge": 1,
+      "pred_refs": [
+        "11_kouatsu_gas_ho",
+        "14_youki_hoan"
+      ],
+      "correct_refs": [
+        "11_kouatsu_gas_ho"
+      ]
+    },
+    {
+      "qa_id": "auto_7fd83367",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_35fef718",
+      "judge": 1,
+      "pred_refs": [
+        "v61n2_06_アンモニアでカーボンニュートラル火力発電へ",
+        "v59n4_12_石炭火力発電における微粉炭・アンモニア混合燃焼技術の開発",
+        "v64n1_04_燃料アンモニア燃焼バーナー・ボイラの商用機実証",
+        "v63n1_03_アンモニア燃焼技術の開発状況"
+      ],
+      "correct_refs": [
+        "v61n2_06_アンモニアでカーボンニュートラル火力発電へ",
+        "v63n1_03_アンモニア燃焼技術の開発状況"
+      ]
+    },
+    {
+      "qa_id": "auto_60a3bb5d",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "04_atsuyoki_kouzou",
+        "45_tokutei_setsubi"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    }
+  ]
+}

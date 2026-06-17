@@ -74,3 +74,7 @@ _bench/_pp_test/
 # Claude Code 一時ファイル
 .claude/scheduled_tasks.lock
 .env.mojibake_backup
+
+# JEMHopQA derived corpus (reproducible via fetch_data.py) + transient graph backups
+_bench/jemhop/chunks_jemhop/
+_bench/jemhop/*.jsonl.gz

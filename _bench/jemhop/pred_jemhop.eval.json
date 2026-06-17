@@ -1,0 +1,1210 @@
+{
+  "n": 120,
+  "contain_pct": 46.7,
+  "em_pct": 34.2,
+  "f1_pct": 42.0,
+  "ref_full_pct": 80.0,
+  "ref_partial_pct": 100.0,
+  "details": [
+    {
+      "qid": "2138f0638f363e75593d09df560db76c",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "ファイナルファンタジーXIII",
+      "pred": "ファイナルファンタジーXIII"
+    },
+    {
+      "qid": "a6c300397ad4c16dd02702a32bf6ebd6",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい、奥州市も酒田市も東北地方の都市です。"
+    },
+    {
+      "qid": "e5582b3a5d2f1726c266cb918d017814",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "カリフォルニア州クパチーノ",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "4cc219f606a1ed5e943b5d9e85b51e67",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.053,
+      "ref_full": false,
+      "gold": "第二次世界大戦",
+      "pred": "横浜市本牧に設置された野戦病院は太平洋戦争の後に設置されました。"
+    },
+    {
+      "qid": "a5dda44918d33681714638f30fba1663",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.267,
+      "ref_full": true,
+      "gold": "クリス・モーガン",
+      "pred": "F・ゲイリー・グレイ"
+    },
+    {
+      "qid": "d33b70ec831f7c8893993ff5fd31d00f",
+      "type": "compositional",
+      "contain": true,
+      "em": false,
+      "f1": 0.513,
+      "ref_full": true,
+      "gold": "2021年8月14日",
+      "pred": "藤島ジュリー景子の母親は2021年8月14日に死亡しました。"
+    },
+    {
+      "qid": "8e48bb8ad84ab240cdb6fabc2aa82e32",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。豊岡市は但馬県民局管轄地域、伊丹市は阪神北県民局管轄区域です。"
+    },
+    {
+      "qid": "4b1946d316e4a51965a48160c8df27dd",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。"
+    },
+    {
+      "qid": "113634a9e20a68e84d97ee6a6588b622",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。"
+    },
+    {
+      "qid": "93d3fc0bc13841e928af6e8f03190b68",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。『ジョーズ』も『Mr.ノーバディ』もユニバーサル・ピクチャーズ配給の映画です。"
+    },
+    {
+      "qid": "c1f9f140633c4b48f48c9d682d1532c4",
+      "type": "comparison",
+      "contain": true,
+      "em": false,
+      "f1": 0.353,
+      "ref_full": true,
+      "gold": "松前藩",
+      "pred": "松前藩が北に位置していました。"
+    },
+    {
+      "qid": "73cb6fa0b26d0b6fdc71249cfd5966eb",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。『テセウスの船』は2017年30号から連載開始、『来世ではちゃんとします』は2018年5号に読み切り掲載。"
+    },
+    {
+      "qid": "e880e1f4ddf6bc55090b19da86679d5d",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。馳浩（1961年生まれ）は谷本正憲（1945年生まれ）より年下です。"
+    },
+    {
+      "qid": "b06dcd0961ac1e76735e9b458f81eb9c",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "J1リーグはAFCに加盟しているが、プリメーラ・ディビシオンは加盟していない。"
+    },
+    {
+      "qid": "149c56a498be054bc3966e3fbc19a5a1",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。小澤征爾（1935年生まれ）は宮川彬良（1961年生まれ）より年上です。"
+    },
+    {
+      "qid": "e932407e748af5aa17fd0394bbb7020b",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。"
+    },
+    {
+      "qid": "1c5904fb10c6a2feeaf2a06cc4c109a9",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい"
+    },
+    {
+      "qid": "c98d5fb85e53ee2c3719c0582825ff25",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "徳川慶喜",
+      "pred": "徳川慶喜"
+    },
+    {
+      "qid": "f872deb6e5b2019559ba02781b9f3d23",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "3月10日",
+      "pred": "3月10日"
+    },
+    {
+      "qid": "7f4ec51000b09d70bea540dc460ba79b",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.8,
+      "ref_full": true,
+      "gold": "1990年",
+      "pred": "1994年"
+    },
+    {
+      "qid": "82dda3a4b5879b38edb1213491204b0d",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。  \n本田技研工業の通称は「ホンダ」、東海旅客鉄道の通称は「JR東海」です。"
+    },
+    {
+      "qid": "cc2b0c6d4689e87cd2814cdf55b03f61",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。"
+    },
+    {
+      "qid": "2d7fdc6ecc532f3667a55d0e3cb4b492",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。アヴァン・ジョーギア（1992年2月9日生まれ）はロビー・アメル（1988年4月21日生まれ）より年下です。"
+    },
+    {
+      "qid": "c0237b876d1389aed323df38b871c8ea",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "ジェフ・ウィリアムズ",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "05767e69f5285f2b1221f7a0516424dd",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "長嶋茂雄",
+      "pred": "長嶋茂雄。"
+    },
+    {
+      "qid": "d266f9dec42316f4492f7b10af61f554",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい、エアバスA380もボーイング747も客室は2階建てです。"
+    },
+    {
+      "qid": "66d615938fe77a4a782accdeadfd0a86",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "2012年",
+      "pred": "2012年"
+    },
+    {
+      "qid": "c9f9e88867d36de5e325abb46ec2bc7c",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": false,
+      "gold": "ギタリスト",
+      "pred": "ギタリスト"
+    },
+    {
+      "qid": "e6dfd98ee15f830ad7bf5818348e2cc3",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。"
+    },
+    {
+      "qid": "5c1533a4f35c124c196cd700f6e77b95",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": false,
+      "gold": "福岡市",
+      "pred": "福岡市"
+    },
+    {
+      "qid": "e5e57bd3bbe330ed647d2203bce7ac93",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "鹿児島城",
+      "pred": "鹿児島城"
+    },
+    {
+      "qid": "e89f21317cb10b53e02a4bdd86e7590c",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "渡部建"
+    },
+    {
+      "qid": "d94be291c20e232c7f67bd67a2584595",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "周防郁雄",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "9721e60fa6b7ce95616481ae624b15be",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "西成区",
+      "pred": "西成区"
+    },
+    {
+      "qid": "ebf921f8f87081d171f2fb8650ad7171",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "立山",
+      "pred": "立山"
+    },
+    {
+      "qid": "feddbcfda8ee7a59cd9b069543218256",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。六代目中村勘九郎の屋号は中村屋、二代目中村獅童の屋号は萬屋（旧播磨屋）です。"
+    },
+    {
+      "qid": "dff616eff5f7d5de12d37561efcbe0de",
+      "type": "comparison",
+      "contain": true,
+      "em": false,
+      "f1": 0.8,
+      "ref_full": true,
+      "gold": "香取神宮",
+      "pred": "香取神宮です。"
+    },
+    {
+      "qid": "2fc01087de4ed31e4a0a3d6c39557363",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "乃木坂46合同会社",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "ca6dbade876424baa561599336b2c4cd",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.036,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。PATAの誕生日は1965年11月4日で、YOSHIKIの誕生日は参考情報に記載がないため比較できない。"
+    },
+    {
+      "qid": "b8a7ecd34506a4c1cc33c29be5b6f260",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.125,
+      "ref_full": true,
+      "gold": "40466",
+      "pred": "2010年10月15日"
+    },
+    {
+      "qid": "f1841714a714178ae914c4fda96e4da6",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい、どちらもクイーンのアルバムです。"
+    },
+    {
+      "qid": "196745e97f5fd9efcad8283679040112",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。法政大学の校歌の作詞は佐藤春夫ですが、東海大学の大学歌・校歌の作詞は松前重義です。"
+    },
+    {
+      "qid": "866b32f2fe8a9dec061240b71c6f1d7e",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.364,
+      "ref_full": false,
+      "gold": "東宝日比谷ビル",
+      "pred": "徳丸ビル"
+    },
+    {
+      "qid": "631f439488a6bd9a61e4dd62dbfc3ddf",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。小山駅は栃木県、長野駅は長野県に所在します。"
+    },
+    {
+      "qid": "2357fcc843d8c5635405b292b84498e0",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "フランシスコ・ザビエル",
+      "pred": "フランシスコ・ザビエル。"
+    },
+    {
+      "qid": "78e153e52b1deef02e94585cf07dd51f",
+      "type": "compositional",
+      "contain": true,
+      "em": false,
+      "f1": 0.471,
+      "ref_full": false,
+      "gold": "オランダ",
+      "pred": "オランダ（ステランティス N.V.）"
+    },
+    {
+      "qid": "d96de874464c5b768733b2d7b79cb82c",
+      "type": "comparison",
+      "contain": true,
+      "em": false,
+      "f1": 0.128,
+      "ref_full": true,
+      "gold": "任天堂",
+      "pred": "任天堂が京都に本社がある。川崎重工業は神戸市中央区（登記上の本店）および東京都港区に本社がある。"
+    },
+    {
+      "qid": "75a4fd8581011b4232fb543e2ee0e7c3",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。『ガラスを割れ!』が2018年3月7日発売、『帰り道は遠回りしたくなる』が2018年11月14日発売です。"
+    },
+    {
+      "qid": "06bca1e5e1b653339009ef45715ed71f",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "松本人志",
+      "pred": "松本人志"
+    },
+    {
+      "qid": "b99e7a131bd1720ff43d2a71dbaffdc3",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": false,
+      "gold": "サウード家",
+      "pred": "サウード家"
+    },
+    {
+      "qid": "7fe82249607f4e242f52524fd3c7132e",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい、明石海峡大橋も大鳴門橋も吊橋です。"
+    },
+    {
+      "qid": "b3c7706dc9ad1773babf23e2c17be650",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "サム・ライミは映画監督、ジョディ・フォスターも映画監督である。"
+    },
+    {
+      "qid": "d3601aa68d870746ac7802dfc0aee8fc",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "奈良県奈良市",
+      "pred": "奈良県奈良市"
+    },
+    {
+      "qid": "0db707837b3611c4f3365cf869bf799f",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.333,
+      "ref_full": false,
+      "gold": "輪王寺",
+      "pred": "増上寺"
+    },
+    {
+      "qid": "dd49c0a8ca7aae0c067e3f919e97dcf0",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "2代目 若乃花 幹士",
+      "pred": "2代目 若乃花 幹士。"
+    },
+    {
+      "qid": "7c2835b80c7c139df0c1d59c01b3a34a",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "飛騨市",
+      "pred": "飛騨市"
+    },
+    {
+      "qid": "1ec8a9aa07a422db8d82f6d2e5d0d4b8",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。『フォレスト・ガンプ/一期一会』の主演はトム・ハンクスだが、『レオン』の主演はジャン・レノである。"
+    },
+    {
+      "qid": "5174cafc990f7fc692cbb7efdc87139c",
+      "type": "compositional",
+      "contain": true,
+      "em": false,
+      "f1": 0.476,
+      "ref_full": true,
+      "gold": "1948年",
+      "pred": "日清食品の創業年は1948年です。"
+    },
+    {
+      "qid": "915892424255afea08854fb07af166ac",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "秋田県",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "cba59b2b94a2069b63bd548ed25f9dcc",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "唐沢寿明",
+      "pred": "唐沢寿明"
+    },
+    {
+      "qid": "eb39f28f51fdd6db26d8894d5558abee",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "赤毛のアン",
+      "pred": "『柳川堀割物語』"
+    },
+    {
+      "qid": "1f4c6912934693e1aac9e0354817c04d",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "1651年6月8日",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "5a9028d4502f45d7dc8824bc737bac44",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "はい。"
+    },
+    {
+      "qid": "f9673326362325b919bf74c864bb55aa",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "月亭方正",
+      "pred": "いいえ。"
+    },
+    {
+      "qid": "19809a1499b6692cc9d40dc1e2a7937e",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "サム・ライミ",
+      "pred": "サム・ライミ"
+    },
+    {
+      "qid": "be1b038973f3bdcae8cd23645805f6e4",
+      "type": "comparison",
+      "contain": true,
+      "em": false,
+      "f1": 0.909,
+      "ref_full": true,
+      "gold": "シアー・ハート・アタック",
+      "pred": "『シアー・ハート・アタック』です。"
+    },
+    {
+      "qid": "fe518cc9f768acdb19418cb13e34a080",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "YES",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "967b3e66408c7f7b9898f577361494ee",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "1996年1月7日",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "64c73934b8fce5b31d14a297bd08320a",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "中元すず香は和田正人よりも若い。"
+    },
+    {
+      "qid": "a9eafd148a2d87fb1b966a5c6345d9eb",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "4a58ecbebdea9ba4e63f508a84bcdd02",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "NO",
+      "pred": "いいえ。『カードキャプターさくら』は少女漫画であるが、『ピアノの森』についての記載は参考情報にないため判断できない。"
+    },
+    {
+      "qid": "7527b7332fa4302b62188991bcccce20",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "ハリソン・フォード",
+      "pred": "ハリソン・フォード"
+    },
+    {
+      "qid": "fed47e77baf9cce969a5adf2abd6051a",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "2001年12月1日",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "888d47d71d99634ecbb0de253cde79fd",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "小泉孝太郎",
+      "pred": "小泉孝太郎"
+    },
+    {
+      "qid": "2e93117ffb4996d40d4c8815ce342a2a",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。『アベンジャーズ/インフィニティ・ウォー』は『アベンジャーズ』（2012年）の続編であり、『ジュラシック・ワールド』は「ジュラシック・パーク」シリーズの第"
+    },
+    {
+      "qid": "8e03238ce78ca4c4cbd68e623edd7bd4",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "青山学院大学",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "c5a487ff9660a2ec01489607d4582941",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "AB型",
+      "pred": "AB型"
+    },
+    {
+      "qid": "2ec3f7f1f916c3ad4b87c98d716f3814",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "Mr.Children",
+      "pred": "大友良英"
+    },
+    {
+      "qid": "ddc80d8b2f0d56d669ba57856cd511e5",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "1968年7月11日",
+      "pred": "1968年7月11日"
+    },
+    {
+      "qid": "fb7d0c6793038e6a884e9d3f69fa8cb3",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。"
+    },
+    {
+      "qid": "b68c244631ee46988dc270d85208656c",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。関西学院大学は大阪梅田キャンパスと東京丸の内キャンパスがあり、東海大学は渋谷キャンパスと品川キャンパスが東京都内にあります。"
+    },
+    {
+      "qid": "8d415850cb886e5e63121a8bd1f05e6f",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "橋本龍太郎",
+      "pred": "橋本龍太郎"
+    },
+    {
+      "qid": "c25cc35f1c1a27940d24041ffafe17a2",
+      "type": "compositional",
+      "contain": true,
+      "em": false,
+      "f1": 0.667,
+      "ref_full": true,
+      "gold": "大阪府",
+      "pred": "大阪府豊中市"
+    },
+    {
+      "qid": "58c03204b452aafe27f1b5c7980b811d",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "杏",
+      "pred": "杏"
+    },
+    {
+      "qid": "18bac68273bc49b6e7051caa54de881e",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": false,
+      "gold": "学校法人関西学院",
+      "pred": "学校法人関西学院"
+    },
+    {
+      "qid": "317262ffbc1415bb71ad4eafb7fef15f",
+      "type": "comparison",
+      "contain": true,
+      "em": false,
+      "f1": 0.128,
+      "ref_full": true,
+      "gold": "西安市",
+      "pred": "西安市の方が広いです。  \n（西安市：9983平方キロメートル、武漢市：8569.15平方キロメートル）"
+    },
+    {
+      "qid": "44075e20f9ac9d318ce3d1096c639e11",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "新城市には市の木の記載があるが、犬山市には市の木の記載がないため、犬山市は市の木があるか情報なし。"
+    },
+    {
+      "qid": "f69a8dfb1261e02255d75d77cb188a3b",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "渋谷区",
+      "pred": "圭三プロダクションの本社所在地は情報なし。"
+    },
+    {
+      "qid": "6bb2785b498ebecffdf462805827e680",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "甲州街道",
+      "pred": "甲州街道。"
+    },
+    {
+      "qid": "99633295d9c26f43c1bbefe565e64a51",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "豊田利三郎",
+      "pred": "林虎雄"
+    },
+    {
+      "qid": "09353979d3c2700a7e5fe52bf2d5f67c",
+      "type": "compositional",
+      "contain": true,
+      "em": false,
+      "f1": 0.5,
+      "ref_full": true,
+      "gold": "1968年",
+      "pred": "1968年（昭和43年）9月21日"
+    },
+    {
+      "qid": "982105aeb2a202a27f80f791a85fe529",
+      "type": "comparison",
+      "contain": true,
+      "em": false,
+      "f1": 0.182,
+      "ref_full": true,
+      "gold": "HERO",
+      "pred": "テレビドラマ『HERO』に木村拓哉が主演している。『ガリレオ』には木村拓哉は主演していない。"
+    },
+    {
+      "qid": "68a6dc2d3d25aef21fdf6b5a987906c5",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "シンボリルドルフは日本生まれ、ライスシャワーは日本生まれ。はい。"
+    },
+    {
+      "qid": "460d72f766d44db3447a9683b9fef532",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "関越自動車道、中央自動車道ともに起点は東京都です。"
+    },
+    {
+      "qid": "26944d1683656b6287d34d8486f62b4e",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "2009年",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "c0fc6d888b754fe75b3e707961a35a52",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "山形県新庄市",
+      "pred": "山形県新庄市"
+    },
+    {
+      "qid": "ad3089a89d02a1b3ffe7cd34a11fae1b",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": false,
+      "gold": "吉本興業",
+      "pred": "吉本興業"
+    },
+    {
+      "qid": "bee945c964838c11d0c5bb7f8905d600",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "NO",
+      "pred": "いいえ。『プロミス・シンデレラ』の作者は橘オレコであり、矢沢あいではありません。"
+    },
+    {
+      "qid": "216294551af0e77451751ec1ccc5d7de",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "小山田圭吾",
+      "pred": "小山田圭吾"
+    },
+    {
+      "qid": "6b7edf5dfd1b43d75e9aea73992e072b",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "1973年10月6日",
+      "pred": "1973年10月6日"
+    },
+    {
+      "qid": "2167328c8c66b2202232e77ee095944b",
+      "type": "compositional",
+      "contain": true,
+      "em": false,
+      "f1": 0.667,
+      "ref_full": true,
+      "gold": "中央大学法学部",
+      "pred": "中央大学法学部を卒業しました。"
+    },
+    {
+      "qid": "43495ff4fff3aefc80eb2bc4be27764b",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。安美錦竜児は伊勢ヶ濱部屋（入門時は安治川部屋）所属、千代鳳祐樹は九重部屋所属です。"
+    },
+    {
+      "qid": "1471bd6dcc395592b34cb89ec301b102",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "木暮武彦",
+      "pred": "竹井テルヲ（たけい テルヲ）"
+    },
+    {
+      "qid": "be2ec37f2497e850aa6fc329e22a5db8",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.333,
+      "ref_full": true,
+      "gold": "中央区",
+      "pred": "西成区"
+    },
+    {
+      "qid": "d557aabd993f595803d7c01ab53921c7",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": false,
+      "gold": "賀来賢人",
+      "pred": "賀来賢人"
+    },
+    {
+      "qid": "7c8c4655dcdc29037a1eea485b83c618",
+      "type": "comparison",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "ジャニー喜多川",
+      "pred": "ジャニー喜多川。"
+    },
+    {
+      "qid": "4cb5923b5136845123b8e1f797fae76e",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ。安美錦竜児（1978年10月3日生まれ）は千代鳳祐樹（1992年10月11日生まれ）より年上です。"
+    },
+    {
+      "qid": "583bb4c62413471e3edacea3d7492767",
+      "type": "compositional",
+      "contain": true,
+      "em": false,
+      "f1": 0.833,
+      "ref_full": true,
+      "gold": "1989年",
+      "pred": "1989年です。"
+    },
+    {
+      "qid": "d84ab29abe1197190f5ce47f581dd5cf",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "東京大学",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "64e9da76872346510817495d3ffff624",
+      "type": "comparison",
+      "contain": true,
+      "em": false,
+      "f1": 0.2,
+      "ref_full": true,
+      "gold": "豊国神社",
+      "pred": "石清水八幡宮は旧社格が官幣大社、京都市の豊国神社は旧社格が別格官幣社である。"
+    },
+    {
+      "qid": "456c3cddd96c0952a90c7372f048a10b",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。『ドント・ストップ・ミー・ナウ』は1978年、『愛にすべてを』は1976年にリリースされています。"
+    },
+    {
+      "qid": "dcbd44b3e2650170f5e70efcd25f055e",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "MIU404",
+      "pred": "いいえ"
+    },
+    {
+      "qid": "e1f71ee9006fc398b94a827fa9c05dfd",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "御嶽山は岐阜県にありますが、車山は岐阜県にはありません。"
+    },
+    {
+      "qid": "dbcf5275221502995b2242687ccf0f9d",
+      "type": "compositional",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": false,
+      "gold": "長坂まき子",
+      "pred": "情報なし"
+    },
+    {
+      "qid": "475ed5444fd30f0fb4e641857e26d4ad",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "いいえ、東名阪自動車道と伊勢自動車道はともに「E23」が割り振られている。"
+    },
+    {
+      "qid": "383d28e06acfe4f1ab9c64b9bfc336bf",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "2004年",
+      "pred": "2004年"
+    },
+    {
+      "qid": "fdea5a0cd8262f902a15858af16eb5bc",
+      "type": "compositional",
+      "contain": true,
+      "em": true,
+      "f1": 1.0,
+      "ref_full": true,
+      "gold": "日本映画学校",
+      "pred": "日本映画学校"
+    },
+    {
+      "qid": "09d835392d233fee86dee9942a252d1d",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "YES",
+      "pred": "はい。北海道コンサドーレ札幌は1998年にJリーグ正会員となり、FC東京は1999年にJリーグ加盟しています。"
+    },
+    {
+      "qid": "7d2abbf6aebd42413827d9277c698440",
+      "type": "comparison",
+      "contain": false,
+      "em": false,
+      "f1": 0.0,
+      "ref_full": true,
+      "gold": "NO",
+      "pred": "若乃花幹士は横綱に昇進したが、貴ノ浪貞博は横綱に昇進していない。"
+    },
+    {
+      "qid": "a6ab2fac9a6f8af51610e24808cf20fa",
+      "type": "compositional",
+      "contain": true,
+      "em": false,
+      "f1": 0.286,
+      "ref_full": true,
+      "gold": "俳優",
+      "pred": "永山絢斗の職業は俳優です。"
+    }
+  ]
+}
