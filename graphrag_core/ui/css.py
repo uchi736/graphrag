@@ -162,5 +162,40 @@ details[data-testid="stExpander"]:hover {
 ::-webkit-scrollbar-thumb:hover {
     background: rgba(102, 126, 234, 0.5);
 }
+
+/* ===== グラデーション ヘッダー ===== */
+.main-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.6rem 2rem;
+    border-radius: 14px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.35);
+}
+.header-title {
+    color: #ffffff;
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0;
+    line-height: 1.1;
+    /* override global h1 transparent-clip so the title stays white */
+    -webkit-text-fill-color: #ffffff;
+    background: none;
+}
+.header-subtitle {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.0rem;
+    font-weight: 400;
+    margin: 0.35rem 0 0 0;
+    letter-spacing: 0.01em;
+}
 </style>
+"""
+
+
+HEADER_HTML = """
+<div class="main-header">
+    <div class="header-title">🔗 GraphRAG</div>
+    <div class="header-subtitle">Neo4j × PGVector Knowledge Base</div>
+</div>
 """

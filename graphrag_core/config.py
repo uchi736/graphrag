@@ -120,8 +120,12 @@ class Settings:
     # --- Search / Retrieval ---
     retrieval_top_k: int = field(default_factory=lambda: _env_int("RETRIEVAL_TOP_K", "5"))
     search_mode: str = field(default_factory=lambda: _env("SEARCH_MODE", "hybrid"))
-    enable_rerank: bool = field(default_factory=lambda: _env_bool("ENABLE_RERANK", "false"))
+    # 検索結果の cross-encoder リランキング（最強レバー +11.8pt, EXPERIMENTS.md）→ 既定ON
+    enable_rerank: bool = field(default_factory=lambda: _env_bool("ENABLE_RERANK", "true"))
     enable_japanese_search: bool = field(default_factory=lambda: _env_bool("ENABLE_JAPANESE_SEARCH", "true"))
+    # グラフ三つ組の "A --rel--> B" 行をコンテキストに含めるか。
+    # EXPERIMENTS.md: noLines がマルチホップで優位のため既定OFF。
+    include_graph_lines: bool = field(default_factory=lambda: _env_bool("INCLUDE_GRAPH_LINES", "false"))
 
     # --- Knowledge Graph ---
     enable_knowledge_graph: bool = field(default_factory=lambda: _env_bool("ENABLE_KNOWLEDGE_GRAPH", "true"))
@@ -130,10 +134,27 @@ class Settings:
 
     # --- Entity Vector Search ---
     enable_entity_vector_search: bool = field(default_factory=lambda: _env_bool("ENABLE_ENTITY_VECTOR_SEARCH", "true"))
-    entity_similarity_threshold: float = field(default_factory=lambda: _env_float("ENTITY_SIMILARITY_THRESHOLD", "0.7"))
+    # 同義語/表記揺れ補完は高い類似度が必須（誤マッチ防止）。
+    # 従来 pipeline 側で max(.,0.85) に切り上げられ 0.7 は死値だったため、
+    # 正直な既定 0.85 を採用。0.85 未満も設定可能（下限切り上げは撤廃済み）。
+    entity_similarity_threshold: float = field(default_factory=lambda: _env_float("ENTITY_SIMILARITY_THRESHOLD", "0.85"))
 
     # --- KG Source Chunks ---
     include_kg_source_chunks: bool = field(default_factory=lambda: _env_bool("INCLUDE_KG_SOURCE_CHUNKS", "true"))
+
+    # --- 条件付き関係(qualifier/reify) ---
+    # 全て既定OFF。規程・基準系コーパス + 条件起点(列挙/横断/閾値)の用途に限定。
+    # 単一チャンクの条件照会では効果中立(A/B検証済み)なので blanket-on しない。
+    # build側（build_kg.py 後処理で :CondFact/:Cond/[:WHEN] を抽出・格納）
+    enable_conditional_facts: bool = field(default_factory=lambda: _env_bool("ENABLE_CONDITIONAL_FACTS", "false"))
+    # entity_node_predicate の :CondFact/:Cond 除外 + consolidate の条件正規化を有効化
+    enable_conditional_relations: bool = field(default_factory=lambda: _env_bool("CONDITIONAL_RELATIONS_ENABLED", "false"))
+    # 条件機能を有効化するコレクションのホワイトリスト（カンマ区切り、空=全許可だが既定OFF）
+    conditional_facts_corpus_tag: str = field(default_factory=lambda: _env("CONDITIONAL_FACTS_CORPUS_TAG", ""))
+    # retrieval側（条件起点ルーティング + <CONDITION_FACTS> 表示）
+    enable_condition_routing: bool = field(default_factory=lambda: _env_bool("ENABLE_CONDITION_ROUTING", "false"))
+    include_condition_lines: bool = field(default_factory=lambda: _env_bool("INCLUDE_CONDITION_LINES", "false"))
+    condition_routing_top_k: int = field(default_factory=lambda: _env_int("CONDITION_ROUTING_TOP_K", "20"))
 
     # --- Langfuse ---
     langfuse_public_key: str = field(default_factory=lambda: _env("LANGFUSE_PUBLIC_KEY"))
@@ -156,3 +177,51 @@ def reset_settings() -> None:
     """テスト用: Settings をリセット"""
     global _settings
     _settings = None
+
+
+def build_pipeline_config(settings: "Settings | None" = None, **overrides) -> dict:
+    """retrieval/KG パイプライン用 config dict を Settings から1か所で構築する。
+
+    pipeline._cfg が読む全キーを網羅し、Settings.enable_entity_vector_search →
+    ランタイムキー 'enable_entity_vector' のキー名変換もここだけで行う。
+    batch_eval / app / sidebar はこの結果に対話的な上書きを overlay するだけにする。
+    bench runner は config dict を明示的に組むため本ヘルパを経由せず影響を受けない。
+
+    Args:
+        settings: 省略時は get_settings()。
+        **overrides: 返り値 dict を上書きするキー（例: app の session_state 値）。
+    """
+    s = settings or get_settings()
+    cfg = {
+        # --- DB / 接続 ---
+        "pg_conn": s.pg_conn,
+        "pg_collection": s.pg_collection,
+        "neo4j_uri": s.neo4j_uri,
+        "neo4j_user": s.neo4j_user,
+        "neo4j_pw": s.neo4j_pw,
+        # --- 検索 / リランク ---
+        "retrieval_top_k": s.retrieval_top_k,
+        "search_mode": s.search_mode,
+        "enable_rerank": s.enable_rerank,
+        "rerank_pool_size": 20,
+        "enable_japanese_search": s.enable_japanese_search,
+        # --- グラフ ---
+        "graph_hop_count": s.graph_hop_count,
+        "path_max_candidates": s.path_max_candidates,
+        "include_graph_lines": s.include_graph_lines,
+        # --- エンティティベクトル（キー名変換は唯一ここ） ---
+        "enable_entity_vector": s.enable_entity_vector_search,
+        "entity_similarity_threshold": s.entity_similarity_threshold,
+        # --- KGソースチャンク ---
+        "include_kg_source_chunks": s.include_kg_source_chunks,
+        "kg_chunk_top_k": 5,
+        # --- 参照追跡（既定OFF, FJH-11） ---
+        "enable_reference_follow": False,
+        "reference_follow_top_k": 5,
+        # --- 条件付き関係の検索ルーティング（既定OFF・規程系限定） ---
+        "enable_condition_routing": s.enable_condition_routing,
+        "include_condition_lines": s.include_condition_lines,
+        "condition_routing_top_k": s.condition_routing_top_k,
+    }
+    cfg.update({k: v for k, v in overrides.items() if v is not None})
+    return cfg

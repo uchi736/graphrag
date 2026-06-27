@@ -54,13 +54,22 @@ def entity_node_predicate(var: str) -> str:
     - 照応ノード（is_anaphor=true: 「本製品」「当社」等で解決不能なもの）を除外。
       複数文書の別対象を1ノードに偽統合した誤ハブになるため
     """
-    return (
+    base = (
         f"{var}.id IS NOT NULL "
         f"AND NOT {var}:ProcessedChunk AND NOT {var}:SchemaMeta "
+        f"AND NOT {var}:GraphProvenance "
         f"AND NOT {var}.id =~ '[0-9a-f]{{32,}}' "
         f"AND COALESCE({var}.is_value, false) = false "
         f"AND COALESCE({var}.is_anaphor, false) = false"
     )
+    # 条件付き関係(reify)のノードは実体検索/pagerank/mention/value-flag から除外する。
+    # フラグOFF時は何も足さない＝文字列は byte-identical（高fanout関数なので不変性が重要）。
+    try:
+        if get_settings().enable_conditional_relations:
+            base += f" AND NOT {var}:CondFact AND NOT {var}:Cond"
+    except Exception:
+        pass
+    return base
 
 
 def _schema_path() -> Optional[Path]:

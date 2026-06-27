@@ -8,7 +8,24 @@ app.py から抽出し、session_state 依存を排除した純粋関数版。
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
+
+
+def _safe_label(name: Any) -> str:
+    """Cypher のバッククォート識別子に埋め込むラベル/リレーションタイプを安全化する。
+
+    enrichment.attach_source_chunks の安全化イディオムと同一:
+    英数字 (`str.isalnum()`) とアンダースコアのみを許可する。CJK 文字は
+    `isalnum()` が True を返すため日本語ラベル (Fujitsu 8ラベル等) は保持され、
+    バッククォート/空白/記号などクエリを破壊する文字のみが除去される。
+
+    Returns:
+        安全化した識別子。除去後に空文字なら ""（呼び出し側はクエリを実行せず失敗扱いにする）。
+    """
+    return "".join(c for c in str(name) if c.isalnum() or c == "_")
 
 
 # ------------------------------------------------------------------
@@ -27,15 +44,20 @@ def neo4j_add_node(graph, node_id: str, node_type: str = "Term", properties: Opt
     Returns:
         成功したら True
     """
+    safe_type = _safe_label(node_type)
+    if not safe_type:
+        logger.warning("neo4j_add_node: invalid node_type %r for id=%s; aborting", node_type, node_id)
+        return False
     try:
         props = dict(properties) if properties else {}
         props["id"] = node_id
         graph.query(
-            f"MERGE (n:`{node_type}` {{id: $id}}) SET n += $props",
+            f"MERGE (n:`{safe_type}` {{id: $id}}) SET n += $props",
             {"id": node_id, "props": props},
         )
         return True
-    except Exception:
+    except Exception as e:
+        logger.warning("neo4j_add_node failed for id=%s type=%s: %s", node_id, safe_type, e)
         return False
 
 
@@ -51,32 +73,66 @@ def neo4j_update_node(graph, node_id: str, node_type: Optional[str] = None, prop
     Returns:
         成功したら True
     """
-    try:
-        props = dict(properties) if properties else {}
-        if node_type:
+    props = dict(properties) if properties else {}
+    if node_type:
+        safe_type = _safe_label(node_type)
+        if not safe_type:
+            logger.warning("neo4j_update_node: invalid node_type %r for id=%s; aborting", node_type, node_id)
+            return False
+        # ラベル変更が無い場合は APOC 不要のプロパティ更新で済ませる。
+        # 編集ダイアログは type を常に再送するため、プロパティのみ編集でも node_type が渡る。
+        # ここで短絡しないと APOC 非搭載の Neo4j では全ノード編集が失敗扱い (False) になる。
+        current = neo4j_get_node_info(graph, node_id)
+        current_type = current.get("type") if current else None
+        if current_type == node_type:
+            try:
+                graph.query(
+                    "MATCH (n {id: $id}) SET n += $props",
+                    {"id": node_id, "props": props},
+                )
+                return True
+            except Exception as e:
+                logger.warning("neo4j_update_node failed (props-only, label unchanged) for id=%s: %s", node_id, e)
+                return False
+        try:
             # ラベル変更: 既存ラベルを削除して新ラベルを付与
             graph.query(
                 "MATCH (n {id: $id}) "
                 "WITH n, labels(n) AS lbls "
                 "CALL { WITH n, lbls UNWIND lbls AS l WITH n, l WHERE l <> 'ProcessedChunk' CALL apoc.node.removeLabel(n, l) YIELD node RETURN count(*) } "
-                f"SET n:`{node_type}`, n += $props",
+                f"SET n:`{safe_type}`, n += $props",
                 {"id": node_id, "props": props},
             )
-        else:
-            graph.query(
-                "MATCH (n {id: $id}) SET n += $props",
-                {"id": node_id, "props": props},
+            return True
+        except Exception as e:
+            # APOC未使用などでラベル変更ができなかった場合、プロパティのみ更新を試みるが、
+            # ラベル変更が反映されていないことを明示し、失敗 (False) を返す。
+            # （以前はラベル変更を黙って捨てつつ True を返す silent no-op だった）
+            logger.warning(
+                "neo4j_update_node: label change to %s skipped for id=%s (APOC unavailable?): %s",
+                safe_type, node_id, e,
             )
-        return True
-    except Exception:
-        # APOC未使用のフォールバック: ラベル変更なしでプロパティのみ更新
+            try:
+                graph.query(
+                    "MATCH (n {id: $id}) SET n += $props",
+                    {"id": node_id, "props": props},
+                )
+                logger.warning(
+                    "neo4j_update_node: properties updated for id=%s but requested label %s was NOT applied",
+                    node_id, safe_type,
+                )
+            except Exception as e2:
+                logger.warning("neo4j_update_node: property fallback also failed for id=%s: %s", node_id, e2)
+            return False
+    else:
         try:
             graph.query(
                 "MATCH (n {id: $id}) SET n += $props",
-                {"id": node_id, "props": properties or {}},
+                {"id": node_id, "props": props},
             )
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning("neo4j_update_node failed (props-only) for id=%s: %s", node_id, e)
             return False
 
 
@@ -93,7 +149,8 @@ def neo4j_delete_node(graph, node_id: str) -> bool:
     try:
         graph.query("MATCH (n {id: $id}) DETACH DELETE n", {"id": node_id})
         return True
-    except Exception:
+    except Exception as e:
+        logger.warning("neo4j_delete_node failed for id=%s: %s", node_id, e)
         return False
 
 
@@ -125,8 +182,8 @@ def neo4j_get_node_info(graph, node_id: str) -> Optional[Dict[str, Any]]:
                 "properties": props,
                 "degree": r.get("degree", 0),
             }
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("neo4j_get_node_info failed for id=%s: %s", node_id, e)
     return None
 
 
@@ -147,14 +204,19 @@ def neo4j_add_edge(graph, source: str, target: str, rel_type: str = "RELATED", p
     Returns:
         edge_key 相当 (0)、失敗時は None
     """
+    safe_type = _safe_label(rel_type)
+    if not safe_type:
+        logger.warning("neo4j_add_edge: invalid rel_type %r for (%s)->(%s); aborting", rel_type, source, target)
+        return None
     try:
         props = dict(properties) if properties else {}
         graph.query(
-            f"MATCH (s {{id: $src}}), (t {{id: $tgt}}) CREATE (s)-[r:`{rel_type}`]->(t) SET r += $props",
+            f"MATCH (s {{id: $src}}), (t {{id: $tgt}}) CREATE (s)-[r:`{safe_type}`]->(t) SET r += $props",
             {"src": source, "tgt": target, "props": props},
         )
         return 0  # edge_key相当
-    except Exception:
+    except Exception as e:
+        logger.warning("neo4j_add_edge failed for (%s)-[%s]->(%s): %s", source, safe_type, target, e)
         return None
 
 
@@ -176,9 +238,16 @@ def neo4j_update_edge(graph, source: str, target: str, edge_key: int = 0, rel_ty
         # 既存のエッジ情報取得
         old_info = neo4j_get_edge_info(graph, source, target, edge_key)
         if not old_info:
+            logger.warning("neo4j_update_edge: edge (%s)->(%s) not found; aborting", source, target)
             return False
-        old_type = old_info.get("type", "RELATED")
-        new_type = rel_type or old_type
+        old_type = _safe_label(old_info.get("type", "RELATED"))
+        new_type = _safe_label(rel_type) if rel_type else old_type
+        if not old_type or not new_type:
+            logger.warning(
+                "neo4j_update_edge: invalid rel_type (old=%r new=%r) for (%s)->(%s); aborting",
+                old_info.get("type"), rel_type, source, target,
+            )
+            return False
         props = dict(properties) if properties else {}
 
         if new_type != old_type:
@@ -197,7 +266,11 @@ def neo4j_update_edge(graph, source: str, target: str, edge_key: int = 0, rel_ty
                 {"src": source, "tgt": target, "props": props},
             )
         return True
-    except Exception:
+    except Exception as e:
+        logger.warning(
+            "neo4j_update_edge failed for (%s)-[%s->%s]->(%s): %s",
+            source, old_info.get("type") if isinstance(old_info, dict) else "?", rel_type, target, e,
+        )
         return False
 
 
@@ -219,7 +292,8 @@ def neo4j_delete_edge(graph, source: str, target: str, edge_key: Optional[int] =
             {"src": source, "tgt": target},
         )
         return True
-    except Exception:
+    except Exception as e:
+        logger.warning("neo4j_delete_edge failed for (%s)->(%s): %s", source, target, e)
         return False
 
 
@@ -250,8 +324,8 @@ def neo4j_get_edge_info(graph, source: str, target: str, edge_key: int = 0) -> O
                 "properties": dict(r.get("props", {})),
                 "edge_key": 0,
             }
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("neo4j_get_edge_info failed for (%s)->(%s): %s", source, target, e)
     return None
 
 
@@ -285,7 +359,8 @@ def neo4j_list_all_nodes(graph) -> List[Dict[str, Any]]:
                 "degree": r.get("degree", 0),
             })
         return nodes
-    except Exception:
+    except Exception as e:
+        logger.warning("neo4j_list_all_nodes failed: %s", e)
         return []
 
 
@@ -310,7 +385,8 @@ def neo4j_list_all_edges(graph) -> List[Dict[str, Any]]:
             {"source": r["source"], "type": r["type"], "target": r["target"], "edge_key": 0}
             for r in (result or [])
         ]
-    except Exception:
+    except Exception as e:
+        logger.warning("neo4j_list_all_edges failed: %s", e)
         return []
 
 
@@ -349,7 +425,8 @@ def export_graph_json(graph, output_path: str = "graph.json") -> dict:
             "RETURN n.id AS id, labels(n) AS labels, properties(n) AS props "
             "ORDER BY n.id"
         )
-    except Exception:
+    except Exception as e:
+        logger.warning("export_graph_json: node query failed, exporting empty nodes: %s", e)
         node_result = []
 
     nodes = []
@@ -373,7 +450,8 @@ def export_graph_json(graph, output_path: str = "graph.json") -> dict:
             "RETURN s.id AS source, type(r) AS type, t.id AS target, properties(r) AS props "
             "ORDER BY s.id, t.id"
         )
-    except Exception:
+    except Exception as e:
+        logger.warning("export_graph_json: edge query failed, exporting empty edges: %s", e)
         edge_result = []
 
     edges = []

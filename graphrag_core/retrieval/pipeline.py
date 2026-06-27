@@ -38,18 +38,22 @@ DEFAULT_CONFIG = {
     "enable_japanese_search": True,
     "enable_rerank": True,
     "enable_entity_vector": False,
-    "entity_similarity_threshold": 0.7,
+    "entity_similarity_threshold": 0.85,
     "search_mode": "hybrid",
     "include_kg_source_chunks": True,
     "kg_chunk_top_k": 5,
     "path_max_candidates": 30,
-    "include_graph_lines": True,
+    "include_graph_lines": False,
     # 参照追跡（「P.98参照」「『◯◯』をご覧ください」を1ホップ辿る）。
     # 機構はSIM質問等で実証済みだが、FJ-Hard 100問ベンチでは正味効果が
     # 中立〜微負（FJH-11参照）だったためデフォルトOFF。明示的な参照を
     # 辿る必要があるマニュアル・規程QAでは有効化を検討
     "enable_reference_follow": False,
     "reference_follow_top_k": 5,
+    # 条件付き関係の検索ルーティング（既定OFF・規程系限定）
+    "enable_condition_routing": False,
+    "include_condition_lines": False,
+    "condition_routing_top_k": 20,
 }
 
 
@@ -58,6 +62,75 @@ def _cfg(config: Optional[dict], key: str):
     if config and key in config:
         return config[key]
     return DEFAULT_CONFIG.get(key)
+
+
+# ── 条件付き関係(qualifier/reify)の検索ルーティング（既定OFF・規程系限定） ──
+
+def classify_condition_intent(question: str) -> str:
+    """質問が条件起点(列挙/閾値/条件)かをヒューリスティックで判定（LLM不使用）。
+
+    単一チャンクの条件照会は 'none' を返してルーティングしない（A/B中立のため）。
+    """
+    import re
+    if re.search(r"全て|すべて|全部|列挙|網羅|もれなく|漏れなく|どんな場合|どのような場合|いずれの", question):
+        return "enumerate_all"
+    if re.search(r"(以上|以下|未満|を超え|超える)", question) and re.search(r"[0-9０-９]|％|%|割|倍", question):
+        return "rate_threshold"
+    if re.search(r"条件|が絡む|を含む|該当する", question):
+        return "condition_origin"
+    return "none"
+
+
+def get_condition_origin_context(question, graph, config, pg_collection) -> dict:
+    """reify グラフ(:CondFact/:Cond/[:WHEN])を決定的Cypherで引き、<CONDITION_FACTS> を作る。
+
+    collection スコープ(:CondFact.pg_collection)で絞り、コーパス横断の漏れを防ぐ。
+    Returns: {"facts": [...], "block": str}
+    """
+    import re
+    top_k = int(_cfg(config, "condition_routing_top_k") or 20)
+    intent = classify_condition_intent(question)
+    rows = []
+    try:
+        if intent == "rate_threshold":
+            m = re.search(r"([0-9０-９]+)\s*(?:％|%|割|倍|日|円|時間|度)?\s*(?:以上|を超え|超える|より大き)", question)
+            thr = int(m.group(1).translate(str.maketrans("０１２３４５６７８９", "0123456789"))) if m else 0
+            rows = graph.query(
+                "MATCH (st:CondFact) WHERE st.pg_collection=$c AND st.value_num >= $thr "
+                "OPTIONAL MATCH (st)-[:WHEN]->(cd:Cond) "
+                "RETURN st.label AS label, st.value_num AS value, st.unit AS unit, st.source AS source, "
+                "collect(DISTINCT cd.value) AS conds ORDER BY st.value_num DESC LIMIT $k",
+                {"c": pg_collection, "thr": thr, "k": top_k},
+            )
+        else:
+            keys = re.findall(r"[一-龥ぁ-んァ-ヶー]{2,}", question)[:8]
+            rows = graph.query(
+                "UNWIND $keys AS k "
+                "MATCH (st:CondFact)-[:WHEN]->(cd:Cond) "
+                "WHERE st.pg_collection=$c AND (cd.value CONTAINS k OR COALESCE(cd.norm_value,'') CONTAINS k) "
+                "WITH DISTINCT st "
+                "MATCH (st)-[:WHEN]->(allc:Cond) "
+                "RETURN st.label AS label, st.value_num AS value, st.unit AS unit, st.source AS source, "
+                "collect(DISTINCT allc.value) AS conds ORDER BY st.value_num LIMIT $k",
+                {"keys": keys, "c": pg_collection, "k": top_k},
+            )
+    except Exception as e:
+        logger.warning("condition-origin query failed: %s", e)
+        return {"facts": [], "block": ""}
+
+    facts = [{"label": r.get("label"), "value": r.get("value"), "unit": r.get("unit"),
+              "source": r.get("source"), "conditions": r.get("conds", [])} for r in (rows or [])]
+    if not facts:
+        return {"facts": [], "block": ""}
+    lines = []
+    for f in facts:
+        val = (f"{f['value']}{f['unit'] or ''}"
+               if f["value"] not in (None, -1) else (f["label"] or ""))
+        conds = " かつ ".join([c for c in f["conditions"] if c])
+        src = f" [出典: {f['source']}]" if f.get("source") else ""
+        lines.append(f"- {f['label']}: {val} （条件: {conds}）{src}")
+    block = "<CONDITION_FACTS>\n" + "\n".join(lines) + "\n</CONDITION_FACTS>"
+    return {"facts": facts, "block": block}
 
 
 # ── エンティティ抽出 ──────────────────────────────────────────────────
@@ -117,7 +190,9 @@ def extract_entities_from_question(
     if _cfg(config, 'enable_entity_vector') and embeddings and pg_conn and entities:
         try:
             entity_vectorizer = EntityVectorizer(pg_conn, embeddings)
-            similarity_threshold = max(_cfg(config, 'entity_similarity_threshold') or 0.7, 0.85)
+            # 同義語/表記揺れ補完は高類似度が必須。既定 0.85（DEFAULT_CONFIG/Settings）だが
+            # 下限切り上げは撤廃し、設定値をそのまま使う（0.85未満も調整可能に）。
+            similarity_threshold = _cfg(config, 'entity_similarity_threshold') or 0.85
             search_mode = _cfg(config, 'search_mode')
             all_similar = []
             for ent in entities[:8]:  # LLM抽出の上位8個までで引く
@@ -873,6 +948,16 @@ def retriever_and_merge(
     if not _cfg(config, "include_graph_lines"):
         graph_lines = []
 
+    # 4.5 条件起点ルーティング（規程・基準系・既定OFF）。
+    # OFF時は classifier も Cypher も走らず、context/result は従来と完全一致。
+    condition_block = ""
+    condition_facts = []
+    if _cfg(config, "enable_condition_routing") and graph is not None:
+        if classify_condition_intent(question) != "none":
+            cinfo = get_condition_origin_context(question, graph, config, pg_collection)
+            condition_facts = cinfo.get("facts", [])
+            condition_block = cinfo.get("block", "")
+
     # 5. コンテキスト組み立て
     all_docs = docs.copy()
     if _cfg(config, 'include_kg_source_chunks'):
@@ -890,7 +975,11 @@ def retriever_and_merge(
         )
     else:
         context = "<DOCUMENT_CONTEXT>\n" + "\n---\n".join(doc_contexts) + "\n</DOCUMENT_CONTEXT>"
-    return {
+    # 条件起点ブロックは最優先で先頭に置く（rows が空なら condition_block="" で不変）
+    if condition_block:
+        context = condition_block + "\n\n" + context
+
+    result = {
         "context": context,
         "question": question,
         "vector_sources": docs,
@@ -899,3 +988,6 @@ def retriever_and_merge(
         "graph_paths": paths,
         "extracted_entities": extracted_entities
     }
+    if condition_facts:
+        result["condition_facts"] = condition_facts
+    return result

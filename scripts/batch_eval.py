@@ -23,7 +23,7 @@ if str(_project_root) not in sys.path:
 
 from tqdm import tqdm
 
-from graphrag_core.config import get_settings
+from graphrag_core.config import get_settings, build_pipeline_config
 
 # プロジェクトモジュール
 from graphrag_core.llm.factory import create_chat_llm
@@ -42,24 +42,8 @@ logger.setLevel(logging.INFO)
 
 # ─── 設定 ───────────────────────────────────────────────────────────
 def load_config() -> dict:
-    """Settings から設定を読み込む"""
-    s = get_settings()
-    return {
-        "pg_conn": s.pg_conn,
-        "pg_collection": s.pg_collection,
-        "enable_japanese_search": s.enable_japanese_search,
-        "search_mode": s.search_mode,
-        "retrieval_top_k": s.retrieval_top_k,
-        "include_kg_source_chunks": s.include_kg_source_chunks,
-        "enable_rerank": s.enable_rerank,
-        "enable_entity_vector": s.enable_entity_vector_search,
-        "entity_similarity_threshold": s.entity_similarity_threshold,
-        "graph_hop_count": s.graph_hop_count,
-        "path_max_candidates": s.path_max_candidates,
-        "neo4j_uri": s.neo4j_uri,
-        "neo4j_user": s.neo4j_user,
-        "neo4j_pw": s.neo4j_pw,
-    }
+    """Settings から設定を読み込む（共通ビルダ経由で単一ソース化）"""
+    return build_pipeline_config(get_settings())
 
 
 # ─── セットアップ ───────────────────────────────────────────────────

@@ -404,6 +404,16 @@ def build_knowledge_graph(
     except Exception as e:
         print(f"⚠️ 参照グラフ構築エラー: {e}")
 
+    # 条件付き関係(qualifier/reify)の抽出・格納（規程・基準系コーパス向け、既定OFF）
+    # consolidate の後・enrich(search_keys 再計算) の前に置く
+    if s.enable_conditional_facts:
+        try:
+            from graphrag_core.graph.conditions import build_conditional_graph
+            cf_stats = build_conditional_graph(graph, create_chat_llm(temperature=0), s.pg_collection)
+            print(f"✅ 条件付き事実: 言明 {cf_stats['condfact_nodes']}件 / 条件 {cf_stats['cond_nodes']}件")
+        except Exception as e:
+            print(f"⚠️ 条件付き事実の構築エラー: {e}")
+
     # 専門用語辞書の適用（KG_DICTIONARY_PATH が指定されていれば）
     # 注: enrich_post_build の search_keys が aliases/canonical_form を取り込むため、
     # 辞書適用は enrichment より先に実行する

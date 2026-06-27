@@ -55,7 +55,7 @@ def edit_node_dialog(graph, node_info=None,
                     # 更新
                     success = graph_update_node(graph, node_id, node_type, properties) if graph_update_node else False
                     if success:
-                        st.success(f"ノード '{node_id}' を更新しました")
+                        st.toast(f"ノード '{node_id}' を更新しました", icon="✅")
                         st.session_state.editing_node = None
                         if graph_get_data_for_cache:
                             st.session_state.graph_data_cache = graph_get_data_for_cache(graph)
@@ -69,7 +69,7 @@ def edit_node_dialog(graph, node_info=None,
                     else:
                         success = graph_add_node(graph, node_id, node_type, properties) if graph_add_node else False
                         if success:
-                            st.success(f"ノード '{node_id}' を追加しました")
+                            st.toast(f"ノード '{node_id}' を追加しました", icon="✅")
                             st.session_state.edit_mode = None
                             if graph_get_data_for_cache:
                                 st.session_state.graph_data_cache = graph_get_data_for_cache(graph)
@@ -147,7 +147,7 @@ def edit_edge_dialog(graph, edge_info=None, all_nodes=None,
                     # 更新
                     success = graph_update_edge(graph, source, target, edge_key, rel_type, properties) if graph_update_edge else False
                     if success:
-                        st.success(f"エッジ '{source} -> {target}' を更新しました")
+                        st.toast(f"エッジ '{source} -> {target}' を更新しました", icon="✅")
                         st.session_state.editing_edge = None
                         if graph_get_data_for_cache:
                             st.session_state.graph_data_cache = graph_get_data_for_cache(graph)
@@ -161,7 +161,7 @@ def edit_edge_dialog(graph, edge_info=None, all_nodes=None,
                     else:
                         result_key = graph_add_edge(graph, source, target, rel_type, properties) if graph_add_edge else None
                         if result_key is not None:
-                            st.success(f"エッジ '{source} -> {target}' を追加しました")
+                            st.toast(f"エッジ '{source} -> {target}' を追加しました", icon="✅")
                             st.session_state.edit_mode = None
                             if graph_get_data_for_cache:
                                 st.session_state.graph_data_cache = graph_get_data_for_cache(graph)

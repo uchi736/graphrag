@@ -118,21 +118,30 @@ def display_data_tables(graph_data, graph=None, enable_edit=False,
                     with st.expander(f"✏️ ノード編集: {selected_node}", expanded=True):
                         if edit_node_dialog_fn:
                             edit_node_dialog_fn(graph, node_info)
+            confirm_node_key = f'confirm_delete_node_{selected_node}'
             with col2:
                 if st.button("🗑️ 削除", key=f"delete_node_{selected_node}"):
-                    if st.session_state.get(f'confirm_delete_node_{selected_node}'):
+                    st.session_state[confirm_node_key] = True
+
+            # 明示的な はい/キャンセル 確認（旧: 「もう一度押す」トグルは取り消し不可で危険）
+            if st.session_state.get(confirm_node_key):
+                st.warning(f"⚠️ ノード '{selected_node}' を削除します。この操作は取り消せません。")
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button("はい、削除", type="primary", key=f"confirm_delete_node_yes_{selected_node}", width="stretch"):
                         success = graph_delete_node(graph, selected_node) if graph_delete_node else False
+                        st.session_state[confirm_node_key] = False
                         if success:
-                            st.success(f"ノード '{selected_node}' を削除しました")
+                            st.toast(f"ノード '{selected_node}' を削除しました", icon="🗑️")
                             if graph_get_data_for_cache:
                                 st.session_state.graph_data_cache = graph_get_data_for_cache(graph)
                             st.rerun()
                         else:
                             st.error("削除に失敗しました")
-                        st.session_state[f'confirm_delete_node_{selected_node}'] = False
-                    else:
-                        st.session_state[f'confirm_delete_node_{selected_node}'] = True
-                        st.warning(f"⚠️ ノード '{selected_node}' を削除しますか？もう一度削除ボタンを押してください。")
+                with c2:
+                    if st.button("キャンセル", key=f"confirm_delete_node_no_{selected_node}", width="stretch"):
+                        st.session_state[confirm_node_key] = False
+                        st.rerun()
 
     # CSVダウンロード
     csv_nodes = nodes_df.to_csv(index=False).encode('utf-8-sig')
@@ -206,21 +215,30 @@ def display_data_tables(graph_data, graph=None, enable_edit=False,
                         with st.expander(f"✏️ エッジ編集: {source} → {target}", expanded=True):
                             if edit_edge_dialog_fn:
                                 edit_edge_dialog_fn(graph, edge_info)
+                confirm_edge_key = f'confirm_delete_edge_{selected_idx}'
                 with col2:
                     if st.button("🗑️ 削除", key=f"delete_edge_{selected_idx}"):
-                        if st.session_state.get(f'confirm_delete_edge_{selected_idx}'):
+                        st.session_state[confirm_edge_key] = True
+
+                # 明示的な はい/キャンセル 確認
+                if st.session_state.get(confirm_edge_key):
+                    st.warning(f"⚠️ エッジ '{source} → {target}' を削除します。この操作は取り消せません。")
+                    ec1, ec2 = st.columns(2)
+                    with ec1:
+                        if st.button("はい、削除", type="primary", key=f"confirm_delete_edge_yes_{selected_idx}", width="stretch"):
                             success = graph_delete_edge(graph, source, target, edge_key) if graph_delete_edge else False
+                            st.session_state[confirm_edge_key] = False
                             if success:
-                                st.success(f"エッジ '{source} → {target}' を削除しました")
+                                st.toast(f"エッジ '{source} → {target}' を削除しました", icon="🗑️")
                                 if graph_get_data_for_cache:
                                     st.session_state.graph_data_cache = graph_get_data_for_cache(graph)
                                 st.rerun()
                             else:
                                 st.error("削除に失敗しました")
-                            st.session_state[f'confirm_delete_edge_{selected_idx}'] = False
-                        else:
-                            st.session_state[f'confirm_delete_edge_{selected_idx}'] = True
-                            st.warning(f"⚠️ エッジ '{source} → {target}' を削除しますか？もう一度削除ボタンを押してください。")
+                    with ec2:
+                        if st.button("キャンセル", key=f"confirm_delete_edge_no_{selected_idx}", width="stretch"):
+                            st.session_state[confirm_edge_key] = False
+                            st.rerun()
 
     # CSVダウンロード
     csv_edges = edges_df.to_csv(index=False).encode('utf-8-sig')

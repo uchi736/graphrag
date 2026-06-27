@@ -103,6 +103,8 @@ graphrag/
 │   │   ├── enrichment.py       # ビルド後プロパティ付与（mention_count/pagerank/search_keys/source_chunks）
 │   │   ├── consolidate.py      # KG統合（値ノードflag/型分裂・かな揺れマージ/関係正規化/照応解決）
 │   │   ├── references.py       # 参照グラフ（節/ページ/文書名参照のルールベース抽出）
+│   │   ├── conditions.py       # 条件付き関係(qualifier)のreify格納（:CondFact/:Cond/[:WHEN]）
+│   │   ├── provenance.py       # グラフ出自(PG_COLLECTION)の刻印と整合性チェック
 │   │   └── dictionary.py       # 専門用語辞書の適用（canonical_form/aliases付与）
 │   ├── retrieval/              # 検索
 │   │   ├── hybrid.py           # 日本語ハイブリッド検索（BM25 + Vector、RRF統合）
@@ -111,14 +113,22 @@ graphrag/
 │   │   └── pipeline.py         # 共通QAパイプライン
 │   ├── document/               # ドキュメント処理
 │   │   └── azure_di.py         # Azure Document Intelligence ほか
-│   └── ui/                     # Streamlit UIコンポーネント
+│   └── ui/                     # Streamlit UIコンポーネント（タブ別に分割）
+│       ├── state.py            # session_state初期化 + 全タブ共有コンテキスト(ctx)
+│       ├── system.py           # システム構築/既存グラフ復元ロジック
 │       ├── css.py              # スタイル定義
 │       ├── sidebar.py          # サイドバー設定UI
+│       ├── qa_tab.py           # 質問応答タブ
+│       ├── graph_tab.py        # グラフ探索タブ
+│       ├── documents_tab.py    # 登録ドキュメントタブ
+│       ├── build_tab.py        # 構築/取り込みタブ
+│       ├── settings_tab.py     # 設定タブ
+│       ├── feedback.py         # フィードバック収集
 │       ├── visualization.py    # グラフ可視化
 │       ├── data_tables.py      # データテーブル表示
 │       └── dialogs.py          # 編集ダイアログ
 ├── scripts/                    # エントリーポイント
-│   ├── app.py                  # Streamlit WebUI
+│   ├── app.py                  # Streamlit WebUI（薄いオーケストレータ。ロジックはui/*へ委譲）
 │   ├── build_kg.py             # CLIナレッジグラフ構築（統合・参照グラフ・enrichment込み）
 │   ├── build_reference_graph.py # 既存グラフへの参照グラフ後付け（再構築不要）
 │   ├── batch_eval.py           # CSVバッチ評価
@@ -181,7 +191,8 @@ ENABLE_KNOWLEDGE_GRAPH=true
 
 # Entity Vector Search Configuration
 ENABLE_ENTITY_VECTOR_SEARCH=true
-ENTITY_SIMILARITY_THRESHOLD=0.7
+# 同義語/表記揺れ補完は高類似度が必須（0.85 が実効既定）
+ENTITY_SIMILARITY_THRESHOLD=0.85
 
 # Japanese Hybrid Search Configuration
 ENABLE_JAPANESE_SEARCH=true
@@ -189,6 +200,10 @@ ENABLE_JAPANESE_SEARCH=true
 # Retrieval Configuration
 RETRIEVAL_TOP_K=5
 GRAPH_HOP_COUNT=2
+# cross-encoder リランク（最強レバー +11.8pt）→ 既定ON
+ENABLE_RERANK=true
+# グラフ三つ組行を LLM コンテキストに含めるか（noLines がマルチホップで優位 → 既定OFF）
+INCLUDE_GRAPH_LINES=false
 
 # LLM Provider (azure_openai or vllm)
 LLM_PROVIDER=azure_openai

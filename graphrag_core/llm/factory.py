@@ -123,6 +123,28 @@ def create_chat_llm(
         )
 
 
+def structured_output(llm: Any, pydantic_model: Any) -> Any:
+    """provider 非依存の構造化出力 Runnable を返す。
+
+    .invoke(prompt) で pydantic_model のインスタンスを返す。
+    - Azure / OpenAI / Anthropic: with_structured_output（function calling）
+    - vLLM: json_schema メソッド、不可なら guided_json を既存 extra_body にマージして bind
+      （chat_template_kwargs を上書きしないようマージする点が肝）
+    """
+    s = get_settings()
+    if s.llm_provider == "vllm":
+        try:
+            return llm.with_structured_output(pydantic_model, method="json_schema")
+        except Exception as e:
+            logger.warning("vLLM json_schema structured output unavailable, falling back to guided_json: %s", e)
+        from langchain_core.output_parsers import PydanticOutputParser
+        base_extra = dict(getattr(llm, "extra_body", None) or {})
+        base_extra["guided_json"] = pydantic_model.model_json_schema()
+        base_extra["guided_decoding_backend"] = "xgrammar"
+        return llm.bind(extra_body=base_extra) | PydanticOutputParser(pydantic_object=pydantic_model)
+    return llm.with_structured_output(pydantic_model)
+
+
 def create_embeddings() -> Any:
     """Create an embeddings instance based on EMBEDDING_PROVIDER.
 
