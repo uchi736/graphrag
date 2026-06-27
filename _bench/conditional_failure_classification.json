@@ -1,0 +1,516 @@
+{
+  "n_failed": 50,
+  "by_type": {
+    "non_conditional": 2,
+    "negation": 4,
+    "temporal": 16,
+    "compound_AND": 18,
+    "single_condition_lookup": 10
+  },
+  "n_qualifier_helps": 20,
+  "n_qualifier_helps_not_table": 0,
+  "n_table_bound": 49,
+  "addressable_candidates": [],
+  "all_results": [
+    {
+      "conditional_type": "non_conditional",
+      "needs_condition": false,
+      "condition_payload": "",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "数値比較・順位付けで条件表現は不要",
+      "no": "13",
+      "question": "違法・有害情報に関する投稿の目撃経験のうち、３番目に「見たことがある」の割合が多い投稿は何ですか？また、１番目のものは、３番目のものより何パーセント「見たことがある」の割合が高いで"
+    },
+    {
+      "conditional_type": "negation",
+      "needs_condition": true,
+      "condition_payload": "後工程で管理可能な場合はCCPでない",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "条件付き関係の成立条件をqualifierで表現可能だから",
+      "no": "6",
+      "question": "生乳の受入時、病原微生物が存在する可能性がありますが、なぜ重要管理点(CCP)ではないのでしょうか？"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "HACCP導入の時期に基づく順位付け",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "順位は時系列データの単純比較で表現可能",
+      "no": "3",
+      "question": "日本は世界で何番目にHACCPに基づいた衛生管理を取り入れましたか？また日本より早く取り入れた国はどこですか？"
+    },
+    {
+      "conditional_type": "negation",
+      "needs_condition": true,
+      "condition_payload": "波長が10mより短い→無線LANで使用される",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "条件付き波長制限の表現が不足し誤答に繋がるため",
+      "no": "15",
+      "question": "無線LANではなぜ10mより長い波長の電波を使うのですか？"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "培養工程を通る原材料は製造工程図の該当工程時点でのもの",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "工程時点条件をエッジqualifierで表現可能だから",
+      "no": "9",
+      "question": "乳酸菌飲料の製造工程図において、どの原材料が培養工程を通りますか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "原材料が発酵工程を通る条件として製造工程図の該当工程を経ること",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "発酵工程通過の条件をqualifierで表現可能だから",
+      "no": "10",
+      "question": "乳酸菌飲料の製造工程図において、生乳・乳酸菌・砂糖・ぶどう糖果糖液糖のうち、どの原材料が発酵工程を通りますか？"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "製造工程図の区分け線で清潔区域に分類される工程は何か",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "区分け線条件をqualifierで表現すれば正答可能",
+      "no": "5",
+      "question": "乳・乳製品のHACCP導入手順の実践資料において、製造工程図に清潔区や汚染区などの区分け線を引く例がありますが、この例で清潔区域に分類される工程は何ですか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "ぶどう糖果糖液糖は水と混合し、ろ過・加熱殺菌を行う",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "製造手順の条件付き関係を表現できれば正誤判定可能",
+      "no": "11",
+      "question": "乳酸菌飲料の製造工程について、ぶどう糖果糖液糖と脱脂粉乳を混合してから、ろ過・加熱殺菌を行いました。この手順は合っていますか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "2012-2024年度の各年度の申告件数・措置件数の比較",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "年度ごとの数値比較で条件付き関係ではないため",
+      "no": "17",
+      "question": "2012年度から2024年度までで、無線局への混信・妨害申告件数が一番低い年度はいつですか？また、申告件数より措置件数が多い年度があるのはなぜですか？"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "地震の種類（熊本地震か能登半島地震か）による利用割合の比較",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "条件は表の数値比較で表現済みのためqualifier不要",
+      "no": "19",
+      "question": "Instagram、家族や友人とのLINE、X、Facebookの中で、熊本地震よりも能登半島地震で利用割合が高かった手段はどれですか？"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "被災地対象調査で真偽不確かな情報をSNSで拡散した人の数",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "表の数値読み取りで条件は表セルに明示",
+      "no": "23",
+      "question": "被災地対象調査において、真偽の不確かな情報をSNSで拡散したと回答した人は何人ですか？"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "調査対象が「一時滞在者」を含むかどうか→全国対象調査に含む",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "調査対象条件の違いをqualifierで表現可能",
+      "no": "22",
+      "question": "能登半島地震に関する真偽の不確かな情報に対する認知・拡散の図表4において、一時滞在者は、被災地対象調査と全国対象調査のどちらに含まれていますか？"
+    },
+    {
+      "conditional_type": "negation",
+      "needs_condition": true,
+      "condition_payload": "被災地対象調査で真偽不確かな情報をSNSで見かけた人の数 > 全国対象調査で同様の回答者数",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "数値比較の否定形で条件表現は不要",
+      "no": "24",
+      "question": "被災地対象調査で真偽の不確かな情報をSNS上で見かけたと回答した人が、全国対象調査で真偽の不確かな情報をSNS上で見かけたと回答した人よりも多い原因を教えてください。"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "平成24年から令和5年の期間内での負傷者数",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "期間内の最小値比較で条件付き関係ではない",
+      "no": "28",
+      "question": "平成24年から令和5年までの間で、熱中症による負傷者が一番少ないのは何年ですか？その年の負傷者は何人ですか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "令和に入っている∧6月から8月の気温偏差が1を超える",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "複数条件のANDをエッジ条件で表現可能なため救える",
+      "no": "29",
+      "question": "令和に入ってから、6月から8月の気温偏差が1を超えているのは何年ですか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "2019-2024年度の各年度における日本郵便の郵便物流事業の営業損益・引受荷物数、ゆうちょ銀行の預貯金残高の年度別値",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "年度ごとの数値比較は表の読み取りが本質であるため",
+      "no": "25",
+      "question": "2019年度から2024年度において、日本郵便の郵便物流事業の営業損益、引受荷物数、ゆうちょ銀行の預貯金残高は、それぞれ何年度が最も数値が低いですか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "発見の遅れかつ異常時の対応の不備に当てはまる件数",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "表の複数条件AND集計でqualifier不要",
+      "no": "30",
+      "question": "熱中症志望災害(R2-R5)の分析結果に関して、発見の遅れと異常時の対応の不備の両方に当てはまったのは何件ですか？"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "木曜日15時に利用可能な施設→利用可",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "時間条件付き利用可否をqualifierで表現可能",
+      "no": "32",
+      "question": "指定暑熱避難施設の運営に関して、世田谷区では、通常の開館・営業時間と同様の範囲で運営することで運営の負担を減らし、地域全体で幅広い時間帯をカバーしています。資料に例示されている中で"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "2025年5月と6月の熱中症救急搬送数トップ3の都道府県",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "時制条件をエッジに付ければ区別可能になるため",
+      "no": "37",
+      "question": "2025年5月と6月で、熱中症救急搬送の多い都道府県トップ3は異なりますか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "2025年8月11日~8月17日の期間における熱中症救急搬送数の最多年齢区分",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "期間条件付きの年齢区分集計が必要でqualifierで表現可能",
+      "no": "36",
+      "question": "2025年8月11日~8月17日において、熱中症による救急搬送が最も多かった年齢区分を教えてください。また、その年齢区分の方の体内水分量はどれくらいですか？その数値が成人と比較して"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "世田谷地域の熱中症予防のお休み処の種類別数比較",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "表の数値比較で条件表現は不要",
+      "no": "33",
+      "question": "世田谷地域の熱中症予防のためのお休み処は、調剤薬局と高齢者施設ではどちらの方が多いですか？"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "学校種別が都内の市立中学校のときの収集経路",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "条件付き経路をqualifierで表現すれば正答可能",
+      "no": "38",
+      "question": "学校基本調査の調査票の収集系統について、都内の市立中学校の場合はどうなりますか？最終的に文部科学大臣に届くまでの経路を記載してください。"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "令和6年度の教員1人あたりの生徒数が最小の学校種",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "時制条件はあるが数値比較で表セル参照が主因",
+      "no": "39",
+      "question": "東京都において、令和６年度の教員１人あたりの生徒数が一番少ない学校種は何ですか？その学校種の教員１人あたりの生徒数も教えてください。"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "令和6年度における幼保連携型認定こども園の数比較",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "年度条件付きの単純数値比較でqualifier不要",
+      "no": "43",
+      "question": "令和６年度において、東京都と大阪府ではどちらのほうが幼保連携型認定こども園の数が多いですか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "令和６年度と令和元年度の児童数比較における学校種別（小学校・中学校）",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "時制と学校種別の複合条件が必要でqualifierで表現可能",
+      "no": "42",
+      "question": "東京都の現在（令和６年度）の小学校の児童数は令和元年度と比較して増加しているのに、中学校では令和元年度と比較して児童数が減少しているのは何故ですか？"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "年度ごとの児童数のピークが異なる",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "ピーク年度が条件付きで異なるため時制条件が必要",
+      "no": "49",
+      "question": "東京都の小学校児童数のピークと大阪の小学校児童数のピークは同じ年度ですか？また、そのピークの理由を教えてください。"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "令和6年度かつ東京都・大阪府の分野別構成比の順位比較",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "表の数値比較で条件付き関係ではないため",
+      "no": "45",
+      "question": "令和6年度の専修学校生徒数の分野別構成比について、東京都と大阪府では、構成比の1位から3位は同じですか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "大阪府かつ第二次ベビーブーム期の教員1人あたり在学者数",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "複数条件の組合せで表現、数値比較が主なため",
+      "no": "51",
+      "question": "大阪府では、第二次ベビーブームのときの小学校児童が非常に多いので、その頃の教員１人あたりの在学者数が最も多くなっていたのではないかと仮定しています。この予想は合っていますでしょうか"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "令和6年度かつ大阪府かつ教員区分ごとに女性数が多いか",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "複数条件の組合せで単純比較のためqualifier不要",
+      "no": "52",
+      "question": "令和６年度の大阪府において、幼稚園、小学校、中学校、高等学校の教員の中で、女性の方が多いものを全て教えてください。"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "令和6年度かつ都道府県が東京都または大阪府のときの中学校総数と私立中学校数",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "数値比較・計算で条件表現は救いにならないため",
+      "no": "53",
+      "question": "令和６年度の東京都と大阪府において、中学校の総数に対する私立中学校の割合はどちらが多いですか？"
+    },
+    {
+      "conditional_type": "negation",
+      "needs_condition": true,
+      "condition_payload": "東京都と大阪でのベビーブーム別児童数の比較条件",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "否定的比較で表の数値読み取りが主なため",
+      "no": "50",
+      "question": "東京都では第一次ベビーブームのほうが小学校児童数が多いのに対して、大阪では第二次ベビーブームのほうが多い理由を教えてください。"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "原因が『要求仕様の決定漏れ』であるプロジェクトの割合",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "表中の数値読み取りで条件表現は不要",
+      "no": "56",
+      "question": "システム開発の工期遅延理由の分析データ（図1.7）について、要求仕様の決定漏れを原因に挙げているプロジェクトは何パーセントですか？"
+    },
+    {
+      "conditional_type": "non_conditional",
+      "needs_condition": false,
+      "condition_payload": "",
+      "table_or_figure_bound": false,
+      "qualifier_would_help": false,
+      "reason": "単純事実の列挙で条件付き関係は不要",
+      "no": "57",
+      "question": "要件定義に求められる３つのことを教えてください。"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "年度別および四半期別のフリーキャッシュフロー",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "時制条件のエッジqualifierで表現可能だから",
+      "no": "71",
+      "question": "富士通の2020年度から2023年度までの年度別のフリーキャッシュフローと、2024年度第3四半期のフリーキャッシュフローを教えてください。"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "2023年度における調整後営業利益率",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "時制条件付きの数値比較でqualifier不要",
+      "no": "69",
+      "question": "2023年度において、サービスソリューションセグメントの調整後営業利益率と富士通全体の調整後営業利益率はどちらが高いですか？"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "『既にレガシーシステムはない』割合が最も低い業界と『ほとんどがレガシーシステムである』割合が最も高い業界を比較する",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "表の数値比較で条件付きエッジ不要",
+      "no": "55",
+      "question": "既にレガシーシステムはないと回答した割合が最も低い業界と、依然としてほとんどがレガシーシステムであると回答した割合が最も高い業界は同じですか？"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "年度や期間ごとの売上収益を区別して比較",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "期間別数値比較で条件表現は不要、単純比較問題",
+      "no": "70",
+      "question": "富士通の2020年度の売上収益と2024年度第三四半期累計の売上収益は、どちらが大きいですか？"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "2019年から2025年の期間における調整後営業利益の値",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "期間指定の数値読み取り・計算で条件表現不要",
+      "no": "75",
+      "question": "富士通のサービスソリューションの調整後営業利益の2019年から2025年のCAGRをおしえてください。"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "年度ごとの売上収益（2023年度、2025年度目標）",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "年度条件をエッジに付与すれば正確に取得可能",
+      "no": "72",
+      "question": "Fujitsu Uvanceの2023年度の売上収益と2025年度の目標売上収益を教えてください。"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "子会社名はユビキタスソリューションセグメントに属すること∧収益は2024年度第3四半期累計の値",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "子会社所属と期間条件の複合条件を表現可能だから",
+      "no": "73",
+      "question": "富士通のユビキタスソリューションセグメントの子会社名とユビキタスソリューションの2024年度第３四半期累計の収益合計を教えてください。"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "2024年度上期の売上データ",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "期間指定の数値読み取りで条件表現不要",
+      "no": "76",
+      "question": "2024年度上期 Fujitsu Uvance の売上のうち海外での売上が占める割合を教えてください。"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "年度ごとの売上額",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "年度別売上は表の数値読み取りで対応可能",
+      "no": "79",
+      "question": "Fujitsu Uvanceの2022年度の売上と2023年度の売上を教えてください。"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "期間FY23-FY25かつ売上かつ対象はFujitsu UvanceまたはVertical",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "表中数値の単純読み取り・計算のためqualifier不要",
+      "no": "78",
+      "question": "中期経営計画におけるFY23からFY25の売上のFujitsu Uvance とVertical それぞれのCAGRを教えてください。"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "2023年度の売上収益および2024年3月31日時点の従業員数",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "数値は表の値で時点条件は時制属性で表現可能",
+      "no": "80",
+      "question": "2023年度において、サービスソリューションのリージョンズ（海外）の欧州の売上収益と、富士通の欧州事業全体の売上収益を教えてください。また、2023年度の欧州の従業員数も教えてくだ"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "パスワードに#は使えるが、&と@は使えない",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "記号ごとに使用可否が条件付きで異なるため",
+      "no": "82",
+      "question": "LIFEBOOK U9313/Rを使用しています。BIOSのパスワード設定をしたいのですが、&と@と#はパスワードに使えますか？"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "動画再生時のバッテリー駆動時間→約12.0時間",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "表の数値読み取りで条件表現は不要",
+      "no": "84",
+      "question": "LIFEBOOK U9313/R（型名：FMVU81002）を購入しました。追加オプション費用込で希望小売価格（税別）は521,900円でした。動画再生時のバッテリー\n駆動時間を教"
+    },
+    {
+      "conditional_type": "temporal",
+      "needs_condition": true,
+      "condition_payload": "時点（2021年または2024年）による役職の違い",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "時制条件をエッジに付与すれば正確に区別可能",
+      "no": "81",
+      "question": "富士通の大西 俊介氏の2021年と2024年の役職を教えてください。"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "最も価格が高くなるカスタムメイドの仕様変更・追加の組合せ→価格合計1,080,700円",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "複数条件の組合せで表の数値読み取りが主なため",
+      "no": "85",
+      "question": "LIFEBOOK U9313/R（FMVU81061）を１台購入しようと考えています。最も価格が高くなるカスタムメイドで仕様の変更・追加が可能な構成パターンの組み合わせを教えてくだ"
+    },
+    {
+      "conditional_type": "single_condition_lookup",
+      "needs_condition": true,
+      "condition_payload": "省エネ法2022年度基準に基づくエネルギー消費効率",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": false,
+      "reason": "条件は年度基準で表の数値参照のためqualifier不要",
+      "no": "87",
+      "question": "LIFEBOOK U9313/R 標準モデル（インテル® CoreTM 5 プロセッサー 220U）の省エネ法に基づくエネルギー消費効率（2022年度基準）を教えてください。エネル"
+    },
+    {
+      "conditional_type": "compound_AND",
+      "needs_condition": true,
+      "condition_payload": "指紋認証機能付き電源ボタンと手のひら静脈センサーは同時選択不可",
+      "table_or_figure_bound": true,
+      "qualifier_would_help": true,
+      "reason": "同時選択不可の条件をqualifierで表現可能",
+      "no": "83",
+      "question": "LIFEBOOK U9313/Rでは、指紋認証機能付き電源ボタンと手のひら静脈センサーの両方を付けることはできますか？"
+    }
+  ]
+}
