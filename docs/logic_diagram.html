@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GraphRAG ロジック詳細図解</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#30363d;
+    --txt:#e6edf3; --mut:#9aa7b4; --dim:#6e7b8a;
+    --build:#4493f8; --post:#a371f7; --retr:#3fb950; --gen:#f0883e;
+    --data:#e3b341; --warn:#f85149; --cyan:#39c5cf;
+    --chip:#21262d;
+    --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",Meiryo,sans-serif;
+    line-height:1.65;font-size:15px;
+  }
+  a{color:var(--build);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);background:var(--chip);padding:1px 6px;border-radius:5px;font-size:.86em;color:#c9d5e1;white-space:nowrap}
+  .wrap{display:flex;max-width:1500px;margin:0 auto}
+
+  /* Sidebar */
+  nav{
+    position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;
+    width:250px;flex:0 0 250px;padding:22px 16px;border-right:1px solid var(--line);
+    background:#0a0e14;font-size:13.5px;
+  }
+  nav h4{margin:18px 0 6px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;font-size:10.5px}
+  nav a{display:block;color:var(--mut);padding:4px 10px;border-radius:6px;border-left:2px solid transparent}
+  nav a:hover{background:var(--panel);color:var(--txt);text-decoration:none}
+  nav .b{border-left-color:var(--build)} nav .p{border-left-color:var(--post)}
+  nav .r{border-left-color:var(--retr)} nav .g{border-left-color:var(--gen)}
+  nav .d{border-left-color:var(--data)}
+  nav .top{font-weight:700;color:var(--txt);font-size:15px;margin-bottom:2px}
+
+  main{flex:1 1 auto;min-width:0;padding:34px 44px 120px}
+
+  header.hero{margin-bottom:10px}
+  header.hero h1{font-size:30px;margin:0 0 6px;letter-spacing:-.01em}
+  header.hero p{color:var(--mut);margin:0;max-width:70ch}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 8px}
+  .legend span{font-size:12px;padding:3px 11px;border-radius:20px;border:1px solid var(--line);display:inline-flex;align-items:center;gap:6px}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+  section{margin-top:46px;scroll-margin-top:16px}
+  h2{font-size:22px;border-bottom:1px solid var(--line);padding-bottom:8px;margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  h2 .tag{font-size:11px;font-weight:600;padding:3px 9px;border-radius:6px;color:#08111d}
+  h3{font-size:17px;margin:26px 0 8px;color:#dfe7ef}
+  h4{font-size:14.5px;margin:18px 0 6px;color:var(--cyan)}
+  .lead{color:var(--mut);margin:6px 0 18px;max-width:82ch}
+  p{max-width:84ch}
+
+  /* flow diagram building blocks */
+  .flow{display:flex;flex-direction:column;gap:0;margin:18px 0}
+  .row{display:flex;gap:14px;flex-wrap:wrap;align-items:stretch}
+  .box{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 15px;position:relative;flex:1;min-width:200px;
+  }
+  .box .n{position:absolute;top:-9px;left:12px;background:var(--data);color:#08111d;font-weight:700;font-size:11px;padding:1px 8px;border-radius:10px}
+  .box b{display:block;margin-bottom:3px;font-size:14.5px}
+  .box small{color:var(--mut);font-size:12.5px;display:block}
+  .box.bd{border-color:var(--build)} .box.po{border-color:var(--post)}
+  .box.re{border-color:var(--retr)} .box.ge{border-color:var(--gen)}
+  .box.dt{border-color:var(--data)} .box.wn{border-color:var(--warn)}
+  .arrow{align-self:center;color:var(--dim);font-size:20px;padding:6px 0;text-align:center;width:100%}
+  .arrow.h{width:auto;padding:0 6px;align-self:center}
+  .split{display:flex;gap:14px;align-items:stretch}
+  .split>.box{flex:1}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0}
+  .card.accent-b{border-left:4px solid var(--build)}
+  .card.accent-p{border-left:4px solid var(--post)}
+  .card.accent-r{border-left:4px solid var(--retr)}
+  .card.accent-g{border-left:4px solid var(--gen)}
+  .card.accent-d{border-left:4px solid var(--data)}
+
+  .note{background:#12233a;border:1px solid #1f4a7a;border-radius:8px;padding:10px 14px;margin:12px 0;font-size:13.5px;color:#c4dcf5}
+  .note.warn{background:#2d1618;border-color:#5c2326;color:#f6c6c6}
+  .note.tip{background:#132a1c;border-color:#245c38;color:#bce8cd}
+  .note b{color:inherit}
+
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px}
+  th,td{border:1px solid var(--line);padding:7px 11px;text-align:left;vertical-align:top}
+  th{background:var(--panel2);color:#cdd9e5;font-weight:600}
+  td code{white-space:normal}
+  tr:nth-child(even) td{background:#12161d}
+  .num{color:var(--data);font-weight:700;font-family:var(--mono)}
+
+  ul.tight{margin:8px 0;padding-left:22px} ul.tight li{margin:3px 0}
+  .steps{counter-reset:s;padding:0;margin:14px 0;list-style:none}
+  .steps>li{counter-increment:s;position:relative;padding:10px 0 10px 46px;border-bottom:1px solid var(--line)}
+  .steps>li:last-child{border-bottom:0}
+  .steps>li::before{content:counter(s);position:absolute;left:0;top:9px;width:30px;height:30px;border-radius:50%;
+    background:var(--panel2);border:1px solid var(--line);color:var(--cyan);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .steps>li b{color:#e8eef4}
+
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line);color:var(--mut);margin:0 3px 3px 0}
+  .pill.on{background:#0f2c1a;border-color:#2c6b40;color:#8ee0a6}
+  .pill.off{background:#2a1416;border-color:#63292c;color:#e8a7a9}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:1100px){.grid2,.grid3{grid-template-columns:1fr}}
+  @media(max-width:820px){nav{display:none}main{padding:24px 18px 80px}}
+
+  .kv{font-family:var(--mono);font-size:12.5px}
+  .kv .k{color:var(--cyan)} .kv .v{color:var(--data)}
+
+  .chiprow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .miniflow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:13px;margin:8px 0}
+  .miniflow .s{background:var(--chip);border:1px solid var(--line);border-radius:7px;padding:5px 10px}
+  .miniflow .op{color:var(--dim)}
+  .foot{margin-top:60px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim);font-size:12.5px}
+  .anchor-h{color:var(--dim);font-weight:400;font-size:14px;margin-left:8px}
+  .badge-file{font-family:var(--mono);font-size:11.5px;color:var(--dim);background:#0a0e14;border:1px solid var(--line);border-radius:5px;padding:1px 7px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav>
+  <div class="top">GraphRAG</div>
+  <div style="color:var(--dim);font-size:11.5px;margin-bottom:6px">ロジック詳細図解</div>
+  <a href="#overview">0. 全体像</a>
+  <h4>構築 (Build)</h4>
+  <a class="b" href="#build">1. 構築パイプライン</a>
+  <a class="b" href="#chunk">2. チャンキング</a>
+  <a class="b" href="#extract">3. KG抽出</a>
+  <h4>後処理 (Post)</h4>
+  <a class="p" href="#consolidate">4. 統合 consolidate</a>
+  <a class="p" href="#references">5. 参照グラフ</a>
+  <a class="p" href="#conditions">6. 条件付き事実</a>
+  <a class="p" href="#dictionary">7. 辞書適用</a>
+  <a class="p" href="#enrich">8. enrichment</a>
+  <a class="p" href="#provenance">9. 出自チェック</a>
+  <h4>検索 (Retrieval)</h4>
+  <a class="r" href="#qa">10. QA全体フロー</a>
+  <a class="r" href="#entity">11. エンティティ抽出</a>
+  <a class="r" href="#hybrid">12. ハイブリッド検索</a>
+  <a class="r" href="#graph">13. グラフ探索</a>
+  <a class="r" href="#rerank">14. リランキング</a>
+  <a class="r" href="#kgchunk">15. KGソースチャンク</a>
+  <h4>生成</h4>
+  <a class="g" href="#answer">16. 回答生成</a>
+  <h4>参照</h4>
+  <a class="d" href="#datamodel">17. データモデル</a>
+  <a class="d" href="#constants">18. 定数早見表</a>
+  <a class="d" href="#incremental">19. 増分更新</a>
+</nav>
+
+<main>
+<header class="hero" id="overview">
+  <h1>GraphRAG ロジック詳細図解</h1>
+  <p>PDF/テキストから <b>ナレッジグラフ (Neo4j)</b> と <b>ベクトルDB (PGVector)</b> を構築し、
+  グラフ探索とハイブリッド検索を統合して高精度な質問応答を行う Graph-First RAG システム。
+  本ドキュメントは <code>graphrag_core/</code> の全ロジックをコードに基づいて図解する。</p>
+  <div class="legend">
+    <span><i class="dot" style="background:var(--build)"></i>構築 Build</span>
+    <span><i class="dot" style="background:var(--post)"></i>後処理 Post-Processing</span>
+    <span><i class="dot" style="background:var(--retr)"></i>検索 Retrieval</span>
+    <span><i class="dot" style="background:var(--gen)"></i>回答生成 Generation</span>
+    <span><i class="dot" style="background:var(--data)"></i>データ / 定数</span>
+  </div>
+</header>
+
+<div class="card">
+  <b style="font-size:15px">2つの大きなフェーズ</b>
+  <div class="row" style="margin-top:14px">
+    <div class="box bd"><b>① 構築フェーズ（オフライン）</b>
+      <small>文書 → チャンク → LLMでトリプル抽出 → Neo4j保存 → 後処理（統合・正規化・enrichment）→ PGVector化。<code>build_kg.py</code> / UI「構築」から実行。</small></div>
+    <div class="arrow h">→</div>
+    <div class="box re"><b>② 検索フェーズ（オンライン）</b>
+      <small>質問 → エンティティ抽出 ∥ 文書検索（並列）→ N-hopグラフ探索 → cross-encoderリランク → コンテキスト統合 → LLM回答。<code>retrieval/pipeline.py</code>。</small></div>
+  </div>
+  <div class="note tip" style="margin-top:14px"><b>設計思想:</b> 「広く取得 → 狭くリランク」を全レイヤ（文書・グラフパス・KGチャンク）で徹底。DB側は <code>extraction_count</code>/<code>pagerank</code>/BM25/ベクトルでスコア付けしてから取得するため、無作為な <code>LIMIT</code> 切り捨てが起きない。最終段は cross-encoder（bge-reranker-v2-m3、最強レバー +11.8pt）で意味的に絞り込む。</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- BUILD -->
+<!-- ============================================================ -->
+<section id="build">
+  <h2><span class="tag" style="background:var(--build)">BUILD</span>1. 構築パイプライン全体 <span class="badge-file">scripts/build_kg.py</span></h2>
+  <p class="lead"><code>build_knowledge_graph(input_dir, extensions, fresh)</code> がマスターシーケンス。
+  ファイル探索から <code>graph.json</code> エクスポートまでを一気通貫で実行する。</p>
+
+  <div class="flow">
+    <div class="row">
+      <div class="box bd"><span class="n">A</span><b>ファイル探索・読込</b><small><code>input_dir.glob("**/*.{ext}")</code> を拡張子ごとに再帰探索し <code>sorted(set(...))</code> で重複排除。PDFは <code>load_pdf_text</code>、txt/mdはUTF-8読込。<code>source</code>=ファイル名のみ（フルパスでない）。</small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box bd"><span class="n">B</span><b>チャンキング + ハッシュ重複排除</b><small><code>create_markdown_chunks(..., chunk_size=1024, chunk_overlap=100)</code>。各チャンクに <code>make_chunk_id(source, content)</code>=SHA256 を付与し <code>metadata["id"]</code> に格納。文書横断の重複排除はしない（文書スコープ削除の安全性優先）。</small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box bd"><span class="n">C</span><b>Neo4j初期化</b><small><code>Neo4jGraph(enhanced_schema=True)</code>。<code>--fresh</code> 時は <code>MATCH (c:ProcessedChunk) DELETE c</code>（再開マーカーのみクリア）。</small></div>
+      <div class="box bd"><span class="n">D</span><b>再開フィルタ</b><small>既存 <code>ProcessedChunk.hash</code> を取得し、未処理チャンクのみ <code>pending_chunks</code> に。すべて処理済なら <code>skip_graph_build=True</code>。</small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box bd"><span class="n">E</span><b>LLMTransformer設定</b><small><code>LLMGraphTransformer(allowed_nodes=["Term"], allowed_relationships=12関係, strict_mode=True)</code>。vLLMは <code>ignore_tool_usage=True</code> + <code>additional_instructions</code>、Azure等はカスタムprompt（<code>KG_SYSTEM_PROMPT</code>）。</small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box bd"><span class="n">F</span><b>並列チャンク処理</b><small><code>ThreadPoolExecutor(max_workers=KG_BUILD_WORKERS=4)</code>。各チャンク: ①トリプル抽出 → ②<code>add_graph_documents(include_source=True)</code> → ③<code>attach_source_chunks</code> → ④<code>ProcessedChunk</code>マーク → ⑤<code>Document.source</code>設定。</small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box bd"><span class="n">H</span><b>PGVector保存</b><small>接続timeout 30s。uniqueness/schema/HNSWインデックス確保。日本語トークン化（Sudachi→<code>tokenized_content</code>、BM25用）+ エンティティベクトル化（<code>EntityVectorizer</code>）。</small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box po"><span class="n">I</span><b>後処理チェーン（順序が重要）</b>
+        <small>consolidate → 参照グラフ+照応解決 → 条件付き事実(opt) → 辞書適用(opt) → enrichment → スキーマ刻印</small>
+        <div class="miniflow" style="margin-top:8px">
+          <span class="s" style="border-color:var(--post)">§4 consolidate</span><span class="op">→</span>
+          <span class="s" style="border-color:var(--post)">§5 references</span><span class="op">→</span>
+          <span class="s" style="border-color:var(--post)">§6 conditions</span><span class="op">→</span>
+          <span class="s" style="border-color:var(--post)">§7 dictionary</span><span class="op">→</span>
+          <span class="s" style="border-color:var(--post)">§8 enrichment</span>
+        </div>
+      </div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box dt"><span class="n">J</span><b>graph.json エクスポート</b><small>NetworkX <code>node_link_data</code> 互換の <code>{"graph":{directed, multigraph, nodes, edges}}</code>。ProcessedChunk/Chunk/ハッシュIDノードを除外。</small></div>
+    </div>
+  </div>
+
+  <div class="note"><b>なぜ後処理の順序が固定なのか:</b>
+  ① consolidate を最初に走らせ、ノードマージ後に下流が正規ノードへ適用されるようにする。
+  ② dictionary は enrichment より前（<code>search_keys</code> が <code>aliases</code>/<code>canonical_form</code> を取り込むため）。
+  ③ enrichment は最後（<code>pagerank</code> は最終グラフ構造に依存、エッジ移動で <code>mention_count</code> も変わる）。</div>
+</section>
+
+<!-- CHUNKING -->
+<section id="chunk">
+  <h2><span class="tag" style="background:var(--build)">BUILD</span>2. Markdown 2段階チャンキング <span class="badge-file">text/chunking.py</span></h2>
+  <p class="lead"><code>create_markdown_chunks(docs, chunk_size=1024, chunk_overlap=100, add_breadcrumb=True)</code>。
+  見出し構造を保ちつつ、埋め込み・BM25で検索可能な「パンくず付き」チャンクを生成する。</p>
+
+  <div class="split">
+    <div class="box bd"><b>Stage 1 — 構造分割</b>
+      <ul class="tight">
+        <li><code>_normalize_markdown_headers</code>: <code>##見出し</code>→<code>## 見出し</code> にスペース補正</li>
+        <li><code>_extract_h1_title</code>: H1 を<b>メタデータとしてのみ</b>抽出（分割境界にしない）</li>
+        <li><code>MarkdownHeaderTextSplitter</code>: <b>H2/H3 のみ</b>で分割、<code>strip_headers=False</code> で本文に見出しを残す</li>
+      </ul>
+    </div>
+    <div class="arrow h">→</div>
+    <div class="box bd"><b>Stage 2 — 文字再分割（<code>len &gt; 1024</code> のみ）</b>
+      <ul class="tight">
+        <li><code>RecursiveCharacterTextSplitter(1024, 100)</code></li>
+        <li>日本語対応セパレータ: <code>["\n\n","\n","。","、"," ",""]</code></li>
+        <li>メタデータに source + h2/h3 + h1 をマージ</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card accent-b" style="margin-top:14px">
+    <b>パンくず注入 <code>_prepend_breadcrumb</code></b>
+    <p style="margin:8px 0 0">文字再分割後の2つ目以降のサブチャンクは見出しを失う。そこで本文先頭に
+    <code>[h1 &gt; h2 &gt; h3]\n</code> を<b>本文として</b>注入する（メタデータだけでなく）。これにより
+    セクション文脈が埋め込みベクトルにも BM25 インデックスにも乗る。</p>
+    <div class="miniflow"><span class="s">[ガス軸受設計 &gt; 2. 軸受形式 &gt; 2.1 動圧型]</span><span class="op">+</span><span class="s">本文テキスト…</span><span class="op">→</span><span class="s" style="border-color:var(--retr)">埋め込み/BM25対象</span></div>
+  </div>
+  <div class="note warn"><b>注意:</b> モジュール docstring は「500文字」と書いてあるが、実際の既定は <code>chunk_size=1024</code>（コード既定・build_kg 呼び出しとも 1024）。コード値が正。</div>
+</section>
+
+<!-- EXTRACT -->
+<section id="extract">
+  <h2><span class="tag" style="background:var(--build)">BUILD</span>3. KG抽出（LLMGraphTransformer）<span class="badge-file">prompts.py / schema.py</span></h2>
+  <p class="lead">チャンクごとに LLM がエンティティ（<code>Term</code>）と関係トリプルを抽出。スキーマは外部JSONで差し替え可能。</p>
+
+  <div class="grid2">
+    <div class="card accent-b">
+      <h4 style="margin-top:0">ノード抽出基準 <code>KG_SYSTEM_PROMPT</code></h4>
+      <ul class="tight">
+        <li><b style="color:var(--retr)">抽出する:</b> 技術用語・概念・固有名詞・プロセス名・規格名</li>
+        <li><b style="color:var(--warn)">抽出しない:</b> 一般名詞（こと/もの/方法）・代名詞・動詞</li>
+        <li><b style="color:var(--warn)">値はノードにしない:</b> 「210円」「53」「令和6年度」「約10時間」。値は関係の対象を概念名にする（例: 牛乳 -[HAS_ATTRIBUTE]→ 価格）</li>
+      </ul>
+    </div>
+    <div class="card accent-b">
+      <h4 style="margin-top:0">デフォルト12関係 <span class="anchor-h">get_allowed_relations()</span></h4>
+      <div class="chiprow">
+        <span class="pill">IS_A</span><span class="pill">BELONGS_TO_CATEGORY</span><span class="pill">PART_OF</span>
+        <span class="pill">HAS_STEP</span><span class="pill">HAS_ATTRIBUTE</span><span class="pill">RELATED_TO</span>
+        <span class="pill">AFFECTS</span><span class="pill">CAUSES</span><span class="pill">DEPENDS_ON</span>
+        <span class="pill">APPLIES_TO</span><span class="pill">OWNED_BY</span><span class="pill">SAME_AS</span>
+      </div>
+      <small style="color:var(--mut)"><code>RELATED_TO</code> は他に適切な関係がない場合の最終手段。<code>SHARED_SCHEMA_PATH</code> で外部JSON（例: 8ノード+23関係）に差し替え可能。適用中スキーマは <code>:SchemaMeta</code> ノードに刻印。</small>
+    </div>
+  </div>
+
+  <div class="card">
+    <b>エンティティ判定の中心述語 <code>entity_node_predicate(var)</code> <span class="badge-file">schema.py:43-72</span></b>
+    <p style="margin:8px 0">「これは本物の検索対象エンティティか？」を判定するCypher述語。<b>ラベル非依存</b>（ノードタイプ差し替え対応）。システム全域（enrichment・prune・pagerank・辞書・検索）で再利用される。次を全て除外:</p>
+    <div class="chiprow">
+      <span class="pill off">id が NULL</span>
+      <span class="pill off">:ProcessedChunk</span>
+      <span class="pill off">:SchemaMeta</span>
+      <span class="pill off">:GraphProvenance</span>
+      <span class="pill off">ハッシュID <code>[0-9a-f]{32,}</code></span>
+      <span class="pill off">is_value=true</span>
+      <span class="pill off">is_anaphor=true</span>
+      <span class="pill off">:CondFact / :Cond（条件機能ON時）</span>
+    </div>
+    <div class="note tip" style="margin-bottom:0">条件機能OFF時は生成文字列がバイト単位で不変（高頻度再利用関数のため）。consolidate が付けるフラグ(<code>is_value</code>/<code>is_anaphor</code>)がこの除外を直接広げる。</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- POST -->
+<!-- ============================================================ -->
+<section id="consolidate">
+  <h2><span class="tag" style="background:var(--post)">POST</span>4. KG統合 consolidate <span class="badge-file">graph/consolidate.py</span></h2>
+  <p class="lead"><code>consolidate_post_build(graph, similarity_threshold=0.9)</code> が5サブステップを順に実行し統計を返す。
+  LLM抽出の生KGにある構造的ノイズ（値ノード・型分裂・かな揺れ・逆関係・照応）を機械的に解消する。</p>
+
+  <ol class="steps">
+    <li><b>① flag_value_nodes — 値ノードのフラグ付け</b><br>
+      <code>n.id</code> が下記正規表現に一致するノードに <code>is_value=true</code>（削除せず可逆）。トラバーサル・entity vector・enrichmentから除外されるが<b>パス終端(葉)としては許可</b>（数値質問の救済）。実測5,715件。
+      <ul class="tight" style="margin-top:6px">
+        <li>数値・単位: <code>^[0-9０-９,，.．%％~〜+±▲△一-九十百千万億兆年月日円人件台時分秒回歳割約-]+$</code></li>
+        <li>年号: <code>^(令和|平成|昭和)[0-9０-９元一-九十]*(年度?|年)?$</code></li>
+        <li>西暦四半期: <code>^[0-9０-９]{4}年?[0-9０-９]*月?(期|度)?(第[0-9０-９一-四]四半期)?$</code></li>
+      </ul>
+    </li>
+    <li><b>② merge_duplicate_id_nodes — 型分裂マージ</b><br>
+      同一 <code>id</code> が複数ラベルに分裂（LLMGraphTransformerが (id,type) 単位でノード生成するため）。次数最大のノードをkeeperに、他を <code>_move_rels</code> で寄せる。<code>extraction_count</code>を合算、<code>source_chunks</code>を和集合、ラベルを追加。実測2,600 id / 5,557ノード。
+    </li>
+    <li><b>③ merge_kana_variant_nodes — かな揺れマージ</b><br>
+      送り仮名・助詞・長音のみ違うノードを統合（ガス軸受/ガス軸受け、サーバ/サーバー）。<code>kana_variant_key</code> 骨格キーでグループ化 → union-findで連結成分 → keeperに寄せ、dup idを <code>aliases</code> に追加。詳細は下表。
+    </li>
+    <li><b>④ normalize_relations — 関係正規化（27ルール）</b><br>
+      逆関係・同義・typoを正規タイプへ統合。検索Cypherは無向マッチのため逆関係は情報量ゼロで重複と<code>extraction_count</code>分散だけ生む。<code>batch_size=2000</code>。詳細は下表。
+    </li>
+    <li><b>⑤ flag_anaphor_nodes / resolve_anaphora_nodes — 照応処理</b><br>
+      「本製品」「当社」等の照応ノードを解決 or <code>is_anaphor=true</code> フラグ（<b>ハード除外</b>: 起点・中継・終端すべて禁止）。参照グラフ由来の <code>alias_maps</code> を使う（§5と連携）。
+    </li>
+  </ol>
+
+  <div class="grid2">
+    <div class="card accent-p">
+      <h4 style="margin-top:0">かな揺れ判定 <code>_is_kana_variant_pair(a,b,max_diff=3)</code></h4>
+      <ul class="tight">
+        <li>どちらか空・等しい・<b>先頭文字が違う</b> → False（この文書/文書 を拒否）</li>
+        <li>末尾 <code>ー</code> を除去して等しければ True（サーバ/サーバー）</li>
+        <li><code>difflib.SequenceMatcher</code> で差分文字を収集</li>
+        <li>差分が <b class="num">3</b> 文字超 → False</li>
+        <li>差分が<b>全てひらがな</b>のときのみ True（漢字/数字/英字の差は却下 → U7314/U7414、第3/第4四半期、取締役/監査役を保護）</li>
+      </ul>
+    </div>
+    <div class="card accent-p">
+      <h4 style="margin-top:0">骨格キー <code>kana_variant_key</code> <span class="badge-file">japanese.py:36-55</span></h4>
+      <ul class="tight">
+        <li>空白・<code>・</code> を除去、NFKC正規化</li>
+        <li>末尾長音 <code>ー</code> を除去（語中は音価があるため保持）</li>
+        <li>ひらがなを全除去して骨格化</li>
+        <li>漢字/カタカナが無ければ <code>""</code>（型番 U7314 を保護）</li>
+        <li><code>len(skel)&lt;3</code> または <code>len(skel)*2 ≤ len(t)</code> なら <code>""</code>（わかりやすい情報→情報 のような語の消失を拒否）</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>④ 関係正規化 27ルール <code>RELATION_NORMALIZE_MAP</code> <span class="badge-file">consolidate.py:305-336</span></h3>
+  <p style="margin:0 0 10px;color:var(--mut)">マッピングは <code>{旧: (新, 方向反転)}</code>。負関係（NOT_*/EXCLUDES/DOES_NOT_HAVE）は意図的に除外。</p>
+  <div class="grid3">
+    <div class="card accent-p" style="margin:0">
+      <h4 style="margin-top:0">同義マージ（方向そのまま）</h4>
+      <table style="margin:0">
+        <tr><td>BELONGS_TO_CATEGORY</td><td>→ IS_A</td></tr>
+        <tr><td>HAS_VALUE</td><td>→ HAS_ATTRIBUTE</td></tr>
+        <tr><td>MEASURED_IN</td><td>→ HAS_ATTRIBUTE</td></tr>
+        <tr><td>MITIGATES</td><td>→ PREVENTS</td></tr>
+        <tr><td>DEPENDS_ON</td><td>→ REQUIRES</td></tr>
+        <tr><td>COVERS</td><td>→ APPLIES_TO</td></tr>
+        <tr><td>TARGETS</td><td>→ APPLIES_TO</td></tr>
+        <tr><td>OPERATED_BY</td><td>→ MANAGED_BY</td></tr>
+        <tr><td>GOVERNED_BY</td><td>→ MANAGED_BY</td></tr>
+        <tr><td>PUBLISHED_BY</td><td>→ ISSUED_BY</td></tr>
+        <tr><td>ENACTED_BY</td><td>→ ISSUED_BY</td></tr>
+        <tr><td>REQUIRES_BEFORE</td><td>→ FOLLOWS</td></tr>
+        <tr><td>REQUIRED_BEFORE</td><td>→ FOLLOWS</td></tr>
+        <tr><td>RELATES_TO</td><td>→ RELATED_TO</td></tr>
+      </table>
+    </div>
+    <div class="card accent-p" style="margin:0">
+      <h4 style="margin-top:0">typo修正（方向そのまま）</h4>
+      <table style="margin:0">
+        <tr><td>MANAGES_BY</td><td>→ MANAGED_BY</td></tr>
+        <tr><td>DEFINES_BY</td><td>→ DEFINED_BY</td></tr>
+        <tr><td>DESCRIBES_IN</td><td>→ DESCRIBED_IN</td></tr>
+      </table>
+    </div>
+    <div class="card accent-p" style="margin:0">
+      <h4 style="margin-top:0">逆方向（<b style="color:var(--data)">方向反転</b>）</h4>
+      <table style="margin:0">
+        <tr><td>HAS_PART</td><td>⇄ PART_OF</td></tr>
+        <tr><td>PRECEDES</td><td>⇄ FOLLOWS</td></tr>
+        <tr><td>USED_BY</td><td>⇄ USES</td></tr>
+        <tr><td>REQUIRED_BY</td><td>⇄ REQUIRES</td></tr>
+        <tr><td>CONTAINS</td><td>⇄ PART_OF</td></tr>
+        <tr><td>INCLUDES</td><td>⇄ PART_OF</td></tr>
+        <tr><td>DEFINES</td><td>⇄ DEFINED_BY</td></tr>
+        <tr><td>DESCRIBES</td><td>⇄ DESCRIBED_IN</td></tr>
+        <tr><td>MANAGES</td><td>⇄ MANAGED_BY</td></tr>
+        <tr><td>GOVERNS</td><td>⇄ MANAGED_BY</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="note"><b>共通不変条件:</b> <code>_move_rels</code> / <code>normalize_relations</code> / <code>attach_source_chunks</code> はすべて <code>extraction_count</code>（合算）と <code>source_chunks</code>（和集合）を維持し、どのマージでも出自が失われない。</div>
+</section>
+
+<!-- REFERENCES -->
+<section id="references">
+  <h2><span class="tag" style="background:var(--post)">POST</span>5. 参照グラフ + 照応解決 <span class="badge-file">graph/references.py</span></h2>
+  <p class="lead">チャンク本文中の明示参照（節/ページ/文書名）と略称定義を<b>ルールベース（LLM不使用・コストゼロ）</b>で抽出し <code>:REFERS_TO</code> エッジを張る。法令引用抽出の手法（F=0.935）を応用。</p>
+
+  <div class="flow">
+    <div class="row">
+      <div class="box po"><span class="n">0</span><b>load_chunks</b><small><code>:Document</code>（ハッシュID）を source/page/id 順に取得（batch 2000）</small></div>
+      <div class="arrow h">→</div>
+      <div class="box po"><span class="n">0</span><b>build_inventory</b><small>4つのインデックス構築: <code>page_index</code> / <code>section_index</code>（見出し正規表現）/ <code>title_map</code>（先頭2ページのタイトル行）/ <code>alias_maps</code>（「以下『◯◯』という」略称定義）</small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box po"><span class="n">1</span><b>extract_references</b>
+        <small>チャンクごとに5種の参照を抽出（各エッジ = src→tgt, kind∈{page,section}）。上限 <code>_MAX_REFS_PER_CHUNK=12</code>。</small>
+        <ol class="tight" style="margin-top:8px">
+          <li><b>文書名参照</b>『◯◯規程』をご覧ください → <code>doc_refs</code>（最大3、プロパティ）</li>
+          <li><b>ページ範囲</b> P.13〜18 → <code>0&lt;p2-p1≤10</code> のみ展開</li>
+          <li><b>単一ページ</b> P.98 / 98ページ（範囲内はスキップ）</li>
+          <li><b>節範囲</b> 3.1〜3.3 → 文字列比較で展開</li>
+          <li><b>節参照</b> 「3.3.1を参照」→ section_index完全一致</li>
+        </ol>
+      </div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box po"><span class="n">2</span><b>write_reference_graph（冪等）</b><small><code>MERGE (a:Document)-[r:REFERS_TO {kind}]->(b:Document) SET r.ref_text</code>。文書名参照は <code>SET c.ref_docs=[...]</code>。</small></div>
+    </div>
+  </div>
+
+  <div class="card accent-p">
+    <h4 style="margin-top:0">照応解決 <code>resolve_anaphora_nodes(graph, alias_maps)</code></h4>
+    <p style="margin:6px 0">照応パターン <code>_ANAPHORA_PATTERNS</code>: <code>^(本|当|弊|同)…</code> / <code>^(その他|上記|下記|前述|後述|以下)</code> / <code>^(これ|それ|あれ)(ら)?$</code></p>
+    <div class="split">
+      <div class="box re" style="border-color:var(--retr)"><b>解決できる場合</b><small>全ての言及文書が1つの正式名に合意（<code>len(formals)==1 and not unresolved_src</code>）→ <code>canonical_form</code> 設定、<code>search_keys</code> 追加、<code>(a)-[:ALIAS_OF]->(f)</code> 作成。<code>resolved++</code></small></div>
+      <div class="box wn"><b>解決できない場合</b><small>照応パターンに一致するが解決不能 → <code>is_anaphor=true</code>。「本製品」が別マニュアルの別製品をdeg=114の偽ハブに統合するのを防ぐ。<code>flagged++</code></small></div>
+    </div>
+  </div>
+  <div class="note"><b>検索時の消費:</b> <code>follow_references</code> が検索ヒットチャンクから <code>REFERS_TO</code> を1ホップ辿り、<code>ref_docs</code> は参照先文書スコープでPGVector再検索。ただし既定OFF（<code>enable_reference_follow=False</code>、FJH-11で正味中立〜微負）。</div>
+</section>
+
+<!-- CONDITIONS -->
+<section id="conditions">
+  <h2><span class="tag" style="background:var(--post)">POST</span>6. 条件付き事実（reify）<span class="badge-file">graph/conditions.py</span></h2>
+  <p class="lead"><span class="pill off">既定OFF</span> 規程・基準系限定。「ある値がある条件下でのみ成立する」事実を <code>:CondFact -[:WHEN]-> :Cond</code> のreify構造で格納。数値は決してノード化せず <code>value_num</code> プロパティに。</p>
+
+  <div class="grid2">
+    <div class="card accent-p">
+      <h4 style="margin-top:0">データモデル（reification）</h4>
+      <div class="row" style="margin-top:6px">
+        <div class="box dt"><b>:CondFact</b><small>label / predicate(UPPER_SNAKE 例:WAGE_PREMIUM_RATE) / value_num(例:35) / unit(%/日/円) / source / pg_collection / source_chunks / extraction_count</small></div>
+      </div>
+      <div class="arrow">▼ [:WHEN]（複合ANDは複数エッジ）</div>
+      <div class="row">
+        <div class="box dt"><b>:Cond</b><small>axis(労働区分/時間帯/閾値…) / operator(eq/gte/lte/gt/lt/between/in) / value(逐語) / norm_value / pg_collection</small></div>
+      </div>
+    </div>
+    <div class="card accent-p">
+      <h4 style="margin-top:0">抽出フロー</h4>
+      <ol class="tight">
+        <li>プレフィルタ: <code>len(text)≥120</code> かつ <code>_COND_KEYWORDS</code>（場合/とき/以上/割増/手当/勤続…）に一致</li>
+        <li><code>structured_output(llm, Extraction)</code> で JSON 抽出（<code>ThreadPoolExecutor(max_workers=4)</code>）</li>
+        <li>条件のない事実は破棄（無条件の単純事実は対象外）</li>
+        <li>決定的ID: <code>_fact_id = "cf_"+sha1(predicate|value|conds)[:20]</code> → 同一variantは同一ID → 冪等MERGE</li>
+      </ol>
+      <small style="color:var(--mut)">検索側 <code>get_condition_origin_context</code>（§10）が閾値・列挙質問で <code>&lt;CONDITION_FACTS&gt;</code> ブロックを決定的Cypherで生成。</small>
+    </div>
+  </div>
+</section>
+
+<!-- DICTIONARY -->
+<section id="dictionary">
+  <h2><span class="tag" style="background:var(--post)">POST</span>7. 用語辞書適用 <span class="badge-file">graph/dictionary.py</span></h2>
+  <p class="lead"><span class="pill off">opt: KG_DICTIONARY_PATH</span> 外部辞書（JSON/CSV）を既存 Term ノードに適用し、<code>canonical_form</code>/<code>aliases</code>/<code>category</code>/<code>definition</code> を付与する。</p>
+  <div class="split">
+    <div class="box po"><b>load_dictionary(path)</b><small>JSON: <code>data["entries"]</code>。CSV(utf-8-sig): <code>canonical, aliases(|区切り), category, definition, notes</code>。canonical無しはスキップ。</small></div>
+    <div class="arrow h">→</div>
+    <div class="box po"><b>apply_dictionary(graph, entries)</b><small>マッチキー = <code>[canonical]+aliases</code>。<code>MATCH (t) WHERE t.id IN $keys AND entity_node_predicate</code>（<b>id完全一致</b>）→ プロパティを SET（既存を上書き）。</small></div>
+    <div class="arrow h">→</div>
+    <div class="box re"><b>enrichment へ</b><small><code>compute_search_keys</code> が <code>aliases</code>/<code>canonical_form</code> を <code>search_keys</code> に畳み込み → 検索でヒット</small></div>
+  </div>
+  <div class="note tip"><b>収束点:</b> <code>aliases</code>（辞書 + かな揺れマージ）と <code>canonical_form</code>（辞書 + 照応解決）は、すべて <code>compute_search_keys</code> に流れ込み、最終的に検索の <code>CONTAINS</code> 照合に反映される。ビルド順序が dictionary/consolidate → enrichment を保証している。</div>
+</section>
+
+<!-- ENRICH -->
+<section id="enrich">
+  <h2><span class="tag" style="background:var(--post)">POST</span>8. enrichment（プロパティ付与）<span class="badge-file">graph/enrichment.py</span></h2>
+  <p class="lead"><code>enrich_post_build(graph)</code> が3つのパスを実行。検索の順位付けと照合キーの基盤を作る、最重要の後処理。</p>
+
+  <div class="grid2">
+    <div class="card accent-p">
+      <h4 style="margin-top:0">A. compute_mention_count</h4>
+      <p style="margin:6px 0"><code>t.mention_count = COUNT(DISTINCT d)</code>（<code>(t)&lt;-[:MENTIONS]-(d:Document)</code>）。何チャンクから言及されたか。</p>
+      <h4>B. compute_pagerank <span class="anchor-h">alpha=0.85, max_iter=100</span></h4>
+      <p style="margin:6px 0">APOC不要、NetworkX使用。MENTIONS除外・両端がentity述語を満たすエッジで <code>nx.DiGraph</code> を構築 → <code>nx.pagerank</code> → <code>t.pagerank</code> をbatch 500で書き戻し。<b>起点ノード選択とパススコアの主信号</b>。</p>
+    </div>
+    <div class="card accent-p">
+      <h4 style="margin-top:0">C. compute_search_keys <span class="anchor-h">retrieval照合の要</span></h4>
+      <p style="margin:6px 0">辞書適用の<b>後</b>に走る。各エンティティに <code>norm_id</code> と <code>search_keys</code> 配列を書く（batch 2000）:</p>
+      <ol class="tight">
+        <li><code>normalize_entity_text(id)</code>（NFKC+小文字化）</li>
+        <li>各 <code>aliases</code> の正規化</li>
+        <li><code>canonical_form</code> の正規化</li>
+        <li>各キーの <code>kana_variant_key</code>（骨格キー）</li>
+      </ol>
+      <small style="color:var(--mut)">順序保持dedup。<code>norm_id=keys[0]</code>。検索側は <code>search_keys</code> に対し CONTAINS 照合し、全角半角・大小文字・送り仮名・助詞・長音の揺れを吸収。</small>
+    </div>
+  </div>
+  <div class="card accent-p">
+    <h4 style="margin-top:0">D. attach_source_chunks（チャンク処理中にインライン実行）</h4>
+    <p style="margin:6px 0">各トリプルの抽出元チャンクIDを <code>edge.source_chunks</code> に冪等追加、<code>extraction_count</code> をインクリメント。<code>MERGE</code> でなく <code>MATCH</code> を使う（同名別ラベルノード間の誤エッジを避ける）。これが検索側「① source_chunks 直引き」を可能にする。</p>
+  </div>
+</section>
+
+<!-- PROVENANCE -->
+<section id="provenance">
+  <h2><span class="tag" style="background:var(--post)">POST</span>9. グラフ出自チェック <span class="badge-file">graph/provenance.py</span></h2>
+  <p class="lead">Neo4jは単一共有DB。グラフがどのPGVectorコレクションから構築されたかを刻印し、コーパス不整合を防ぐ。</p>
+  <div class="row">
+    <div class="box po"><b>stamp_graph_provenance</b><small><code>MERGE (p:GraphProvenance {kind:'active'}) SET p.pg_collection, doc_count, stamped_at</code>（冪等）。UI構築・増分更新で呼ぶ。</small></div>
+    <div class="arrow h">→</div>
+    <div class="box re"><b>graph_collection_status</b><small>3状態: <b style="color:var(--retr)">match</b>（=現在→KG使用）/ <b style="color:var(--warn)">mismatch</b>（≠→KGスキップ）/ <b style="color:var(--data)">unknown</b>（未刻印→安全側でスキップ）</small></div>
+    <div class="arrow h">→</div>
+    <div class="box ge"><b>検索時ゲート</b><small><code>graph_matches_collection</code> が match のときのみKG使用。不一致なら <code>graph=None</code> でベクトル+BM25のみにフォールバック（<code>ui/system.py:141</code>）。</small></div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- RETRIEVAL -->
+<!-- ============================================================ -->
+<section id="qa">
+  <h2><span class="tag" style="background:var(--retr)">RETRIEVAL</span>10. QA全体フロー <span class="badge-file">retrieval/pipeline.py :: retriever_and_merge</span></h2>
+  <p class="lead">質問1件に対する検索・統合の全体。エンティティ抽出と文書検索を<b>並列実行</b>し、グラフ探索・リランク・コンテキスト統合を経て回答用contextを組み立てる。</p>
+
+  <div class="flow">
+    <div class="row"><div class="box" style="border-color:var(--cyan);flex:0 0 auto;min-width:auto"><b>質問 question</b></div></div>
+    <div class="arrow">▼ Phase 1: ThreadPoolExecutor(max_workers=2) で並列</div>
+    <div class="split">
+      <div class="box re"><span class="n">1a</span><b>エンティティ抽出</b><small>LLM抽出（fallback:Sudachi）→ entity vector で同義語補完（閾値0.85）。<a href="#entity">§11</a></small></div>
+      <div class="box re"><span class="n">1b</span><b>文書検索 _search_documents</b><small>ハイブリッド検索（BM25+ベクトル+RRF）→ リランクプール20 → cross-encoderで top_k=5 に絞る。<a href="#hybrid">§12</a></small></div>
+    </div>
+    <div class="arrow">▼ Phase 2</div>
+    <div class="row">
+      <div class="box re"><span class="n">2</span><b>グラフ探索 get_graph_context</b><small>抽出エンティティを正規化 → Neo4j N-hopパスクエリ → cross-encoderでパスリランク。doc_context（文書上位5件の先頭200字）も渡す。<a href="#graph">§13</a></small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box re"><span class="n">3</span><b>KGソースチャンク取得</b><small>①<code>edge.source_chunks</code>直引き → ②MENTIONS共起順fallback → プール30 → リランクで top 5。<a href="#kgchunk">§15</a></small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="split">
+      <div class="box" style="border-color:var(--dim)"><span class="n">3.5</span><b>参照追跡</b><small class="off">既定OFF</small></div>
+      <div class="box" style="border-color:var(--dim)"><span class="n">4.5</span><b>条件起点ルーティング</b><small>既定OFF。<code>&lt;CONDITION_FACTS&gt;</code>を先頭注入</small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box ge"><span class="n">5</span><b>コンテキスト統合</b><small><code>all_docs = docs + kg_chunks</code>。<code>&lt;GRAPH_CONTEXT&gt;</code>（既定OFF）+ <code>&lt;DOCUMENT_CONTEXT&gt;</code> で構成。各文書は <code>[出典: source]\n本文</code>。<a href="#answer">§16へ</a></small></div>
+    </div>
+  </div>
+
+  <div class="note"><b>グラフ↔コレクション不整合時:</b> <code>graph=None</code> が渡され、KG関連（Phase 2/3）を全スキップしてベクトル+BM25のみで動作する（§9のゲート）。</div>
+</section>
+
+<!-- ENTITY -->
+<section id="entity">
+  <h2><span class="tag" style="background:var(--retr)">RETRIEVAL</span>11. 質問エンティティ抽出 <span class="badge-file">extract_entities_from_question</span></h2>
+  <div class="flow">
+    <div class="row">
+      <div class="box re"><span class="n">1</span><b>LLM抽出</b><small><code>ENTITY_EXTRACTION_PROMPT</code> でカンマ区切り出力。「なし/None/N/A」は除外。<br><b>失敗時fallback:</b> Sudachiトークン化（<code>len&gt;1</code>）or 空白split</small></div>
+    </div>
+    <div class="arrow">▼ 条件: enable_entity_vector（既定ON）+ embeddings + pg_conn</div>
+    <div class="row">
+      <div class="box re"><span class="n">2</span><b>entity vector 同義語補完</b>
+        <small>上位<b class="num">8</b>エンティティごとに <code>search_hybrid_entities(ent, k=3, score_threshold=0.85, search_type)</code>。既存とdedupして追加。</small>
+      </div>
+    </div>
+  </div>
+  <div class="note"><b>なぜ質問全文を embed しないのか:</b> 全文embedすると一般語（はじめに/対策）や無関係概念（PaaS/PDCA）が拾われる。個別エンティティごとに<b>高い閾値0.85</b>で同義語のみ補完する。閾値0.85未満だと誤マッチが混入するため（EXPERIMENTSで実証）。</div>
+  <div class="card accent-r">
+    <h4 style="margin-top:0">照合用正規化（1.5ステップ）</h4>
+    <p style="margin:6px 0">ノード側 <code>search_keys</code> と同じ正規化を質問側にも適用しミスマッチを防ぐ。各エンティティ <code>e</code> について:</p>
+    <div class="miniflow">
+      <span class="s"><code>e</code></span><span class="op">→</span>
+      <span class="s"><code>normalize_entity_text(e)</code>（len≥2）</span><span class="op">+</span>
+      <span class="s"><code>kana_variant_key(e)</code>（骨格キー、len≥2）</span><span class="op">→</span>
+      <span class="s" style="border-color:var(--retr)"><code>match_entities</code></span>
+    </div>
+    <small style="color:var(--mut)">CONTAINSで過剰一致する1文字エンティティは除外。ノード側のかな揺れキーと双方向で照合可能に。</small>
+  </div>
+</section>
+
+<!-- HYBRID -->
+<section id="hybrid">
+  <h2><span class="tag" style="background:var(--retr)">RETRIEVAL</span>12. 日本語ハイブリッド検索 <span class="badge-file">retrieval/hybrid.py</span></h2>
+  <p class="lead"><code>HybridRetriever</code>（コレクション毎シングルトン）。BM25（Sudachi形態素）とベクトル（pgvector cosine）を <b>RRF</b> で統合する。</p>
+
+  <div class="split">
+    <div class="box re"><b>_vector_search</b>
+      <small>pgvector cosine 距離 <code>&lt;=&gt;</code>。score = <code>1-(embedding&lt;=&gt;query)</code>。<b>次元ガード</b>: query次元≠列次元なら <code>[]</code>（埋め込みプロバイダ切替検出）。</small></div>
+    <div class="box re"><b>_bm25_search</b>
+      <small>ビルド時の <code>tokenized_content</code> でBM25Okapi。質問をSudachiトークン化 → <code>get_scores</code> → <code>score&gt;0</code> のみ上位k。<br>fallback: ILIKE部分一致。</small></div>
+  </div>
+
+  <div class="card accent-r">
+    <h4 style="margin-top:0">RRF融合 <code>_hybrid_search_rrf</code></h4>
+    <div class="row" style="margin:10px 0">
+      <div class="box dt"><b>内部fetch</b><small><code>internal_k = min(k*10, 100)</code>。ベクトル・BM25とも internal_k 件取得。</small></div>
+      <div class="arrow h">→</div>
+      <div class="box dt"><b>RRFスコア加算</b>
+        <div style="font-family:var(--mono);font-size:14px;color:var(--data);margin:8px 0;text-align:center;background:#0a0e14;padding:10px;border-radius:8px;border:1px solid var(--line)">
+          rrf_scores[doc] += 1.0 / (60 + rank + 1)
+        </div>
+        <small>rank は0基点。両リストに出る文書は両方から加算。<code>rrf_k = 60</code>（標準定数）。</small>
+      </div>
+      <div class="arrow h">→</div>
+      <div class="box re"><b>ソート・切り詰め</b><small>累積RRFスコア降順で top-k。出力の <code>score</code> はRRFスコア。BM25が空ならベクトルのみ返す。</small></div>
+    </div>
+  </div>
+  <div class="note"><b>検索モード:</b> <code>hybrid</code>（既定・RRF）/ <code>vector</code> / <code>keyword</code>。<code>search()</code> の <code>rrf_k=60</code> は引数化。エンティティ検索側 <code>search_hybrid_entities</code> は<b>重み付きRRF</b>（<code>vector_weight=keyword_weight=0.5</code>）を使う。</div>
+</section>
+
+<!-- GRAPH -->
+<section id="graph">
+  <h2><span class="tag" style="background:var(--retr)">RETRIEVAL</span>13. N-hopグラフ探索 <span class="badge-file">get_graph_context</span></h2>
+  <p class="lead">正規化エンティティを起点に、Neo4jでN-hopパスを「スコア順」でそのまま取得する。ホップ数ごとに取得数・リランク後件数を変える。</p>
+
+  <div class="card accent-r">
+    <h4 style="margin-top:0">ホップ別パラメータ</h4>
+    <table>
+      <tr><th>ホップ数</th><th>Cypher LIMIT（<code>limit_map</code>）</th><th>リランク後 top_k（<code>top_k_map</code>）</th></tr>
+      <tr><td>1-hop</td><td class="num">30</td><td class="num">15</td></tr>
+      <tr><td>2-hop（既定）</td><td class="num">50</td><td class="num">20</td></tr>
+      <tr><td>3-hop</td><td class="num">80</td><td class="num">25</td></tr>
+    </table>
+    <small style="color:var(--mut)">起点ノードは <code>max_start_nodes=20</code> に制限（CONTAINS過剰一致による爆発抑制）。<code>path_max_candidates=30</code>。</small>
+  </div>
+
+  <ol class="steps">
+    <li><b>起点ノード選択 <code>_start_select</code></b><br>
+      <code>search_keys</code>（未バックフィル時は <code>toLower(n.id)</code>）に対し CONTAINS 照合。<b>完全一致を最優先</b>し、次に <code>pagerank</code> 降順で上位<code>[0..20]</code>に絞る。旧実装は無作為collectで汎用語が起点を占有していた。
+    </li>
+    <li><b>パス取得（ノイズ除外つき）</b><br>
+      1-hop は <code>(start)-[r]-(end)</code>、N-hop は <code>(start)-[*1..hop]-(end)</code>。除外条件:
+      <ul class="tight" style="margin-top:6px">
+        <li>ハッシュIDノード（チャンク）を除外</li>
+        <li><code>MENTIONS</code> エッジを除外</li>
+        <li><code>is_anaphor</code> ノードは起点・中継・終端すべて禁止</li>
+        <li><code>is_value</code> ノードは<b>中継禁止・終端のみ許可</b>（日付ハブ経由の逸脱を防ぎつつ、数値の出典チャンク取得は残す）</li>
+      </ul>
+    </li>
+    <li><b>スコアリング（無作為truncation排除）</b><br>
+      1-hop: <code>extraction_count</code> DESC, <code>pagerank</code>和 DESC。<br>
+      N-hop: パス長で正規化した平均 <code>rel_sum/plen</code> DESC, <code>pr_sum/(plen+1)</code> DESC（長さ自体には加点しない）。
+    </li>
+    <li><b>parse_neo4j_paths</b><br>
+      (ノード列, 関係タイプ列) で重複排除。Cypher側スコア順を保持（パス長降順ソートは廃止 = 1-hop事実エッジが落ちる逆効果のため）。<code>max_candidates=30</code>。
+    </li>
+    <li><b>パスリランク</b><br>
+      <code>len(paths) &gt; top_k</code> のときのみ <code>rank_paths_by_relevance</code>。以下なら<b>スキップ</b>。<a href="#rerank">§14</a>
+    </li>
+  </ol>
+  <div class="note warn"><b>2段のfallback:</b> パス0件 → 個別トリプルクエリ（<code>rank_relations_by_relevance</code>）。クエリ例外 → 単純1-hopマッチ <code>LIMIT 20</code> → <code>top_k=15</code> でリランク。</div>
+</section>
+
+<!-- RERANK -->
+<section id="rerank">
+  <h2><span class="tag" style="background:var(--retr)">RETRIEVAL</span>14. リランキング（cross-encoder優先）<span class="badge-file">retrieval/reranker.py</span></h2>
+  <p class="lead">全レイヤ（文書・パス・トリプル・KGチャンク）で共通の2段構成: <b>広く取得 → cross-encoderで意味的に絞る</b>。cross-encoder失敗時はLLMリランクにフォールバック。</p>
+
+  <div class="split">
+    <div class="box re"><b>score_candidates(query, candidates)</b>
+      <small>vLLM <code>/v1/score</code>（bge-reranker-v2-m3互換）。payload <code>{model, text_1:query, text_2:[候補]}</code>。<b>失敗・長さ不一致 → None</b>（=フォールバック信号）。</small></div>
+    <div class="box re"><b>rerank_by_score(query, items, text_fn, top_k)</b>
+      <small>汎用ヘルパ。<code>text_fn</code>で各itemからテキスト抽出 → スコア降順 → top_k。None時は <code>items[:top_k]</code>（原順）。</small></div>
+  </div>
+
+  <div class="card accent-r">
+    <h4 style="margin-top:0">パス/トリプルの「自然文化」</h4>
+    <p style="margin:6px 0">cross-encoderは自然文ペアで学習されているため、記号表記 <code>A -[IS_A]-&gt; B</code> はスコアが不安定。<code>_REL_TEMPLATES</code>（39関係）で自然文に変換してからスコアリングする（表示用 <code>path_text</code> は記号表記のまま）。</p>
+    <div class="miniflow">
+      <span class="s"><code>ガス軸受 -[IS_A]-&gt; 軸受</code></span>
+      <span class="op">→ triple_to_natural_text →</span>
+      <span class="s" style="border-color:var(--retr)">「ガス軸受は軸受の一種である」</span>
+    </div>
+    <small style="color:var(--mut)">未知関係は <code>「{s}と{o}は{rel}の関係にある」</code>。doc_contextはcross-encoderには連結しない（信号が薄まるため）が、LLMフォールバック側では使う。</small>
+  </div>
+
+  <div class="grid2">
+    <div class="card accent-r">
+      <h4 style="margin-top:0">文書リランク <code>rerank_with_llm</code></h4>
+      <ul class="tight">
+        <li>cross-encoder優先: <code>text_fn=d.text[:1000]</code>（500字だと後半の根拠が隠れるため1000字）</li>
+        <li>LLMフォールバック: <code>text[:500]</code> + <code>RERANK_PROMPT</code> → 「3,1,5,2,4」形式のID列パース → 欠落IDは末尾追加</li>
+      </ul>
+    </div>
+    <div class="card accent-r">
+      <h4 style="margin-top:0">有効化ゲート</h4>
+      <p style="margin:6px 0"><code>is_reranker_enabled()</code> = <code>RERANKER_ENABLED=true</code> かつ endpoint設定あり。<br>速度: cross-encoderはLLMリランクの<b>10〜100倍高速</b>。品質寄与 <b>+11.8pt</b>（最強レバー）のため既定ON。</p>
+    </div>
+  </div>
+</section>
+
+<!-- KGCHUNK -->
+<section id="kgchunk">
+  <h2><span class="tag" style="background:var(--retr)">RETRIEVAL</span>15. KGソースチャンク取得</h2>
+  <p class="lead">グラフで見つかったトリプルの「出典チャンク」をコンテキストに加える。プール <code>max(30, kg_chunk_top_k*3)=30</code> → リランクで top <code>5</code>。</p>
+  <div class="flow">
+    <div class="row">
+      <div class="box re"><span class="n">①</span><b>edge.source_chunks 直引き（新方式・正確）</b><small><code>MATCH (a{id})-[r]-(b{id}) WHERE type(r)=tk.p AND r.source_chunks IS NOT NULL</code> → <code>UNWIND r.source_chunks</code> → <code>:Document</code> 取得。triple単位の正確なリンク。</small></div>
+    </div>
+    <div class="arrow">▼ 空なら</div>
+    <div class="row">
+      <div class="box re"><span class="n">②</span><b>MENTIONS共起順 fallback（旧方式）</b><small>端点エンティティを言及するチャンク。<b>「言及対象エンティティ数」が多い順</b>（<code>count(DISTINCT entity)</code> DESC）。無順位LIMITだとハブから任意件が返り不安定になるのを防ぐ。</small></div>
+    </div>
+    <div class="arrow">▼</div>
+    <div class="row">
+      <div class="box re"><span class="n">③</span><b>リランク絞り込み</b><small><code>len &gt; 5</code> かつ reranker有効なら <code>rerank_by_score(text_fn=text[:1000], top_k=5)</code>。無効なら先頭5件。既存docと重複するtextは除外。</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- ANSWER -->
+<section id="answer">
+  <h2><span class="tag" style="background:var(--gen)">GENERATION</span>16. 回答生成 <span class="badge-file">ui/system.py :: generate_with_sources</span></h2>
+  <p class="lead">統合コンテキストを <code>QA_PROMPT</code> に流し、<code>temperature=0</code> のLLMで回答生成。LangChain LCELチェーンで構成。</p>
+  <div class="miniflow" style="font-size:14px">
+    <span class="s" style="border-color:var(--cyan)">question</span><span class="op">→</span>
+    <span class="s" style="border-color:var(--retr)">retriever_and_merge</span><span class="op">→</span>
+    <span class="s">{context, question}</span><span class="op">→</span>
+    <span class="s" style="border-color:var(--gen)">QA_PROMPT</span><span class="op">→</span>
+    <span class="s" style="border-color:var(--gen)">LLM(temp=0)</span><span class="op">→</span>
+    <span class="s" style="border-color:var(--gen)">StrOutputParser</span><span class="op">→</span>
+    <span class="s">answer + sources</span>
+  </div>
+
+  <div class="card accent-g">
+    <h4 style="margin-top:0">QA_PROMPT の核心ルール</h4>
+    <div class="grid2">
+      <div>
+        <b style="color:var(--gen)">Grounding（根拠限定）</b>
+        <ul class="tight">
+          <li>参考情報の範囲「だけ」で回答。外部知識・推測で補完しない</li>
+          <li>断定文には必ず根拠（文書 or トリプル）を添える</li>
+          <li>規格名・JIS番号・条文番号は一字一句転記（反捏造）</li>
+          <li>矛盾する情報は両論併記し、どちらとも断定しない</li>
+        </ul>
+      </div>
+      <div>
+        <b style="color:var(--gen)">コンテキストの読み方</b>
+        <ul class="tight">
+          <li><code>&lt;GRAPH_CONTEXT&gt;</code>: 推論パス（マルチホップ）と単体トリプル。番号は関連度順</li>
+          <li><code>&lt;DOCUMENT_CONTEXT&gt;</code>: 原文チャンク。事実・数値・条件の根拠は基本こちら</li>
+          <li><code>&lt;CONDITION_FACTS&gt;</code>: 条件→値の機械的列挙（あれば最優先で先頭）</li>
+        </ul>
+      </div>
+    </div>
+    <div class="note tip" style="margin-bottom:0"><b>出典書式（inline citation）:</b> 文書は <code>[出典: ファイル名]</code>、グラフは <code>[出典: KG トリプルN]</code> / <code>[出典: KG 推論パスN]</code> / <code>[出典: KG PN-Ej]</code> をラベル通りに。規程・条文系では「何に準拠/準用するか」を具体値より先に明示。</div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- REFERENCE -->
+<!-- ============================================================ -->
+<section id="datamodel">
+  <h2><span class="tag" style="background:var(--data)">DATA</span>17. データモデル（ノード・エッジ）</h2>
+  <div class="grid2">
+    <div class="card accent-d">
+      <h4 style="margin-top:0">ノード</h4>
+      <table style="margin:0">
+        <tr><th>ラベル</th><th>主なプロパティ</th></tr>
+        <tr><td><code>:Term</code>（差替可）</td><td>id, mention_count, pagerank, norm_id, <b>search_keys</b>, is_value, is_anaphor, aliases, canonical_form</td></tr>
+        <tr><td><code>:Document</code></td><td>id=SHA256, source, text, page, ref_docs</td></tr>
+        <tr><td><code>:ProcessedChunk</code></td><td>hash, processed_at（再開マーカー）</td></tr>
+        <tr><td><code>:CondFact</code></td><td>predicate, value_num, unit, source_chunks…</td></tr>
+        <tr><td><code>:Cond</code></td><td>axis, operator, value, norm_value</td></tr>
+        <tr><td><code>:SchemaMeta</code> / <code>:GraphProvenance</code></td><td>刻印メタ</td></tr>
+      </table>
+    </div>
+    <div class="card accent-d">
+      <h4 style="margin-top:0">エッジ</h4>
+      <table style="margin:0">
+        <tr><th>タイプ</th><th>説明・プロパティ</th></tr>
+        <tr><td>抽出関係（12〜）</td><td><b>source_chunks</b>[](出自), <b>extraction_count</b>(抽出回数)</td></tr>
+        <tr><td><code>:MENTIONS</code></td><td>Document→Entity。source_chunks無し（prune時に保護）</td></tr>
+        <tr><td><code>:REFERS_TO</code></td><td>Document→Document。kind∈{page,section}, ref_text</td></tr>
+        <tr><td><code>:ALIAS_OF</code></td><td>照応→正式名ノード</td></tr>
+        <tr><td><code>:WHEN</code></td><td>CondFact→Cond</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="note"><b>チャンクID体系（全域で統一）:</b> <code>make_chunk_id(doc_id, content) = sha256(f"{doc_id}\n{content}")</code>。doc_idを混ぜることで文書横断の衝突を防ぎ、文書スコープ削除を安全にする。ハッシュID <code>[0-9a-f]{32,}</code> がチャンク/Documentノードとエンティティノードを区別する鍵。</div>
+</section>
+
+<section id="constants">
+  <h2><span class="tag" style="background:var(--data)">DATA</span>18. 主要定数・既定値 早見表</h2>
+  <div class="grid2">
+    <div class="card accent-d">
+      <h4 style="margin-top:0">検索・リランク</h4>
+      <table style="margin:0">
+        <tr><th>項目</th><th>値</th></tr>
+        <tr><td>retrieval_top_k</td><td class="num">5</td></tr>
+        <tr><td>graph_hop_count</td><td class="num">2</td></tr>
+        <tr><td>search_mode</td><td>hybrid</td></tr>
+        <tr><td>RRF k 定数</td><td class="num">60</td></tr>
+        <tr><td>RRF式</td><td><code>1/(60+rank+1)</code></td></tr>
+        <tr><td>hybrid内部fetch</td><td><code>min(k*10,100)</code></td></tr>
+        <tr><td>rerank_pool_size</td><td class="num">20</td></tr>
+        <tr><td>entity_similarity_threshold</td><td class="num">0.85</td></tr>
+        <tr><td>entity vector 引く数</td><td>上位<span class="num">8</span> × k=3</td></tr>
+        <tr><td>cross-encoder入力truncate</td><td><span class="num">1000</span> 字</td></tr>
+        <tr><td>LLMリランク入力truncate</td><td><span class="num">500</span> 字</td></tr>
+      </table>
+    </div>
+    <div class="card accent-d">
+      <h4 style="margin-top:0">グラフ探索（ホップ別）</h4>
+      <table style="margin:0">
+        <tr><th>hop</th><th>LIMIT</th><th>top_k</th></tr>
+        <tr><td>1</td><td class="num">30</td><td class="num">15</td></tr>
+        <tr><td>2</td><td class="num">50</td><td class="num">20</td></tr>
+        <tr><td>3</td><td class="num">80</td><td class="num">25</td></tr>
+      </table>
+      <table style="margin:12px 0 0">
+        <tr><th>項目</th><th>値</th></tr>
+        <tr><td>max_start_nodes</td><td class="num">20</td></tr>
+        <tr><td>path_max_candidates</td><td class="num">30</td></tr>
+        <tr><td>kg_chunk_top_k / プール</td><td><span class="num">5</span> / <span class="num">30</span></td></tr>
+        <tr><td>pagerank α / max_iter</td><td><span class="num">0.85</span> / <span class="num">100</span></td></tr>
+        <tr><td>chunk_size / overlap</td><td><span class="num">1024</span> / <span class="num">100</span></td></tr>
+        <tr><td>KG_BUILD_WORKERS</td><td class="num">4</td></tr>
+        <tr><td>かな揺れ max_diff</td><td class="num">3</td></tr>
+        <tr><td>batch: search_keys / pagerank</td><td><span class="num">2000</span> / <span class="num">500</span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="card accent-d">
+    <h4 style="margin-top:0">機能フラグ（既定）</h4>
+    <div class="chiprow">
+      <span class="pill on">enable_rerank</span>
+      <span class="pill on">enable_japanese_search</span>
+      <span class="pill on">enable_entity_vector_search</span>
+      <span class="pill on">include_kg_source_chunks</span>
+      <span class="pill on">enable_knowledge_graph</span>
+      <span class="pill on">reranker_enabled</span>
+      <span class="pill off">include_graph_lines</span>
+      <span class="pill off">enable_reference_follow</span>
+      <span class="pill off">enable_conditional_facts</span>
+      <span class="pill off">enable_condition_routing</span>
+    </div>
+    <small style="color:var(--mut)">プロバイダ既定（完全オンプレ）: LLM=<code>vllm</code>(gpt-oss-120b), Embedding=<code>vllm</code>(Qwen3-Embedding-8B, 4096次元), Reranker=<code>bge-reranker-v2-m3</code>。Azure切替時: GPT-4o + text-embedding-3-small(1536次元)。<code>include_graph_lines=false</code>・<code>enable_reference_follow=false</code> はベンチ（EXPERIMENTS.md）でマルチホップ優位のため。</small>
+  </div>
+</section>
+
+<section id="incremental">
+  <h2><span class="tag" style="background:var(--data)">DATA</span>19. 増分更新・再開 <span class="badge-file">graph/incremental.py</span></h2>
+  <p class="lead">文書スコープ置換（approach D）。チャンクハッシュで差分検出し、変更チャンクのみ再処理する。</p>
+  <div class="split">
+    <div class="box dt"><b>compute_delta</b><small>新旧チャンクIDの集合演算: <code>added=新−旧</code>, <code>removed=旧−新</code>, <code>unchanged=∩</code></small></div>
+    <div class="arrow h">→</div>
+    <div class="box wn"><b>prune_chunks（5段）</b><small>①各エッジ<code>source_chunks</code>から除去 → ②空エッジ削除 → ③Documentノード削除 → ④孤立エンティティ削除（<code>orphan_entity_ids</code>返却）→ ⑤ProcessedChunk削除</small></div>
+    <div class="arrow h">→</div>
+    <div class="box dt"><b>再処理・同期</b><small>added を並列LLM抽出 → <code>sync_pgvector_document</code>（unchangedは再embedしない）→ <code>sync_entity_vectors</code> → 軽量post</small></div>
+  </div>
+  <div class="note"><b>再開の仕組み:</b> 各チャンクの <code>ProcessedChunk.hash</code> と照合し、処理済みはスキップ。UI「続きから再開」/ CLI <code>--fresh</code>無し実行で有効。<br><b>設計上の注意:</b> consolidate/pagerank のグローバルな名寄せ・集約は増分更新では遅延され（重いため）、定期的なフルリビルドで再計算する。</div>
+</section>
+
+<div class="foot">
+  <b>GraphRAG ロジック詳細図解</b> — <code>graphrag_core/</code> のソースコードに基づく。
+  LLM=Azure OpenAI / vLLM、Graph=Neo4j、Vector=PGVector、日本語=Sudachi、Rerank=bge-reranker-v2-m3。<br>
+  参照: <code>scripts/build_kg.py</code>, <code>retrieval/pipeline.py</code>, <code>graph/{consolidate,references,conditions,enrichment,provenance,dictionary,schema}.py</code>, <code>retrieval/{hybrid,entity_vector,reranker}.py</code>, <code>text/{chunking,japanese}.py</code>, <code>prompts.py</code>, <code>config.py</code>。
+</div>
+
+</main>
+</div>
+</body>
+</html>

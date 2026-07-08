@@ -45,6 +45,8 @@ env/
 *.html
 graph.html
 graph_enhanced.html
+# 手動作成のドキュメントは追跡する（生成物の *.html 除外の例外）
+!docs/logic_diagram.html
 
 # Temporary files
 *.log
