@@ -235,3 +235,17 @@ def enrich_post_build(graph) -> dict:
         "pagerank": compute_pagerank(graph),
         "search_keys": compute_search_keys(graph),
     }
+
+
+def enrich_post_update(graph) -> dict:
+    """増分更新（文書単位）向けの軽量後処理。
+
+    pagerank は NetworkX 全グラフ計算で重い（33kノードで数分〜）ため増分更新では
+    実行しない。既存値は据え置き（新規ノードは pagerank 無し → クエリ側は
+    COALESCE で扱われる）。pagerank の再計算と consolidate のGCは定期フル
+    再構築（build_kg --fresh 等）で行う。
+    """
+    return {
+        "mention_count": compute_mention_count(graph),
+        "search_keys": compute_search_keys(graph),
+    }

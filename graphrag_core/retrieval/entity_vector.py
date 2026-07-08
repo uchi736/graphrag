@@ -56,6 +56,92 @@ class EntityVectorizer:
             logger.warning(f"Entity vector store not found, will create on first add: {e}")
             self.vector_store = None
 
+    def _build_documents(self, entities: List[Dict[str, Any]]):
+        """エンティティ辞書リストから埋め込み用 Document 群を構築する（共通部）。"""
+        documents = []
+        ids = []
+        for entity in entities:
+            entity_id = entity.get('id', '')
+            entity_type = entity.get('type', 'Term')
+            properties = entity.get('properties', {})
+
+            # コンテキストテキストの構築
+            # エンティティ名、タイプ、プロパティ、関連テキストを結合
+            text_parts = [
+                f"Entity: {entity_id}",
+                f"Type: {entity_type}"
+            ]
+            for key, value in properties.items():
+                if value and key != 'id':  # idは既に含まれているのでスキップ
+                    text_parts.append(f"{key}: {value}")
+            related_text = entity.get('related_text', '')
+            if related_text:
+                text_parts.append(f"Context: {related_text}")
+
+            documents.append(Document(
+                page_content="\n".join(text_parts),
+                metadata={
+                    'entity_id': entity_id,
+                    'entity_type': entity_type,
+                    'properties': properties
+                }
+            ))
+            ids.append(hashlib.md5(f"{entity_id}_{entity_type}".encode()).hexdigest())
+        return documents, ids
+
+    def delete_entities(self, entity_ids: List[str]) -> int:
+        """エンティティ埋め込みを id 指定で削除する（増分更新の剪定と対で使う）。
+
+        共有テーブルのため、このコレクション内の cmetadata->>'entity_id' 一致行
+        だけを削除する。
+
+        Returns: 削除行数
+        """
+        ids = [i for i in (entity_ids or []) if i]
+        if not ids:
+            return 0
+        import psycopg
+        from graphrag_core.db.utils import normalize_pg_connection_string
+        raw_conn = normalize_pg_connection_string(self.connection_string)
+        with psycopg.connect(raw_conn) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    DELETE FROM langchain_pg_embedding e
+                    USING langchain_pg_collection c
+                    WHERE e.collection_id = c.uuid AND c.name = %s
+                      AND e.cmetadata->>'entity_id' = ANY(%s)
+                """, (self.collection_name, ids))
+                deleted = cur.rowcount
+            conn.commit()
+        logger.info(f"Deleted {deleted} entity vectors from '{self.collection_name}'")
+        return deleted
+
+    def upsert_entities(self, entities: List[Dict[str, Any]]) -> int:
+        """エンティティ埋め込みを差分upsertする（コレクションを wipe しない）。
+
+        add_entities は pre_delete_collection でコレクション全体を作り直すため
+        増分更新には使えない。こちらは対象idの既存行を消してから挿入する。
+        """
+        if not entities:
+            return 0
+        self.delete_entities([e.get('id', '') for e in entities])
+        documents, _ids = self._build_documents(entities)
+        BATCH_SIZE = 500
+        saved = 0
+        for i in range(0, len(documents), BATCH_SIZE):
+            batch = documents[i:i + BATCH_SIZE]
+            self.vector_store = PGVector.from_documents(
+                batch,
+                self.embeddings,
+                connection=self.connection_string,
+                collection_name=self.collection_name,
+                pre_delete_collection=False,
+                use_jsonb=True,
+            )
+            saved += len(batch)
+        logger.info(f"Upserted {saved} entity vectors into '{self.collection_name}'")
+        return saved
+
     def add_entities(self, entities: List[Dict[str, Any]], graph_docs: Optional[List[Any]] = None) -> int:
         """
         エンティティをベクトル化して保存
@@ -75,47 +161,7 @@ class EntityVectorizer:
         if len(entities) > 0:
             logger.info(f"Sample entities: {[e.get('id', '') for e in entities[:5]]}")
 
-        documents = []
-        ids = []
-
-        for entity in entities:
-            # エンティティIDとテキストを生成
-            entity_id = entity.get('id', '')
-            entity_type = entity.get('type', 'Term')
-            properties = entity.get('properties', {})
-
-            # コンテキストテキストの構築
-            # エンティティ名、タイプ、プロパティ、関連テキストを結合
-            text_parts = [
-                f"Entity: {entity_id}",
-                f"Type: {entity_type}"
-            ]
-
-            # プロパティを追加
-            for key, value in properties.items():
-                if value and key != 'id':  # idは既に含まれているのでスキップ
-                    text_parts.append(f"{key}: {value}")
-
-            # 関連テキストがあれば追加
-            related_text = entity.get('related_text', '')
-            if related_text:
-                text_parts.append(f"Context: {related_text}")
-
-            # ドキュメント作成
-            content = "\n".join(text_parts)
-            doc = Document(
-                page_content=content,
-                metadata={
-                    'entity_id': entity_id,
-                    'entity_type': entity_type,
-                    'properties': properties
-                }
-            )
-            documents.append(doc)
-
-            # 一意なIDを生成（entity_id + entity_typeのハッシュ）
-            unique_id = hashlib.md5(f"{entity_id}_{entity_type}".encode()).hexdigest()
-            ids.append(unique_id)
+        documents, ids = self._build_documents(entities)
 
         logger.info(f"Created {len(documents)} documents for vectorization")
 

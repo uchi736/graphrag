@@ -122,10 +122,13 @@ def build_knowledge_graph(
     all_chunks = create_markdown_chunks(source_docs, chunk_size=1024, chunk_overlap=100)
 
     # 重複除去
+    # ID = sha256(doc_id + 本文): 増分更新(incremental.py)と同一体系。
+    # doc_id込みのため文書横断dedupはしない（文書スコープ削除を安全にする意図）
+    from graphrag_core.graph.incremental import make_chunk_id
     deduped = []
     seen_hashes = set()
     for chunk in all_chunks:
-        digest = hashlib.sha256(chunk.page_content.encode("utf-8")).hexdigest()
+        digest = make_chunk_id(chunk.metadata.get("source", ""), chunk.page_content)
         if digest in seen_hashes:
             continue
         seen_hashes.add(digest)
@@ -238,6 +241,12 @@ def build_knowledge_graph(
                 graph.query(
                     "MERGE (c:ProcessedChunk {hash: $hash}) SET c.processed_at = datetime()",
                     {"hash": chunk_hash},
+                )
+                # Document.source を明示SET（増分更新の差分検出 get_doc_chunk_ids が
+                # source で文書スコープを引くため、全ビルド経路で保証する）
+                graph.query(
+                    "MATCH (d:Document {id: $id}) SET d.source = $src",
+                    {"id": chunk_hash, "src": chunk.metadata.get("source")},
                 )
             return chunk_hash
 

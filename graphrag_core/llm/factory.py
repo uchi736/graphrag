@@ -16,7 +16,9 @@ from graphrag_core.config import get_settings
 def create_chat_llm(
     temperature: Optional[float] = None,
     max_tokens: Optional[int] = None,
-    model_override: Optional[str] = None
+    model_override: Optional[str] = None,
+    timeout: Optional[float] = None,
+    max_retries: Optional[int] = None,
 ) -> Any:
     """
     Create a chat LLM instance based on configuration.
@@ -25,11 +27,23 @@ def create_chat_llm(
         temperature: Override temperature setting
         max_tokens: Override max_tokens setting
         model_override: Override the model name (for specific use cases)
+        timeout: リクエストタイムアウト秒。**必ずここで渡すこと** —
+            生成後に `llm.request_timeout = N` を代入しても、初期化済みの
+            openai クライアントには伝播しない（実測: vllm既定300sのまま）。
+            None なら各プロバイダの既定（vllm=VLLM_TIMEOUT, azure=無指定）。
+        max_retries: リトライ回数。同上の理由でここで渡す。
 
     Returns:
         Either AzureChatOpenAI or VLLMChatClient instance
     """
     s = get_settings()
+
+    # 共通のオーバーライド（None のキーは渡さない = 各クラスの既定を使う）
+    _overrides = {}
+    if timeout is not None:
+        _overrides["timeout"] = timeout
+    if max_retries is not None:
+        _overrides["max_retries"] = max_retries
 
     if s.llm_provider == "openai":
         from langchain_openai import ChatOpenAI
@@ -45,7 +59,7 @@ def create_chat_llm(
             model=s.openai_model,
             temperature=openai_temperature,
             max_tokens=openai_max_tokens,
-            timeout=s.openai_timeout,
+            **{"timeout": s.openai_timeout, **_overrides},
         )
 
     if s.llm_provider == "anthropic":
@@ -62,7 +76,7 @@ def create_chat_llm(
             model=s.anthropic_model,
             temperature=anthropic_temperature,
             max_tokens=anthropic_max_tokens,
-            timeout=s.anthropic_timeout,
+            **{"timeout": s.anthropic_timeout, **_overrides},
         )
 
     if s.llm_provider == "vllm":
@@ -95,8 +109,8 @@ def create_chat_llm(
             model=s.vllm_model,
             temperature=vllm_temperature,
             max_tokens=vllm_max_tokens,
-            timeout=s.vllm_timeout,
             extra_body=extra_body,
+            **{"timeout": s.vllm_timeout, **_overrides},
         )
 
     else:
@@ -119,7 +133,8 @@ def create_chat_llm(
             azure_endpoint=s.azure_openai_endpoint,
             api_key=s.azure_openai_api_key,
             temperature=azure_temperature,
-            max_tokens=azure_max_tokens
+            max_tokens=azure_max_tokens,
+            **_overrides,
         )
 
 

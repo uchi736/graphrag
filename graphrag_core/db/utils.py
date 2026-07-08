@@ -303,6 +303,60 @@ def batch_update_tokenized(conn_string: str, chunks, batch_size: int = 500) -> i
     return updated
 
 
+def get_doc_embedding_ids(conn_string: str, collection_name: str, doc_id: str) -> set:
+    """コレクション内でこの文書(source)に属する行の chunk id 集合を返す。
+
+    chunk id は cmetadata->>'id'（無ければ行の e.id）で判定する。
+    """
+    raw_conn = normalize_pg_connection_string(conn_string)
+    with psycopg.connect(raw_conn) as conn:
+        rows = conn.execute("""
+            SELECT COALESCE(e.cmetadata->>'id', e.id)
+            FROM langchain_pg_embedding e
+            JOIN langchain_pg_collection c ON e.collection_id = c.uuid
+            WHERE c.name = %s AND e.cmetadata->>'source' = %s
+        """, (collection_name, doc_id)).fetchall()
+    return {r[0] for r in rows if r[0]}
+
+
+def delete_doc_embeddings_except(
+    conn_string: str,
+    collection_name: str,
+    doc_id: str,
+    keep_ids: list,
+) -> int:
+    """この文書(source)の行のうち、chunk id が keep_ids に無いものを削除する。
+
+    文書スコープ置換（増分更新）用: 旧版の行（位置ID行・消えたチャンク）を掃除する。
+    keep_ids が空なら文書の全行を削除。共有テーブルのため collection と source で
+    厳密にスコープする（他コレクション・他文書には触れない）。
+
+    Returns: 削除行数
+    """
+    raw_conn = normalize_pg_connection_string(conn_string)
+    keep = [k for k in (keep_ids or []) if k]
+    with psycopg.connect(raw_conn) as conn:
+        with conn.cursor() as cur:
+            if keep:
+                cur.execute("""
+                    DELETE FROM langchain_pg_embedding e
+                    USING langchain_pg_collection c
+                    WHERE e.collection_id = c.uuid
+                      AND c.name = %s AND e.cmetadata->>'source' = %s
+                      AND NOT (COALESCE(e.cmetadata->>'id', e.id) = ANY(%s))
+                """, (collection_name, doc_id, keep))
+            else:
+                cur.execute("""
+                    DELETE FROM langchain_pg_embedding e
+                    USING langchain_pg_collection c
+                    WHERE e.collection_id = c.uuid
+                      AND c.name = %s AND e.cmetadata->>'source' = %s
+                """, (collection_name, doc_id))
+            deleted = cur.rowcount
+        conn.commit()
+    return deleted
+
+
 def ensure_hnsw_index(conn_string: str) -> None:
     """コサイン距離用の HNSW インデックスを保証する（冪等）。"""
     raw_conn = normalize_pg_connection_string(conn_string)

@@ -36,6 +36,7 @@ from graphrag_core.text.chunking import create_markdown_chunks
 from graphrag_core.retrieval.entity_vector import EntityVectorizer
 from graphrag_core.retrieval.pipeline import retriever_and_merge as qa_retriever_and_merge
 from graphrag_core.graph.provenance import stamp_graph_provenance, graph_matches_collection
+from graphrag_core.graph.incremental import make_chunk_id
 from graphrag_core.document.pdf import load_pdf_text
 from graphrag_core.ui.state import create_vector_retriever
 
@@ -197,7 +198,8 @@ def build_rag_system(ctx, source_docs: list, csv_edges: list | None = None):
     deduped = []
     seen_hashes = set()
     for chunk in chunks:
-        digest = hashlib.sha256(chunk.page_content.encode("utf-8")).hexdigest()
+        # ID = sha256(doc_id + 本文): 増分更新(incremental.py)・build_kg.py と同一体系
+        digest = make_chunk_id(chunk.metadata.get("source", ""), chunk.page_content)
         if digest in seen_hashes:
             continue
         seen_hashes.add(digest)
@@ -481,7 +483,8 @@ def update_chunks_only(ctx, source_docs: list):
     deduped = []
     seen_hashes = set()
     for chunk in all_chunks:
-        digest = hashlib.sha256(chunk.page_content.encode("utf-8")).hexdigest()
+        # ID = sha256(doc_id + 本文): 増分更新(incremental.py)・build_kg.py と同一体系
+        digest = make_chunk_id(chunk.metadata.get("source", ""), chunk.page_content)
         if digest in seen_hashes:
             continue
         seen_hashes.add(digest)
