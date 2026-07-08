@@ -78,3 +78,13 @@ _bench/_pp_test/
 # JEMHopQA derived corpus (reproducible via fetch_data.py) + transient graph backups
 _bench/jemhop/chunks_jemhop/
 _bench/jemhop/*.jsonl.gz
+
+# transient graph backups (recovery artifacts; large, reproducible by rebuild)
+_bench/**/graph_*_backup.json
+# scratch diagnostics / demos (underscore-prefixed one-offs)
+_bench/_docling_md.md
+_bench/_md_demo.md
+_bench/_neo4j_probe.json
+_bench/plant/_*.json
+_bench/plant/_*.py
+_bench/plant/_*.txt

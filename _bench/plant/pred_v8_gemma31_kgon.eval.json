@@ -1,0 +1,644 @@
+{
+  "answer_accuracy": 67.39,
+  "ref_full_coverage": 67.39,
+  "ref_match_rate": 83.7,
+  "n": 46,
+  "details": [
+    {
+      "qa_id": "manual_2ed4e617",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei",
+        "02_boiler_anzen"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ]
+    },
+    {
+      "qa_id": "manual_77ab2412",
+      "judge": 0,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315",
+        "14_youki_hoan"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ]
+    },
+    {
+      "qa_id": "manual_5c557682",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "03_boiler_kouzou"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ]
+    },
+    {
+      "qa_id": "manual_4383485a",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "03_boiler_kouzou",
+        "04_atsuyoki_kouzou",
+        "02_boiler_anzen",
+        "01_anewho",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "14_youki_hoan"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ]
+    },
+    {
+      "qa_id": "manual_84e9db17",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "04_atsuyoki_kouzou",
+        "14_youki_hoan",
+        "41_anewho_seirei"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ]
+    },
+    {
+      "qa_id": "manual_5961b194",
+      "judge": 0,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315",
+        "03_boiler_kouzou",
+        "02_boiler_anzen"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ]
+    },
+    {
+      "qa_id": "manual_b0a25bd4",
+      "judge": 1,
+      "pred_refs": [
+        "v54n1_18_石炭専焼タワー型ボイラの運転実績813MWUSC",
+        "v54n1_17_アメリカにおける亜瀝青炭専焼超臨界圧ボイラの900MW計画と試運転実績",
+        "v55n4_18_高効率褐炭焚きボイラの商業化に向けて",
+        "v55n4_01_資源・エネルギー特集号の発刊にあたって",
+        "33_denji_kisoku",
+        "v55n4_08_マレーシアの電力安定供給と経済発展に貢献する"
+      ],
+      "correct_refs": [
+        "v54n1_17_アメリカにおける亜瀝青炭専焼超臨界圧ボイラの900MW計画と試運転実績",
+        "v54n1_18_石炭専焼タワー型ボイラの運転実績813MWUSC"
+      ]
+    },
+    {
+      "qa_id": "manual_3c2c1036",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen"
+      ]
+    },
+    {
+      "qa_id": "manual_045cc2c9",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "03_boiler_kouzou",
+        "45_tokutei_setsubi",
+        "04_atsuyoki_kouzou",
+        "11_kouatsu_gas_ho",
+        "11_ippan_kisoku",
+        "33_denji_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi"
+      ]
+    },
+    {
+      "qa_id": "manual2_651f8f1e",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "08_kagi_shorei",
+        "02_boiler_anzen"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual2_4e766734",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei",
+        "15_taiki_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual2_34618542",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei",
+        "14_youki_hoan"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual2_dad85d6b",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "04_atsuyoki_kouzou",
+        "v59n4_11_アンモニアガスタービンコージェネレーションシステムの開発",
+        "33_denji_kisoku",
+        "08_kagi_shorei"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual3_33ba5ce0",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "03_boiler_kouzou",
+        "33_denji_kisoku",
+        "02_boiler_anzen",
+        "15_taiki_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual3_d14cf359",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei",
+        "33_denji_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual3_21b06a42",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei",
+        "11_ippan_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual4_90eb24d5",
+      "judge": 0,
+      "pred_refs": [
+        "03_boiler_kouzou",
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "15_taiki_kisoku",
+        "02_boiler_anzen"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual4_db55e122",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "03_boiler_kouzou"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual4_df54db53",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi",
+        "08_kagi_shorei",
+        "34_yousetu_kaisyaku",
+        "33_denji_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "manual4_e6a75e6f",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "09_kagi_kaishaku_240315"
+      ],
+      "correct_refs": [
+        "34_yousetu_kaisyaku"
+      ]
+    },
+    {
+      "qa_id": "auto_fa0abbac",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "08_kagi_shorei",
+        "02_boiler_anzen",
+        "41_anewho_seirei",
+        "45_tokutei_setsubi"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi"
+      ]
+    },
+    {
+      "qa_id": "auto_5571f444",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi",
+        "05_kogata_boiler_kouzou",
+        "03_boiler_kouzou",
+        "33_denji_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi"
+      ]
+    },
+    {
+      "qa_id": "auto_42a26461",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "02_boiler_anzen",
+        "08_kagi_shorei"
+      ],
+      "correct_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_cd0a95ec",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "02_boiler_anzen",
+        "41_anewho_seirei",
+        "08_kagi_shorei"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "46_kikai_kentei"
+      ]
+    },
+    {
+      "qa_id": "auto_71e715ad",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "03_boiler_kouzou",
+        "04_atsuyoki_kouzou"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "14_youki_hoan"
+      ]
+    },
+    {
+      "qa_id": "auto_224b6c16",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "02_boiler_anzen",
+        "01_anewho"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku"
+      ]
+    },
+    {
+      "qa_id": "auto_2c283c74",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi",
+        "08_kagi_shorei",
+        "14_youki_hoan"
+      ],
+      "correct_refs": [
+        "45_tokutei_setsubi",
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_5daa593b",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi",
+        "11_ippan_kisoku",
+        "14_youki_hoan"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi"
+      ]
+    },
+    {
+      "qa_id": "auto_ea4e91c5",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "05_kogata_boiler_kouzou",
+        "03_boiler_kouzou",
+        "04_atsuyoki_kouzou"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "14_youki_hoan"
+      ]
+    },
+    {
+      "qa_id": "auto_0281bb03",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "02_boiler_anzen"
+      ],
+      "correct_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_8756082e",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "08_kagi_shorei",
+        "02_boiler_anzen",
+        "41_anewho_seirei",
+        "45_tokutei_setsubi"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi"
+      ]
+    },
+    {
+      "qa_id": "auto_9776ab14",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "02_boiler_anzen",
+        "41_anewho_seirei",
+        "45_tokutei_setsubi"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen"
+      ]
+    },
+    {
+      "qa_id": "auto_58673767",
+      "judge": 0,
+      "pred_refs": [
+        "02_boiler_anzen",
+        "34_yousetu_kaisyaku",
+        "08_kagi_shorei"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen"
+      ]
+    },
+    {
+      "qa_id": "auto_97a25b71",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "33_denji_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "14_youki_hoan"
+      ]
+    },
+    {
+      "qa_id": "auto_829f1afa",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "02_boiler_anzen"
+      ],
+      "correct_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_c7702ede",
+      "judge": 0,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei",
+        "14_youki_hoan",
+        "33_denji_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi"
+      ]
+    },
+    {
+      "qa_id": "auto_d267c779",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "02_boiler_anzen",
+        "01_anewho"
+      ],
+      "correct_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_6ed6ded3",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "02_boiler_anzen",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "08_kagi_shorei"
+      ],
+      "correct_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_809c7a9a",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "03_boiler_kouzou",
+        "05_kogata_boiler_kouzou",
+        "02_boiler_anzen"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen"
+      ]
+    },
+    {
+      "qa_id": "auto_682e7b95",
+      "judge": 1,
+      "pred_refs": [
+        "34_yousetu_kaisyaku",
+        "02_boiler_anzen",
+        "v55n4_02_世代間ギャップを跳び越えて溶接技術・組立技術の神髄を伝える",
+        "08_kagi_shorei",
+        "09_kagi_kaishaku_240315"
+      ],
+      "correct_refs": [
+        "34_yousetu_kaisyaku",
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_c83c6f7c",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei",
+        "33_denji_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen"
+      ]
+    },
+    {
+      "qa_id": "auto_695196a3",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "04_atsuyoki_kouzou"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "14_youki_hoan"
+      ]
+    },
+    {
+      "qa_id": "auto_45cf65d5",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "08_kagi_shorei",
+        "11_ippan_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen"
+      ]
+    },
+    {
+      "qa_id": "auto_c95156a4",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "45_tokutei_setsubi",
+        "14_youki_hoan"
+      ],
+      "correct_refs": [
+        "45_tokutei_setsubi",
+        "09_kagi_kaishaku_240315"
+      ]
+    },
+    {
+      "qa_id": "auto_a6bee5a4",
+      "judge": 1,
+      "pred_refs": [
+        "09_kagi_kaishaku_240315",
+        "34_yousetu_kaisyaku",
+        "08_kagi_shorei",
+        "02_boiler_anzen",
+        "41_anewho_seirei",
+        "45_tokutei_setsubi"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen"
+      ]
+    },
+    {
+      "qa_id": "auto_d1711a74",
+      "judge": 1,
+      "pred_refs": [
+        "08_kagi_shorei",
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen",
+        "v64n2_08_てくのすこーぷで視たてくのすこーぷで視たアンモニア燃焼利用技術の発明アンモニア燃焼利用技術の発明",
+        "15_taiki_kisoku"
+      ],
+      "correct_refs": [
+        "09_kagi_kaishaku_240315",
+        "02_boiler_anzen"
+      ]
+    }
+  ]
+}

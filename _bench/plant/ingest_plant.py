@@ -59,7 +59,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--collection", default="plant_v15")
     ap.add_argument("--fresh", action="store_true", help="コレクションを作り直す")
+    ap.add_argument("--chunks-dir", default=None, help="チャンクJSONLディレクトリ（既定: chunks_plant）")
     args = ap.parse_args()
+    if args.chunks_dir:
+        global CHUNKS_DIR
+        CHUNKS_DIR = Path(args.chunks_dir)
 
     os.environ["PG_COLLECTION"] = args.collection
     from graphrag_core.config import reset_settings, get_settings
