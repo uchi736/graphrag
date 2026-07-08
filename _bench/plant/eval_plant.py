@@ -27,7 +27,7 @@ load_dotenv()
 
 from langchain_openai import ChatOpenAI
 
-JUDGE_MODEL = os.environ.get("JUDGE_MODEL", "google/gemma-4-26B-A4B-it")
+JUDGE_MODEL = os.environ.get("JUDGE_MODEL", "google/gemma-4-31B-it")
 JUDGE_BASE_URL = os.environ.get("JUDGE_BASE_URL", "http://192.168.0.250:8000/v1")
 JUDGE_API_KEY = os.environ.get("JUDGE_API_KEY", "dummy")
 

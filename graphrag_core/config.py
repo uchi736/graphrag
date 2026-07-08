@@ -59,7 +59,8 @@ class Settings:
     azure_di_model: str = field(default_factory=lambda: _env("AZURE_DI_MODEL", "prebuilt-layout"))
 
     # --- LLM Provider ---
-    llm_provider: str = field(default_factory=lambda: _env("LLM_PROVIDER", "azure_openai"))
+    # 完全オンプレ既定: vllm（DGXのgemma）。Azureを使う場合のみ LLM_PROVIDER=azure_openai を明示。
+    llm_provider: str = field(default_factory=lambda: _env("LLM_PROVIDER", "vllm"))
 
     # --- VLLM ---
     vllm_endpoint: str = field(default_factory=lambda: _env("VLLM_ENDPOINT"))
@@ -96,7 +97,8 @@ class Settings:
     vllm_reranker_api_key: str = field(default_factory=lambda: _env("VLLM_RERANKER_API_KEY", "EMPTY"))
 
     # --- Embedding Provider ---
-    embedding_provider: str = field(default_factory=lambda: _env("EMBEDDING_PROVIDER", "azure_openai"))
+    # 完全オンプレ既定: vllm（DGXのruri-v3）。
+    embedding_provider: str = field(default_factory=lambda: _env("EMBEDDING_PROVIDER", "vllm"))
     vllm_embedding_endpoint: str = field(default_factory=lambda: _env("VLLM_EMBEDDING_ENDPOINT", "http://localhost:8001/v1"))
     vllm_embedding_model: str = field(default_factory=lambda: _env("VLLM_EMBEDDING_MODEL", "Qwen/Qwen3-Embedding-8B"))
     vllm_embedding_api_key: str = field(default_factory=lambda: _env("VLLM_EMBEDDING_API_KEY", "EMPTY"))
