@@ -1,9 +1,11 @@
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Download, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { useSettingsStore } from "@/stores/settingsStore"
 import { useGraphOverview, useSubgraph, useGraphStatus } from "@/hooks/useGraphData"
 import { GraphCanvas } from "@/components/graph/GraphCanvas"
+import { GraphLegend } from "@/components/graph/GraphLegend"
+import { toGraphData } from "@/lib/graphTransform"
 import { NodeDetailPanel } from "@/components/graph/NodeDetailPanel"
 import { SubgraphControls } from "@/components/graph/SubgraphControls"
 import { DataTablePanel } from "@/components/graph/DataTablePanel"
@@ -32,6 +34,20 @@ export default function GraphPage() {
 
   const active = mode === "overview" ? overview : subgraph
   const edges = active.data ?? []
+
+  // 凡例フィルタ（選択タイプ以外を淡色化）。モード切替・データ更新でリセット
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set())
+  const legendNodes = useMemo(() => toGraphData(edges).nodes, [edges])
+  // 依存は active.data（react-queryの安定参照）。edges は ?? [] で毎レンダー
+  // 新配列になり得るため依存にすると無限再レンダーする
+  useEffect(() => setSelectedTypes(new Set()), [mode, active.data])
+  const toggleType = (t: string) =>
+    setSelectedTypes((prev) => {
+      const next = new Set(prev)
+      if (next.has(t)) next.delete(t)
+      else next.add(t)
+      return next
+    })
 
   const [exporting, setExporting] = useState(false)
   const exportGraphJson = async () => {
@@ -159,7 +175,12 @@ export default function GraphPage() {
                 : "表示できるエッジがありません"}
             </div>
           ) : (
-            <GraphCanvas edges={edges} onNodeClick={setSelected} />
+            <>
+              <div className="mb-2">
+                <GraphLegend nodes={legendNodes} selectedTypes={selectedTypes} onToggle={toggleType} />
+              </div>
+              <GraphCanvas edges={edges} onNodeClick={setSelected} dimTypes={selectedTypes} />
+            </>
           )}
           {edges.length > 0 && (
             <p className="mt-1 text-right text-xs text-muted-foreground">{edges.length} エッジ表示中</p>

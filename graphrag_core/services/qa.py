@@ -54,6 +54,34 @@ def gate_graph(deps: QADeps, config: Dict) -> tuple[Any, Optional[str]]:
 
 
 # ── 検索 ──────────────────────────────────────────────────────────
+def _annotate_triple_types(graph, triples) -> None:
+    """graph_sources の各トリプルに実ノードラベル start_type/end_type を付与する。
+
+    QA参照グラフの色分け用（付与しないと全ノードが Unknown=灰色になる）。
+    1クエリのみ・失敗しても検索結果には影響させない。
+    """
+    if graph is None or not triples:
+        return
+    ids = sorted({t.get(k) for t in triples if isinstance(t, dict)
+                  for k in ("start", "end") if t.get(k)})
+    if not ids:
+        return
+    try:
+        rows = graph.query(
+            "MATCH (n) WHERE n.id IN $ids RETURN n.id AS id, labels(n)[0] AS t",
+            {"ids": ids}) or []
+        tmap = {r["id"]: r["t"] for r in rows if r.get("t")}
+        for t in triples:
+            if not isinstance(t, dict):
+                continue
+            if t.get("start") in tmap:
+                t["start_type"] = tmap[t["start"]]
+            if t.get("end") in tmap:
+                t["end_type"] = tmap[t["end"]]
+    except Exception:
+        pass
+
+
 def run_retrieval(question: str, deps: QADeps, config: Dict) -> Dict:
     """検索本体。graphゲート + retriever生成込みで pipeline を呼ぶ。
 
@@ -68,6 +96,7 @@ def run_retrieval(question: str, deps: QADeps, config: Dict) -> Dict:
     )
     result["kg_used"] = graph is not None
     result["kg_skip_reason"] = skip_reason
+    _annotate_triple_types(graph, result.get("graph_sources") or [])
     return result
 
 
@@ -128,7 +157,8 @@ def serialize_qa_result(data: Dict, include_answer: bool = True) -> Dict:
         "vector_sources": [_doc_to_dto(d) for d in data.get("vector_sources", [])],
         "kg_source_chunks": [_doc_to_dto(d) for d in data.get("kg_source_chunks", [])],
         "graph_sources": [
-            {"start": t.get("start"), "type": t.get("type"), "end": t.get("end")}
+            {"start": t.get("start"), "type": t.get("type"), "end": t.get("end"),
+             "start_type": t.get("start_type"), "end_type": t.get("end_type")}
             for t in data.get("graph_sources", []) if isinstance(t, dict)
         ],
         "graph_paths": [

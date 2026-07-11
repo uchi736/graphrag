@@ -2,6 +2,8 @@ import { lazy, memo, Suspense, useMemo, useState, type ReactNode } from "react"
 import { BookOpen } from "lucide-react"
 import type { EdgeRecord, QaEvidence, SourceChunk } from "@/api/types"
 import { ChunkBrowserModal } from "@/components/documents/ChunkBrowserModal"
+import { GraphLegend } from "@/components/graph/GraphLegend"
+import { toGraphData } from "@/lib/graphTransform"
 
 // force-graph はサイズが大きいので遅延ロード（QA初期バンドルから隔離）
 const GraphCanvas = lazy(() =>
@@ -14,10 +16,10 @@ function triplesToEdges(evidence: QaEvidence): EdgeRecord[] {
     .filter((t) => t.start && t.end)
     .map((t) => ({
       source: t.start,
-      source_type: "Unknown",
+      source_type: t.start_type ?? "Unknown",
       relation: t.type,
       target: t.end,
-      target_type: "Unknown",
+      target_type: t.end_type ?? "Unknown",
       source_degree: 0,
       target_degree: 0,
       source_docs: [],
@@ -94,6 +96,7 @@ function EvidencePanelsInner({ evidence }: { evidence: QaEvidence | null }) {
   // force-graph が graphData 変更とみなし物理シミュレーションを再加熱してしまう
   // （トークンストリーミング中ずっとグラフが揺れ続ける原因）。
   const graphEdges = useMemo(() => (evidence ? triplesToEdges(evidence) : []), [evidence])
+  const legendNodes = useMemo(() => toGraphData(graphEdges).nodes, [graphEdges])
   if (!evidence) return null
   const entities = evidence.extracted_entities ?? {}
   const merged = (entities as { merged_entities?: string[] }).merged_entities ?? []
@@ -117,6 +120,7 @@ function EvidencePanelsInner({ evidence }: { evidence: QaEvidence | null }) {
         defaultOpen={evidence.graph_sources.length > 0}
         emptyNote={graphEmptyNote}
       >
+        <GraphLegend nodes={legendNodes} />
         <Suspense
           fallback={
             <div className="flex h-40 items-center justify-center text-xs text-muted-foreground">

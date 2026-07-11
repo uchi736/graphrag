@@ -13,17 +13,22 @@ export function GraphCanvas({
   height = 620,
   onNodeClick,
   showEdgeLabels = false,
+  dimTypes = null,
 }: {
   edges: EdgeRecord[]
   height?: number
   onNodeClick?: (node: GraphNode) => void
   /** 関係名をエッジ上に常時描画（QA参照グラフ等、エッジが主役の少数グラフ用） */
   showEdgeLabels?: boolean
+  /** 凡例フィルタ: 指定タイプ以外のノード/エッジを淡色化（null/空=全表示） */
+  dimTypes?: Set<string> | null
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(800)
   const data = useMemo(() => toGraphData(edges), [edges])
   const labelThreshold = data.nodes.length > 1000 ? 1.8 : 0.8
+  const dimming = dimTypes != null && dimTypes.size > 0
+  const isDimmed = (type: string) => dimming && !dimTypes!.has(type)
 
   useEffect(() => {
     const el = containerRef.current
@@ -47,11 +52,15 @@ export function GraphCanvas({
           const g = n as GraphNode
           return `${g.id}\n[${g.type}] degree=${g.degree}`
         }}
-        nodeColor={(n) => (n as GraphNode).color}
+        nodeColor={(n) => {
+          const g = n as GraphNode
+          return isDimmed(g.type) ? "rgba(203,208,218,0.25)" : g.color
+        }}
         nodeCanvasObjectMode={() => "after"}
         nodeCanvasObject={(node, ctx, globalScale) => {
           if (globalScale < labelThreshold) return
           const g = node as GraphNode & { x?: number; y?: number }
+          if (isDimmed(g.type)) return
           const label = g.id.length > 16 ? g.id.slice(0, 16) + "…" : g.id
           const fontSize = Math.max(10 / globalScale, 2.2)
           ctx.font = `${fontSize}px "Yu Gothic UI", "Meiryo", sans-serif`
@@ -61,7 +70,12 @@ export function GraphCanvas({
           ctx.fillText(label, g.x ?? 0, (g.y ?? 0) + g.size + 1.5)
         }}
         linkLabel={(l) => (l as { relation: string }).relation}
-        linkColor={() => (showEdgeLabels ? "rgba(100,110,140,0.75)" : "rgba(120,130,150,0.35)")}
+        linkColor={(l) => {
+          const link = l as { source_type?: string; target_type?: string }
+          if (dimming && (isDimmed(link.source_type ?? "") || isDimmed(link.target_type ?? "")))
+            return "rgba(150,155,170,0.06)"
+          return showEdgeLabels ? "rgba(100,110,140,0.75)" : "rgba(120,130,150,0.35)"
+        }}
         linkWidth={showEdgeLabels ? 1.4 : 1}
         linkDirectionalArrowLength={showEdgeLabels ? 4.5 : 3}
         linkDirectionalArrowRelPos={1}

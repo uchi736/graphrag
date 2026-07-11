@@ -56,6 +56,17 @@ export interface Triple {
   start: string
   type: string
   end: string
+  /** 実ノードラベル（QA参照グラフの色分け用。グラフ未使用時は null） */
+  start_type?: string | null
+  end_type?: string | null
+}
+
+// ---- GET /api/graph/node ----
+export interface NodeInfo {
+  id: string
+  type: string
+  degree: number
+  properties: Record<string, unknown>
 }
 
 export interface GraphPath {
