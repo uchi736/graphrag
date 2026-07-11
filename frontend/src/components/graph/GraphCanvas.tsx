@@ -3,9 +3,16 @@ import ForceGraph2D from "react-force-graph-2d"
 import type { EdgeRecord } from "@/api/types"
 import { toGraphData, type GraphNode } from "@/lib/graphTransform"
 
+// force-graph の nodeRelSize 既定値。実描画半径 = sqrt(nodeVal) * NODE_REL_SIZE
+const NODE_REL_SIZE = 4
+
+/** 少数グラフ（サブグラフ・QA参照グラフ）とみなすエッジ数。関係名の常時描画等を自動有効化 */
+const SMALL_GRAPH_LINKS = 80
+
 /**
  * force-graph によるグラフ描画（旧 neo4j-viz iframe の置換）。
- * - タイプ別色 / 次数でサイズ / 日本語ラベル（ズームに応じて表示）
+ * - タイプ別色 / 次数でサイズ / 日本語ラベル（ノード半径に連動した可読サイズ＋白フチ）
+ * - 少数グラフでは自動でエッジ濃色化＋関係名を常時描画
  * - ノードクリック → onNodeClick（詳細パネル連携）
  */
 export function GraphCanvas({
@@ -18,7 +25,7 @@ export function GraphCanvas({
   edges: EdgeRecord[]
   height?: number
   onNodeClick?: (node: GraphNode) => void
-  /** 関係名をエッジ上に常時描画（QA参照グラフ等、エッジが主役の少数グラフ用） */
+  /** 関係名をエッジ上に常時描画（少数グラフでは自動有効） */
   showEdgeLabels?: boolean
   /** 凡例フィルタ: 指定タイプ以外のノード/エッジを淡色化（null/空=全表示） */
   dimTypes?: Set<string> | null
@@ -26,7 +33,9 @@ export function GraphCanvas({
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(800)
   const data = useMemo(() => toGraphData(edges), [edges])
-  const labelThreshold = data.nodes.length > 1000 ? 1.8 : 0.8
+  const small = data.links.length <= SMALL_GRAPH_LINKS
+  const edgeLabels = showEdgeLabels || small
+  const labelThreshold = small ? 0 : data.nodes.length > 1000 ? 1.8 : 0.8
   const dimming = dimTypes != null && dimTypes.size > 0
   const isDimmed = (type: string) => dimming && !dimTypes!.has(type)
 
@@ -61,34 +70,50 @@ export function GraphCanvas({
           if (globalScale < labelThreshold) return
           const g = node as GraphNode & { x?: number; y?: number }
           if (isDimmed(g.type)) return
-          const label = g.id.length > 16 ? g.id.slice(0, 16) + "…" : g.id
-          const fontSize = Math.max(10 / globalScale, 2.2)
+          const label = small
+            ? g.id
+            : g.id.length > 16 ? g.id.slice(0, 16) + "…" : g.id
+          // 実描画半径（sqrt(nodeVal)*relSize）。旧実装は g.size を半径扱いして
+          // ラベルが円に食い込んでいた
+          const r = Math.sqrt(Math.max(g.size, 0.1)) * NODE_REL_SIZE
+          // フォントはズーム反比例と半径連動の大きい方 → ノードが大きく見える時は
+          // ラベルも比例して読めるサイズになる
+          const fontSize = Math.max(10 / globalScale, r * 0.42)
           ctx.font = `${fontSize}px "Yu Gothic UI", "Meiryo", sans-serif`
           ctx.textAlign = "center"
           ctx.textBaseline = "top"
-          ctx.fillStyle = "rgba(29,35,51,0.85)"
-          ctx.fillText(label, g.x ?? 0, (g.y ?? 0) + g.size + 1.5)
+          const x = g.x ?? 0
+          const y = (g.y ?? 0) + r + fontSize * 0.25
+          // 白フチで背景・エッジと分離
+          ctx.lineWidth = Math.max(fontSize / 4.5, 1 / globalScale)
+          ctx.strokeStyle = "rgba(255,255,255,0.9)"
+          ctx.strokeText(label, x, y)
+          ctx.fillStyle = "rgba(24,30,46,0.95)"
+          ctx.fillText(label, x, y)
         }}
         linkLabel={(l) => (l as { relation: string }).relation}
         linkColor={(l) => {
           const link = l as { source_type?: string; target_type?: string }
           if (dimming && (isDimmed(link.source_type ?? "") || isDimmed(link.target_type ?? "")))
             return "rgba(150,155,170,0.06)"
-          return showEdgeLabels ? "rgba(100,110,140,0.75)" : "rgba(120,130,150,0.35)"
+          return edgeLabels ? "rgba(100,110,140,0.75)" : "rgba(120,130,150,0.35)"
         }}
-        linkWidth={showEdgeLabels ? 1.4 : 1}
-        linkDirectionalArrowLength={showEdgeLabels ? 4.5 : 3}
+        linkWidth={edgeLabels ? 1.4 : 1}
+        linkDirectionalArrowLength={edgeLabels ? 4.5 : 3}
         linkDirectionalArrowRelPos={1}
-        linkCanvasObjectMode={() => (showEdgeLabels ? "after" : undefined)}
+        linkCanvasObjectMode={() => (edgeLabels ? "after" : undefined)}
         linkCanvasObject={
-          showEdgeLabels
+          edgeLabels
             ? (link, ctx, globalScale) => {
                 const l = link as {
                   relation: string
+                  source_type?: string
+                  target_type?: string
                   source: { x?: number; y?: number } | string
                   target: { x?: number; y?: number } | string
                 }
                 if (typeof l.source !== "object" || typeof l.target !== "object") return
+                if (dimming && (isDimmed(l.source_type ?? "") || isDimmed(l.target_type ?? ""))) return
                 const sx = l.source.x ?? 0
                 const sy = l.source.y ?? 0
                 const tx = l.target.x ?? 0
