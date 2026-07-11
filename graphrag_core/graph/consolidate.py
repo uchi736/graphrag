@@ -342,11 +342,27 @@ def normalize_relations(graph, batch_size: int = 2000) -> dict:
     既に正規タイプのエッジが同一ペアに存在する場合はマージ
     （extraction_count合算・source_chunks和集合）。
 
+    スキーマガード: 外部スキーマ（SHARED_SCHEMA_PATH）使用時は
+    - スキーマで許可されているタイプを別名へ改名しない
+      （例: EDCスキーマでは GOVERNED_BY が正であり MANAGED_BY へ潰してはならない）
+    - スキーマに無いタイプへの改名も行わない
+    静的マップはfujitsu語彙前提のため、この2条件で対象を絞る。
+
     Returns:
         {旧タイプ: 処理エッジ数}
     """
+    from graphrag_core.graph.schema import load_schema
+    schema = load_schema()
+    allowed_upper = ({r.upper() for r in schema.get("relations", [])}
+                     if schema.get("source") else None)  # 外部スキーマ時のみガード
+
     stats: dict[str, int] = {}
     for old, (new, swap) in RELATION_NORMALIZE_MAP.items():
+        if allowed_upper is not None:
+            if old.upper() in allowed_upper:
+                continue  # 許可タイプは正。改名しない
+            if new.upper() not in allowed_upper:
+                continue  # スキーマ外への改名はしない（埋め込み正規化に委ねる）
         moved = 0
         # MERGE方向: swap時は (b)->(a)
         merge_pat = "(b)-[nr:`%s`]->(a)" % new if swap else "(a)-[nr:`%s`]->(b)" % new
@@ -380,6 +396,162 @@ def normalize_relations(graph, batch_size: int = 2000) -> dict:
             logger.info("normalize_relations: %s -> %s%s (%d edges)",
                         old, new, " (reversed)" if swap else "", moved)
     return stats
+
+
+# ── 3.5. スキーマ語彙への埋め込み正規化（EDCのCanonicalizeと同思想） ──
+
+def canonicalize_relations_to_schema(graph, embeddings=None, llm=None, *,
+                                     threshold: float = 0.80,
+                                     shortlist_k: int = 3,
+                                     protect_label_prefix: str = "Qms",
+                                     dry_run: bool = False,
+                                     batch_size: int = 2000) -> dict:
+    """スキーマ外の関係タイプを、EDCのCanonicalizeと同じ2段構成でスキーマ語彙へ名寄せする。
+
+    1. 埋め込み検索: 野良タイプ名 vs スキーマ関係「名前+定義文」の類似度で
+       上位 shortlist_k 候補に絞る（実測で正誤が同スコアに並ぶため単独では使わない）
+    2. LLM検証: 実例トリプルを見せて「同義の候補番号 or 該当なし」を判定
+       （llm=None の場合は埋め込みのみ＝類似度 threshold 以上で採用）
+
+    - 外部スキーマ（SHARED_SCHEMA_PATH）が無い場合は何もしない
+    - 方向反転を伴う正規化（HAS_PART→PART_OF等）は判定できないため
+      静的マップ側に残す
+    - protect_label_prefix のラベルを持つノードに接続するエッジは対象外
+      （共有Neo4j上の他プログラムのグラフを書き換えないため）
+
+    Returns:
+        {"mapping": {旧: {"to", "score", "edges", "by"}}, "unmatched": {...}, "applied": bool}
+    """
+    import json as _json
+
+    import numpy as np
+
+    from graphrag_core.graph.schema import _schema_path, chunk_edge, load_schema
+
+    schema = load_schema()
+    if not schema.get("source"):
+        return {"mapping": {}, "unmatched": {}, "applied": False}
+    allowed = list(schema.get("relations", []))
+    allowed_upper = {r.upper(): r for r in allowed}
+
+    # スキーマJSONから定義文を取得（あれば埋め込みの手がかりにする）
+    desc = {}
+    try:
+        raw = _json.loads(_schema_path().read_text(encoding="utf-8"))
+        desc = {r["name"]: r.get("description", "") for r in raw.get("relations", [])
+                if isinstance(r, dict) and r.get("name")}
+    except Exception:
+        pass
+
+    skip = {chunk_edge().upper(), "MENTIONS", "REFERS_TO"}
+    rows = graph.query(
+        "MATCH ()-[r]->() RETURN DISTINCT type(r) AS t") or []
+    strays = [r["t"] for r in rows
+              if r["t"].upper() not in allowed_upper and r["t"].upper() not in skip]
+    if not strays:
+        return {"mapping": {}, "unmatched": {}, "applied": not dry_run}
+
+    if embeddings is None:
+        from graphrag_core.llm.factory import create_embeddings
+        embeddings = create_embeddings()
+
+    def _txt(name: str, d: str = "") -> str:
+        base = name.lower().replace("_", " ")
+        return f"{base}: {d}" if d else base
+
+    schema_vecs = np.array(embeddings.embed_documents(
+        [_txt(n, desc.get(n, "")) for n in allowed]))
+    stray_vecs = np.array(embeddings.embed_documents([_txt(s) for s in strays]))
+
+    def _cos(a, b):
+        return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-9))
+
+    guard = (
+        f"AND NOT any(l IN labels(a) WHERE l STARTS WITH '{protect_label_prefix}') "
+        f"AND NOT any(l IN labels(b) WHERE l STARTS WITH '{protect_label_prefix}') "
+    ) if protect_label_prefix else ""
+
+    def _llm_pick(stray: str, candidates: list, examples: list) -> int:
+        """LLMに同義候補を選ばせる。戻り値: candidates のindex、該当なしは -1。"""
+        cand_lines = "\n".join(
+            f"{k+1}. {name}: {desc.get(name, '')}" for k, (name, _) in enumerate(candidates))
+        ex_lines = "\n".join(f"- ({a}) -[{stray}]-> ({b})" for a, b in examples) or "（例なし）"
+        prompt = (
+            "ナレッジグラフの関係タイプを正規スキーマ語彙へ統合する判定です。\n"
+            f"対象の関係タイプ: {stray}\n実例:\n{ex_lines}\n\n"
+            f"候補（正規語彙）:\n{cand_lines}\n\n"
+            "対象の関係が候補のいずれかと同義（実例の主語→目的語の向きのまま置換しても"
+            "意味が保たれる）なら、その番号だけを出力してください。"
+            "どれとも同義でない、または向きが逆になる場合は 0 を出力してください。番号のみ。"
+        )
+        try:
+            out = llm.invoke(prompt).content.strip()
+            n = int("".join(c for c in out if c.isdigit()) or "0")
+            return n - 1 if 1 <= n <= len(candidates) else -1
+        except Exception as e:
+            logger.warning("canonicalize LLM verify failed for %s: %s", stray, e)
+            return -1
+
+    mapping: dict = {}
+    unmatched: dict = {}
+    for i, stray in enumerate(strays):
+        sims = [_cos(stray_vecs[i], sv) for sv in schema_vecs]
+        order = sorted(range(len(allowed)), key=lambda j: -sims[j])[:shortlist_k]
+        candidates = [(allowed[j], round(sims[j], 3)) for j in order]
+        cnt_rows = graph.query(
+            f"MATCH (a)-[r:`{stray}`]->(b) WHERE true {guard} RETURN count(r) AS c")
+        n_edges = cnt_rows[0]["c"] if cnt_rows else 0
+        if n_edges == 0:
+            unmatched[stray] = {"nearest": candidates[0][0], "score": candidates[0][1],
+                                "edges": 0}
+            continue
+
+        if llm is not None:
+            ex_rows = graph.query(
+                f"MATCH (a)-[r:`{stray}`]->(b) WHERE true {guard} "
+                "RETURN a.id AS a, b.id AS b LIMIT 3") or []
+            pick = _llm_pick(stray, candidates, [(r["a"], r["b"]) for r in ex_rows])
+            if pick < 0:
+                unmatched[stray] = {"nearest": candidates[0][0], "score": candidates[0][1],
+                                    "edges": n_edges, "by": "llm_rejected"}
+                continue
+            best, score, by = candidates[pick][0], candidates[pick][1], "llm"
+        else:
+            best, score, by = candidates[0][0], candidates[0][1], "embedding"
+            if score < threshold:
+                unmatched[stray] = {"nearest": best, "score": score, "edges": n_edges}
+                continue
+
+        mapping[stray] = {"to": best, "score": score, "edges": n_edges, "by": by}
+        if dry_run:
+            continue
+        try:
+            while True:
+                result = graph.query(
+                    f"""
+                    MATCH (a)-[r:`{stray}`]->(b) WHERE true {guard}
+                    WITH a, r, b LIMIT $batch
+                    MERGE (a)-[nr:`{best}`]->(b)
+                    ON CREATE SET nr = properties(r)
+                    ON MATCH SET
+                        nr.extraction_count =
+                            COALESCE(nr.extraction_count, 0) + COALESCE(r.extraction_count, 1),
+                        nr.source_chunks = COALESCE(nr.source_chunks, []) +
+                            [x IN COALESCE(r.source_chunks, [])
+                             WHERE NOT x IN COALESCE(nr.source_chunks, [])]
+                    DELETE r
+                    RETURN count(*) AS c
+                    """,
+                    {"batch": batch_size},
+                )
+                c = result[0]["c"] if result else 0
+                if c < batch_size:
+                    break
+            logger.info("canonicalize_relations: %s -> %s (sim=%.3f, %d edges)",
+                        stray, best, score, n_edges)
+        except Exception as e:
+            logger.warning("canonicalize_relations failed for %s: %s", stray, e)
+    return {"mapping": mapping, "unmatched": unmatched, "applied": not dry_run}
 
 
 # ── 4. 照応（アナフォラ）ノードの解決とフラグ付け ─────────────────────
@@ -487,10 +659,20 @@ def consolidate_post_build(graph) -> dict:
     """ビルド後のKG統合処理をまとめて実行する。
 
     実行後に enrichment.enrich_post_build() を呼び直すこと。
+    関係の埋め込み正規化は外部スキーマ使用時のみ動く（内部でembeddings生成、
+    失敗しても他の統合処理は完了させる）。
     """
-    return {
+    result = {
         "value_nodes_flagged": flag_value_nodes(graph),
         "duplicate_merge": merge_duplicate_id_nodes(graph),
         "kana_variant_merge": merge_kana_variant_nodes(graph),
         "relation_normalize": normalize_relations(graph),
     }
+    try:
+        from graphrag_core.llm.factory import create_chat_llm
+        llm = create_chat_llm(temperature=0, timeout=60, max_retries=1)
+        result["relation_canonicalize"] = canonicalize_relations_to_schema(graph, llm=llm)
+    except Exception as e:
+        logger.warning("canonicalize_relations_to_schema skipped: %s", e)
+        result["relation_canonicalize"] = {"error": str(e)}
+    return result
