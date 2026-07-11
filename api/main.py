@@ -40,6 +40,13 @@ async def lifespan(app: FastAPI):
 
     st = AppState()
     st.settings = get_settings()
+    # UIで切り替えたコレクションを再起動後も維持（優先度: runtimeファイル > .env）
+    from api.state import load_runtime_overrides
+    _rt = load_runtime_overrides()
+    if _rt.get("pg_collection"):
+        logger.info("PG_COLLECTION runtime override: %s -> %s (.graphrag_runtime.json)",
+                    st.settings.pg_collection, _rt["pg_collection"])
+        st.settings.pg_collection = _rt["pg_collection"]
     st.env_report = required_env_check(st.settings)
     # ui/state.py:236 と同じ副作用（ParentDocumentRetriever 等が参照）
     if st.settings.pg_conn:

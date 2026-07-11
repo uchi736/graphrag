@@ -3,6 +3,12 @@ import remarkGfm from "remark-gfm"
 import { Loader2 } from "lucide-react"
 import type { QaStreamState } from "@/hooks/useQaStream"
 
+const KG_SKIP_LABELS: Record<string, string> = {
+  provenance_mismatch: "グラフ出自と検索対象コレクションが不一致",
+  disabled_by_config: "設定でOFF",
+  graph_not_connected: "グラフ未接続",
+}
+
 export function AnswerCard({ state }: { state: QaStreamState }) {
   if (state.status === "idle") return null
 
@@ -38,7 +44,9 @@ export function AnswerCard({ state }: { state: QaStreamState }) {
           検索 {(state.timing.retrieval / 1000).toFixed(1)}s · 生成 {(state.timing.generation / 1000).toFixed(1)}s
           {state.evidence &&
             ` · 参照 ${state.evidence.vector_sources.length}件 · KGチャンク ${state.evidence.kg_source_chunks.length}件` +
-              (state.evidence.kg_used ? "" : " · KG未使用")}
+              (state.evidence.kg_used
+                ? ""
+                : ` · ⚠️ KG未使用（${KG_SKIP_LABELS[state.evidence.kg_skip_reason ?? ""] ?? "グラフ関係なし"}）`)}
         </p>
       )}
     </div>

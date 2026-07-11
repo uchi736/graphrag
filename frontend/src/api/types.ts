@@ -170,6 +170,13 @@ export interface DictionaryReport {
   counts: { merge_candidate: number; matched: number; unmatched: number }
 }
 
+// ---- /api/admin/collections（コレクション切替） ----
+export interface CollectionsResponse {
+  current: string
+  graph_collection: string | null
+  collections: { name: string; chunks: number }[]
+}
+
 // ---- GET /api/documents ----
 export interface DocumentsSummary {
   collection: string

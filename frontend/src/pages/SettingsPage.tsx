@@ -1,8 +1,9 @@
 import { useState } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { AlertTriangle, RotateCcw } from "lucide-react"
-import { apiSend } from "@/api/client"
+import { AlertTriangle, Database, RotateCcw } from "lucide-react"
+import { apiGet, apiSend } from "@/api/client"
+import type { CollectionsResponse } from "@/api/types"
 import { useHealth, useSettingsInfo } from "@/hooks/useHealth"
 import { useSettingsStore } from "@/stores/settingsStore"
 import { useQaStore } from "@/stores/qaStore"
@@ -14,6 +15,30 @@ export default function SettingsPage() {
   const clearHistory = useQaStore((st) => st.clear)
   const qc = useQueryClient()
   const [confirmText, setConfirmText] = useState("")
+
+  // コレクション切替（実行時・永続化。KG出自との不整合防止のため一覧に出自を明示）
+  const { data: cols } = useQuery({
+    queryKey: ["collections"],
+    queryFn: () => apiGet<CollectionsResponse>("/api/admin/collections"),
+    staleTime: 30_000,
+  })
+  const [pendingCol, setPendingCol] = useState<string | null>(null)
+  const switchCol = useMutation({
+    mutationFn: (name: string) =>
+      apiSend<{ new: string; provenance: { status: string } }>(
+        "POST", "/api/admin/collection", { name }),
+    onSuccess: (r) => {
+      if (r.provenance.status === "match") {
+        toast.success(`コレクションを ${r.new} に切り替えました（グラフ出自と一致・KG有効）`)
+      } else {
+        toast.warning(
+          `コレクションを ${r.new} に切り替えました — グラフ出自と不一致のためKGは自動オフです`)
+      }
+      setPendingCol(null)
+      qc.invalidateQueries()
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : String(e)),
+  })
 
   const clearDb = useMutation({
     mutationFn: () => apiSend("POST", "/api/admin/clear-database", { confirm: confirmText }),
@@ -30,6 +55,49 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl space-y-6">
+      {/* 検索対象コレクション（実行時切替・再起動不要） */}
+      {cols && (
+        <section className="rounded-lg border bg-card p-5 shadow-sm">
+          <h2 className="mb-1 flex items-center gap-2 text-sm font-bold">
+            <Database className="h-4 w-4 text-primary" />
+            検索対象コレクション
+          </h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            現在: <b className="font-mono">{cols.current}</b>
+            {cols.graph_collection && (
+              <>
+                　/　ナレッジグラフの出自: <b className="font-mono">{cols.graph_collection}</b>
+                {cols.graph_collection !== cols.current && (
+                  <span className="ml-1 text-amber-600">（不一致 → KG自動オフ中）</span>
+                )}
+              </>
+            )}
+            　切替は即時反映され、再起動後も維持されます（.env は変更しません）
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <select
+              value={pendingCol ?? cols.current}
+              onChange={(e) => setPendingCol(e.target.value)}
+              className="rounded-md border bg-background px-3 py-1.5 font-mono text-sm"
+            >
+              {cols.collections.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name}（{c.chunks.toLocaleString()}チャンク）
+                  {c.name === cols.graph_collection ? " ★グラフ出自" : ""}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => pendingCol && switchCol.mutate(pendingCol)}
+              disabled={!pendingCol || pendingCol === cols.current || switchCol.isPending}
+              className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {switchCol.isPending ? "切替中…" : "切り替える"}
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* KG詳細設定（QAリクエストに載る値。localStorage永続） */}
       <section className="rounded-lg border bg-card p-5 shadow-sm">
         <h2 className="mb-4 text-sm font-bold">🔧 ナレッジグラフ詳細設定</h2>

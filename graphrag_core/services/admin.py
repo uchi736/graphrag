@@ -193,3 +193,24 @@ def clear_database(graph=None, settings=None) -> Dict[str, Any]:
             logger.warning("clear_database PG side failed: %s", e)
 
     return {"ok": True, "warnings": warnings}
+
+
+def list_pg_collections(pg_conn: str) -> list:
+    """PGVector の全コレクションとチャンク数を返す（コレクション切替UI用）。
+
+    `_entities` 系（エンティティベクトル格納用）は文書コレクションではないため除外。
+    """
+    import psycopg
+    from graphrag_core.db.utils import normalize_pg_connection_string
+    raw_conn = normalize_pg_connection_string(pg_conn)
+    with psycopg.connect(raw_conn) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT c.name, count(e.id)
+                FROM langchain_pg_collection c
+                LEFT JOIN langchain_pg_embedding e ON e.collection_id = c.uuid
+                GROUP BY c.name ORDER BY 2 DESC
+            """)
+            rows = cur.fetchall()
+    return [{"name": r[0], "chunks": r[1]} for r in rows
+            if not r[0].endswith("_entities")]

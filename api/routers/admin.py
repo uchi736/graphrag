@@ -47,6 +47,39 @@ def settings_info(st: AppState = Depends(get_state)) -> dict:
     }
 
 
+# ── コレクション切替（実行時・再起動不要） ─────────────────────────
+class SwitchCollectionBody(BaseModel):
+    name: str
+
+
+@router.get("/admin/collections")
+def list_collections(st: AppState = Depends(require_ready)) -> dict:
+    """PGVectorの全コレクション一覧（切替UI用）。現在の選択と出自グラフも返す。"""
+    from graphrag_core.services.admin import list_pg_collections
+    from graphrag_core.graph.provenance import graph_collection_status
+    cols = list_pg_collections(st.settings.pg_conn)
+    prov = graph_collection_status(st.graph, st.settings.pg_collection)
+    return {
+        "current": st.settings.pg_collection,
+        "graph_collection": prov.get("graph_collection"),
+        "collections": cols,
+    }
+
+
+@router.post("/admin/collection")
+def switch_collection(body: SwitchCollectionBody,
+                      st: AppState = Depends(require_ready)) -> dict:
+    """検索対象コレクションを切り替える（.graphrag_runtime.json に永続化）。"""
+    from graphrag_core.services.admin import list_pg_collections
+    from graphrag_core.graph.provenance import graph_collection_status
+    names = {c["name"] for c in list_pg_collections(st.settings.pg_conn)}
+    if body.name not in names:
+        raise HTTPException(400, f"コレクションが存在しません: {body.name}")
+    result = st.switch_collection(body.name)
+    prov = graph_collection_status(st.graph, body.name)
+    return {**result, "provenance": prov}
+
+
 # ── 破壊的操作（サーバ側でも確認を担保） ──────────────────────────
 class ClearDatabaseBody(BaseModel):
     confirm: str  # 誤操作防止: 現コレクション名の完全一致が必須
