@@ -39,6 +39,13 @@ def status(st: AppState = Depends(require_ready)) -> dict:
     return {"graph": stats, "provenance": prov, "collection": st.settings.pg_collection}
 
 
+@router.get("/schema")
+def schema(st: AppState = Depends(require_ready)) -> dict:
+    """アクティブスキーマ（グラフ刻印）と次回ビルド設定（SHARED_SCHEMA_PATH）の突き合わせ。"""
+    from graphrag_core.services.schema_sync import schema_report
+    return schema_report(st.graph)
+
+
 @router.post("/provenance")
 def stamp_provenance(st: AppState = Depends(require_ready)) -> dict:
     ok = stamp_graph_provenance(st.graph, st.settings.pg_collection)

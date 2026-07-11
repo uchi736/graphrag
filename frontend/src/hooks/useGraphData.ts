@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { apiGet } from "@/api/client"
-import type { DocumentsSummary, EdgeRecord, GraphStatus } from "@/api/types"
+import type { DocumentsSummary, EdgeRecord, GraphStatus, SchemaReport } from "@/api/types"
 
 /** 全体エッジ。staleTime: Infinity + 手動 refetch（現行の graph_data_cache と同じモデル） */
 export function useGraphOverview(limit: number, enabled: boolean) {
@@ -43,6 +43,14 @@ export function useGraphStatus() {
     queryKey: ["graph-status"],
     queryFn: () => apiGet<GraphStatus>("/api/graph/status"),
     staleTime: 30_000,
+  })
+}
+
+export function useSchemaReport() {
+  return useQuery({
+    queryKey: ["graph-schema"],
+    queryFn: () => apiGet<SchemaReport>("/api/graph/schema"),
+    staleTime: 60_000,
   })
 }
 

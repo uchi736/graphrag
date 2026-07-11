@@ -583,6 +583,10 @@ langfuse>=4.0.0
 `build_kg.py` が自動でこのスキーマを `allowed_nodes` / `allowed_relationships` に反映します。
 逆方向関係や値ノードを作らない等の設計指針は「KGスキーマの外部化」の節を参照してください。
 
+スキーマの手書きの代わりに **EDCフレームワークによる自動発見**も使えます
+（UI構築タブの「EDCスキーマ同期」または `scripts/edc_schema_sync.py`）。
+セットアップと使い方: [docs/EDC_INTEGRATION.md](docs/EDC_INTEGRATION.md)
+
 ## 評価・ベンチマーク
 
 Fujitsu RAG Hard Benchmark（100問）による継続評価を `_bench/` で実施しています:

@@ -14,6 +14,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiSend } from "@/api/client"
 import { useGraphStatus } from "@/hooks/useGraphData"
 import { useJobProgress } from "@/hooks/useJobProgress"
+import { SchemaCard } from "@/components/schema/SchemaCard"
 import { cn } from "@/lib/utils"
 
 export default function BuildPage() {
@@ -106,6 +107,9 @@ export default function BuildPage() {
           </div>
         </div>
       )}
+
+      {/* KGスキーマ（アクティブ vs 次回ビルド設定 + EDC同期） */}
+      <SchemaCard attach={attach} busy={busy} />
 
       {/* アップロード */}
       <div className="grid gap-4 sm:grid-cols-2">

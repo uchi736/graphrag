@@ -105,6 +105,25 @@ export interface GraphStatus {
   collection: string
 }
 
+// ---- GET /api/graph/schema ----
+export interface SchemaInfo {
+  domain: string
+  version: string
+  source: string | null
+  node_types: string[]
+  relations: string[]
+}
+
+export interface SchemaReport {
+  /** グラフ構築時に刻印されたスキーマ（SchemaMeta）。未刻印なら null */
+  active: (SchemaInfo & { stamped_at: string; kind: string }) | null
+  /** SHARED_SCHEMA_PATH が指す、次回ビルドで使われるスキーマ */
+  configured: SchemaInfo
+  /** active.source と configured.source の一致。active 無しなら null */
+  match: boolean | null
+  edc_endpoint: string
+}
+
 // ---- GET /api/documents ----
 export interface DocumentsSummary {
   collection: string

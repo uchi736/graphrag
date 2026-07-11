@@ -166,6 +166,36 @@ def delete_document_endpoint(doc_id: str, st: AppState = Depends(require_ready))
     return result
 
 
+@router.post("/build/edc-sync", status_code=202)
+async def edc_sync(
+    payload: Optional[dict] = None,
+    st: AppState = Depends(require_ready),
+) -> dict:
+    """EDCスキーマ同期ジョブ。現コレクションの文書サンプル→EDC /extract→スキーマJSON。
+
+    body(任意): {"endpoint": str, "docs": int, "chunks_per_doc": int, "out": str}
+    """
+    p = payload or {}
+    settings = st.settings
+
+    def run(progress, should_cancel):
+        from graphrag_core.services.schema_sync import sync_edc_schema
+        return sync_edc_schema(
+            settings.pg_conn, settings.pg_collection,
+            out_path=p.get("out"),
+            endpoint=p.get("endpoint"),
+            n_docs=int(p.get("docs") or 4),
+            chunks_per_doc=int(p.get("chunks_per_doc") or 6),
+            progress=progress, should_cancel=should_cancel,
+        )
+
+    try:
+        job = st.jobs.submit("edc_sync", run)
+    except JobBusy as e:
+        raise HTTPException(409, {"message": str(e), "running_job_id": e.running_job_id})
+    return {"job_id": job.id}
+
+
 # ── ジョブ管理 ─────────────────────────────────────────────────────
 @router.get("/jobs")
 def list_jobs(st: AppState = Depends(require_ready)) -> list:
