@@ -1,0 +1,19 @@
+Example 1:
+Text: 会社は、労働者として採用された者に対し、採用された日から2週間以内に住民票記載事項証明書の提出を求める。
+Triplets: [['労働者として採用された者', 'Actor', 'must_submit', '住民票記載事項証明書', 'Document'], ['労働者として採用された者', 'Actor', 'must_submit_within', '2週間以内', 'Period']]
+
+Example 2:
+Text: 労働者として新たに採用した者については、採用した日から3か月間を試用期間とする。試用期間中に労働者として不適格と認めた者は、解雇することがある。
+Triplets: [['試用期間', 'Norm', 'has_duration', '3か月間', 'Period'], ['労働者', 'Actor', 'may_be_terminated_during', '試用期間', 'Norm'], ['試用期間', 'Norm', 'starts_from', '採用した日', 'Event']]
+
+Example 3:
+Text: 労働者が業務外の傷病による欠勤が3か月を超え、なお療養を継続する必要があるため勤務できないときは、休職とする。
+Triplets: [['労働者', 'Actor', 'has_absence_due_to', '業務外の傷病', 'Condition'], ['労働者', 'Actor', 'enters_leave_after', '3か月', 'Period'], ['休職', 'Norm', 'triggered_by', '業務外の傷病', 'Condition']]
+
+Example 4:
+Text: 6週間以内に出産予定の女性労働者から請求があったときは、休業させる。
+Triplets: [['女性労働者', 'Actor', 'may_request', '休業', 'Action'], ['使用者', 'Actor', 'must_grant', '休業', 'Action'], ['休業', 'Action', 'applies_before', '6週間以内', 'Period'], ['休業', 'Action', 'triggered_by', '出産', 'Event']]
+
+Example 5:
+Text: この就業規則は、労働基準法第89条に基づき定めるものである。
+Triplets: [['就業規則', 'Norm', 'based_on', '労働基準法第89条', 'Law']]

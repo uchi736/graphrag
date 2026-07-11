@@ -1,0 +1,22 @@
+# EDC API サービス。LLM/Embedding/OCR は DGX Spark(${DGX_HOST}) 側を HTTP で呼ぶ。
+services:
+  edc-api:
+    build: .
+    image: edc-api:latest
+    container_name: edc-api
+    ports:
+      - "8080:8080"
+    # VLLM_ENDPOINT / VLLM_EMBEDDING_ENDPOINT / PADDLEX_ENDPOINT 等を .env から注入
+    # （.env はイメージに焼き込まず実行時に渡す）
+    env_file:
+      - .env
+    restart: unless-stopped
+    # ${DGX_HOST} のLANサービスへ到達できること。ホストがLANに居れば既定bridgeで通常到達可。
+    # 到達できない場合は Linux で host ネットワークを使う（その場合 ports 指定は無効、8080で直接待受）:
+    # network_mode: host
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

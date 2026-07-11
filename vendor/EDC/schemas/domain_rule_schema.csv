@@ -1,0 +1,7 @@
+APPLIES_TO,"規範/規定が適用される対象(労働者・使用者等)"
+APPLIES_WHEN,"規範/手続きが適用される条件・場合"
+REQUIRES,"対象が満たす/提出する必要がある事項"
+REQUIRES_APPROVAL_FROM,"手続きが必要とする承認者・承認権限"
+HAS_STEP,"手続き/フローが含む手順・ステップ"
+PRECEDES,"手順が別の手順に先行する"
+GOVERNED_BY,"規定の根拠となる法令・上位規程"

@@ -13,19 +13,21 @@ graphrag のKG構築は、許可ノードタイプ・関係タイプを外部ス
   → 構築時に Neo4j へ :SchemaMeta として刻印（どのスキーマで作ったかの証跡）
 ```
 
-## EDC 本体のセットアップ（別リポジトリ）
+## EDC 本体のセットアップ
 
-EDC は独立したプログラムとして https://github.com/uchi736/EDC で管理している。
+**EDC 一式はこのリポジトリに同梱している（[vendor/EDC/](../vendor/EDC/)）** — `git clone` 1回で連携に必要なコードが全部そろう。
 
 ```bash
-git clone https://github.com/uchi736/EDC.git
-cd EDC/edc
-# 環境構築は EDC リポジトリの README 参照（environment.yml / Dockerfile あり）
-python -m uvicorn api:app --port 8080
+cd vendor/EDC
+python -m venv .venv && .venv/Scripts/pip install -r requirements-api.txt   # 初回のみ
+cp .env.example .env    # LLM/embedding の接続先を環境に合わせて編集
+.venv/Scripts/python -m uvicorn api:app --host 127.0.0.1 --port 8080
 ```
 
 - ヘルスチェック: `GET http://127.0.0.1:8080/health`
 - graphrag 側からのエンドポイント指定: 環境変数 `EDC_ENDPOINT`（既定 `http://127.0.0.1:8080`）
+- EDC自体の開発は上流リポジトリ https://github.com/uchi736/EDC で行い、
+  [vendor/EDC/VENDOR.md](../vendor/EDC/VENDOR.md) の手順で再取り込みする（同梱分は読み取り専用スナップショット）
 
 ### API仕様の罠
 

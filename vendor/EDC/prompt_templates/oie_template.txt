@@ -1,0 +1,14 @@
+Your task is to transform the given text into a semantic graph in the form of a list of triples. The triples must be in the form of [Entity1, Relationship, Entity2]. In your answer, please strictly only include the triples and do not include any explanation or apologies.
+
+IMPORTANT: Relationship names MUST ALWAYS be in English, using lowercase with underscores (e.g., "located_in", "has_feature", "used_for"). This rule applies even when the input text is in Japanese or other non-English languages. NEVER use Japanese characters in relationship names.
+- WRONG: ['ガス軸受', '対応', '高温環境'] → DO NOT use Japanese relationships
+- CORRECT: ['ガス軸受', 'corresponds_to', '高温環境'] → Always use English relationships
+- WRONG: ['技術', '可能性', '応用'] → DO NOT use Japanese relationships
+- CORRECT: ['技術', 'has_potential_for', '応用'] → Always use English relationships
+Entity names (Entity1, Entity2) can remain in their original language.
+
+Here are some examples:
+{few_shot_examples}
+
+Now please extract triplets from the following text.
+Text: {input_text}

@@ -1,0 +1,163 @@
+{
+  "domain": "synth_v1",
+  "version": "edc-20260711",
+  "generated_at": "2026-07-11T11:16:28.368217+00:00",
+  "generated_by": "services/schema_sync.sync_edc_schema (EDC /extract, doctype=auto, enrich_schema=True)",
+  "notes": [
+    "EDCフレームワークによる自動スキーマ発見（Extract-Define-Canonicalize）",
+    "SYN09_青灘_設備保全管理規程: doctype=社内規程_就業規則 (+16関係/12型)",
+    "SYN01_白波_設備保全管理規程: doctype=社内規程_就業規則 (+15関係/12型)",
+    "SYN55_白波_不適合事例集_5: doctype=NCR_不適合是正処置報告書 (+15関係/17型)",
+    "SYN51_白波_不適合事例集_1: doctype=NCR_不適合是正処置報告書 (+16関係/17型)"
+  ],
+  "node_types": [
+    "Action",
+    "Actor",
+    "Cause",
+    "Condition",
+    "Date",
+    "Defect",
+    "Document",
+    "Entity",
+    "Identifier",
+    "Law",
+    "Location",
+    "Norm",
+    "Organization",
+    "Parameter",
+    "Period",
+    "Person",
+    "Process",
+    "Product",
+    "Role",
+    "Section",
+    "Standard",
+    "Term"
+  ],
+  "node_type_definitions": {
+    "Document": "文書・届出書類",
+    "Section": "章・節・条項・項目などの文書構造単位",
+    "Term": "用語・型式名・略語など、辞書アンカー対象の用語エンティティ",
+    "Entity": "上記以外の実体の総称(設備・人・組織・事象等。ドメイン型で具体化される)",
+    "Norm": "規程・制度・ルール",
+    "Actor": "対象者(労働者・使用者・管理監督者等)",
+    "Action": "行為・手続き(届出・採用・解雇・休業等)",
+    "Condition": "条件・状態(請求・傷病等)",
+    "Period": "期間・時間範囲(2週間・3か月等)",
+    "Law": "法令・条文(労働基準法等)",
+    "Organization": "組織・機関",
+    "Role": "役職・権限",
+    "Product": "製品・装置・対象物(蒸気ドラム等)",
+    "Process": "工程・作業・検査(溶接・UT等)",
+    "Defect": "欠陥・不適合事象(割れ・水素割れ等)",
+    "Cause": "原因・要因(予熱不足等)",
+    "Standard": "規格・基準・手順(WPS・JIS等)",
+    "Parameter": "パラメータ・数値条件(予熱温度・炭素当量等)",
+    "Person": "個人(起票者・確認者等)",
+    "Date": "日付・期日",
+    "Identifier": "番号・識別子(報告書番号・製番等)",
+    "Location": "場所・位置"
+  },
+  "relations": [
+    {
+      "name": "APPLIES_TO",
+      "description": "規範/規定が適用される対象(労働者・使用者等)"
+    },
+    {
+      "name": "APPLIES_WHEN",
+      "description": "規範/手続きが適用される条件・場合"
+    },
+    {
+      "name": "CAUSES",
+      "description": "原因・要因が事象/不適合を直接引き起こす"
+    },
+    {
+      "name": "CONTRIBUTES_TO",
+      "description": "直接原因ではないが発生確率を高めた背景・寄与要因"
+    },
+    {
+      "name": "DEFINES",
+      "description": "主語(条項・文書)が目的語(用語)の定義を与える。定義文かどうかで MENTIONS と区別"
+    },
+    {
+      "name": "FOLLOWS",
+      "description": "一連の是正プロセスにおける時系列的な手順・後続"
+    },
+    {
+      "name": "GOVERNED_BY",
+      "description": "規定の根拠となる法令・上位規程"
+    },
+    {
+      "name": "HAS_STEP",
+      "description": "手続き/フローが含む手順・ステップ"
+    },
+    {
+      "name": "IS_A",
+      "description": "主語が目的語の一種である(上位下位・分類)"
+    },
+    {
+      "name": "MENTIONS",
+      "description": "主語が目的語に言及する(定義ではない単純な言及)"
+    },
+    {
+      "name": "MITIGATES",
+      "description": "影響を限定し被害を最小化するための応急/暫定処置"
+    },
+    {
+      "name": "PART_OF",
+      "description": "主語が目的語の構成要素・一部である"
+    },
+    {
+      "name": "PRECEDES",
+      "description": "手順が別の手順に先行する"
+    },
+    {
+      "name": "PREVENTS",
+      "description": "再発を防止するための恒久的な是正処置"
+    },
+    {
+      "name": "REFERS_TO",
+      "description": "主語が目的語(他条項・文書・規格)を参照する"
+    },
+    {
+      "name": "REQUIRES",
+      "description": "対象が満たす/提出する必要がある事項"
+    },
+    {
+      "name": "REQUIRES_APPROVAL_FROM",
+      "description": "手続きが必要とする承認者・承認権限"
+    },
+    {
+      "name": "SUBORDINATE_TO",
+      "description": "主語が目的語の下位・従属である(章節などの階層)"
+    },
+    {
+      "name": "VALIDATED_BY",
+      "description": "処置/工程が基準を満たすかを確認する検査・検証"
+    },
+    {
+      "name": "does_not_apply_to",
+      "description": "The subject entity is not applicable to the items or entities specified by the object entity."
+    },
+    {
+      "name": "excludes",
+      "description": "The subject entity explicitly excludes the items or entities specified by the object entity from its scope."
+    },
+    {
+      "name": "has_horizontal_deployment",
+      "description": "The subject entity includes the horizontal deployment or preventive measure applied to similar equipment as specified by the object entity."
+    },
+    {
+      "name": "issued_by",
+      "description": "The subject entity was issued or published by the organization specified by the object entity."
+    },
+    {
+      "name": "must_report_to",
+      "description": "The subject entity is required to report to the person or role specified by the object entity."
+    },
+    {
+      "name": "targets_equipment",
+      "description": "The subject entity refers to or targets the specific piece of equipment specified by the object entity."
+    }
+  ]
+}

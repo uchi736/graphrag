@@ -1,0 +1,26 @@
+{
+  "backbone": {
+    "schema": "schemas/kg_backbone_schema.csv",
+    "types": "schemas/kg_backbone_types.csv"
+  },
+  "doctypes": [
+    {
+      "name": "NCR_不適合是正処置報告書",
+      "description": "製品/工程の不適合と、その原因分析(なぜなぜ・真因)、暫定/恒久対策、効果確認を記す品質報告書(CAPA)。欠陥・原因・是正処置・検査が中心。",
+      "schema": "schemas/domain_ncr_schema.csv",
+      "types": "schemas/domain_ncr_types.csv"
+    },
+    {
+      "name": "社内規程_就業規則",
+      "description": "就業規則・社内規程など、規範・適用範囲・条件・手続き・承認・期間を定める規程文書。",
+      "schema": "schemas/domain_rule_schema.csv",
+      "types": "schemas/domain_rule_types.csv"
+    },
+    {
+      "name": "技術論文_解説書",
+      "description": "技術の原理・構造・因果・依存関係を説明する論文/解説/技報。背景・目的・手法・効果が中心。",
+      "schema": "schemas/domain_paper_schema.csv",
+      "types": "schemas/domain_paper_types.csv"
+    }
+  ]
+}

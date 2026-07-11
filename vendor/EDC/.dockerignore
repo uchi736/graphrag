@@ -1,0 +1,20 @@
+# ビルドコンテキストから除外（イメージを小さく・ビルドを速く）
+myenv/
+output/
+datasets/
+docs/
+.git/
+__pycache__/
+**/__pycache__/
+*.pyc
+pytest-cache-files-*/
+assets/
+evaluate/
+.vscode/
+.env
+*.md
+# APIコンテナでは使わないエントリ
+app.py
+run.py
+collect_schema_retrieval_data.py
+azure_di_processor.py

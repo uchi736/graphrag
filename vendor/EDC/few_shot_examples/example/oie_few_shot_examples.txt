@@ -1,0 +1,31 @@
+Example 1:
+Text: The location of Trane is Swords, Dublin.
+Triplets: [['Trane', 'location', 'Swords,_Dublin']]
+
+Example 2:
+Text: The Ciudad Ayala city, a part of Morelos with population density and population of 1604.0 and 1,777,539 respectively, has a UTC offset of -6. The government type of Ciudad Ayala is council-manager government and City Manager is one of the leaders.
+Triplets: [['Ciudad_Ayala', 'populationMetro', '1777539'], ['Ciudad_Ayala', 'leaderTitle', '"City Manager"'], ['Ciudad_Ayala', 'type', 'City'], ['Ciudad_Ayala', 'populationDensity', '1604.0'], ['Ciudad_Ayala', 'governmentType', 'Council-manager_government'], ['Ciudad_Ayala', 'utcOffset', '−6'], ['Ciudad_Ayala', 'isPartOf', 'Morelos']]
+
+Example 3:
+Text: The 17068.8 millimeter long ALCO RS-3 has a diesel-electric transmission.
+Triplets: [['ALCO_RS-3', 'powerType', 'Diesel-electric_transmission'], ['ALCO_RS-3', 'length', '17068.8 (millimetres)']]
+
+Example 4:
+Text: Alan B. Miller Hall, in Virginia, USA, was designed by Robert A.M. Stern. The address of the hall is "101 Ukrop Way" and the current tenants are the Mason School of Business.
+Triplets: [['Alan_B._Miller_Hall', 'architect', 'Robert_A._M._Stern'], ['Alan_B._Miller_Hall', 'address', '"101 Ukrop Way"'], ['Alan_B._Miller_Hall', 'currentTenants', 'Mason_School_of_Business'], ['Alan_B._Miller_Hall', 'location', 'Virginia'], ['Mason_School_of_Business', 'country', 'United_States']]
+
+Example 5:
+Text: Liselotte Grschebina was born in Karlsruhe and died in Israel. Ethnic groups in Israel include Arabs.
+Triplets: [['Liselotte_Grschebina', 'bornIn', 'Karlsruhe'], ['Liselotte_Grschebina', 'diedIn', 'Israel'], ['Israel', 'ethnicGroup', 'Arab_citizens_of_Israel']]
+
+Example 6:
+Text: Agremiação Sportiva Arapiraquense managed by Vica has 17000 members and play in the Campeonato Brasileiro Série C league which is from Brazil.
+Triplets: [['Agremiação_Sportiva_Arapiraquense', 'league', 'Campeonato_Brasileiro_Série_C'], ['Campeonato_Brasileiro_Série_C', 'country', 'Brazil'], ['Agremiação_Sportiva_Arapiraquense', 'numberOfMembers', '17000'], ['Agremiação_Sportiva_Arapiraquense', 'manager', 'Vica']]
+
+Example 7:
+Text: 東京スカイツリーは墨田区に位置し、高さ634メートルで2012年に開業した。設計は日建設計が担当した。
+Triplets: [['東京スカイツリー', 'located_in', '墨田区'], ['東京スカイツリー', 'has_height', '634メートル'], ['東京スカイツリー', 'opened_in', '2012'], ['東京スカイツリー', 'designed_by', '日建設計']]
+
+Example 8:
+Text: 京都大学の山中伸弥教授は2012年にノーベル生理学・医学賞を受賞した。iPS細胞の発見が評価された。
+Triplets: [['山中伸弥', 'affiliated_with', '京都大学'], ['山中伸弥', 'received', 'ノーベル生理学・医学賞'], ['山中伸弥', 'award_year', '2012'], ['山中伸弥', 'recognized_for', 'iPS細胞の発見']]

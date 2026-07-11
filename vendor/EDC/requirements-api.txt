@@ -1,0 +1,11 @@
+# EDC API コンテナ用スリム依存（vLLM経路のみ）。
+# LLM/Embedding/OCR は DGX Spark 上のサービスを HTTP で呼ぶため、
+# torch / transformers / sentence-transformers / streamlit / pandas は不要。
+python-dotenv>=1.0.0
+openai>=1.0.0
+requests>=2.31.0
+numpy>=1.24.0
+tqdm>=4.65.0
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9

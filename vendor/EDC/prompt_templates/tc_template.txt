@@ -1,0 +1,12 @@
+Given the following text and an entity extracted from it:
+
+Text: {input_text}
+Entity: {entity}
+Raw type assigned by OIE: {raw_type}
+
+Which of the following entity types best describes the entity in this context? Consider types as EQUIVALENT if they have the same semantic meaning, even if they use different wording or languages.
+
+Please answer by providing only the letter of your choice.
+
+Choices:
+{choices}
