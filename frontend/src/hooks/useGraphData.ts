@@ -54,14 +54,19 @@ export function useDocuments() {
   })
 }
 
-export function useDocumentChunks(source: string | null, offset: number) {
+/**
+ * 文書チャンク一覧。offset=null かつ focus 指定時はサーバが該当チャンクの
+ * ページに offset を自動調整して返す（QA根拠→「文書内で見る」用）。
+ */
+export function useDocumentChunks(source: string | null, offset: number | null, focus?: string | null) {
   return useQuery({
-    queryKey: ["document-chunks", source, offset],
+    queryKey: ["document-chunks", source, offset, focus ?? ""],
     queryFn: () =>
       apiGet<import("@/api/types").DocumentChunksResponse>("/api/documents/chunks", {
         source: source ?? "",
         limit: 50,
-        offset,
+        offset: offset ?? undefined,
+        focus: offset === null && focus ? focus : undefined,
       }),
     enabled: source !== null,
     staleTime: 60_000,

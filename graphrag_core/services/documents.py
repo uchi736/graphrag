@@ -15,8 +15,13 @@ from graphrag_core.db.utils import normalize_pg_connection_string
 
 
 def list_document_chunks(pg_conn: str, pg_collection: str, source: str,
-                         limit: int = 50, offset: int = 0) -> Dict[str, Any]:
-    """指定ソース文書のチャンク本文を取得する（登録ドキュメントのチャンク閲覧用）。"""
+                         limit: int = 50, offset: int = 0,
+                         focus_id: str | None = None) -> Dict[str, Any]:
+    """指定ソース文書のチャンク本文を取得する（登録ドキュメント/QA根拠のチャンク閲覧用）。
+
+    focus_id を渡すと、そのチャンクが含まれるページに offset を自動調整して返す
+    （QAの参照ドキュメントから「文書内で見る」を開いたとき用）。
+    """
     import psycopg
     raw_conn = normalize_pg_connection_string(pg_conn)
     limit = max(1, min(int(limit), 200))
@@ -30,6 +35,21 @@ def list_document_chunks(pg_conn: str, pg_collection: str, source: str,
                 WHERE c.name = %s AND COALESCE(e.cmetadata->>'source','(unknown)') = %s
             """, (pg_collection, source))
             total = cur.fetchone()[0]
+
+            # focus_id 指定時: そのチャンクの順位からページ先頭 offset を計算
+            if focus_id:
+                cur.execute("""
+                    SELECT rn - 1 FROM (
+                        SELECT COALESCE(e.cmetadata->>'id', e.id) AS chunk_id,
+                               ROW_NUMBER() OVER (ORDER BY COALESCE(e.cmetadata->>'id', e.id)) AS rn
+                        FROM langchain_pg_embedding e
+                        JOIN langchain_pg_collection c ON e.collection_id = c.uuid
+                        WHERE c.name = %s AND COALESCE(e.cmetadata->>'source','(unknown)') = %s
+                    ) t WHERE chunk_id = %s
+                """, (pg_collection, source, focus_id))
+                row = cur.fetchone()
+                if row is not None:
+                    offset = (row[0] // limit) * limit
             cur.execute("""
                 SELECT COALESCE(e.cmetadata->>'id', e.id) AS chunk_id,
                        e.cmetadata->>'page' AS page,
@@ -131,8 +151,9 @@ def build_add_chunk_fn(graph, llm) -> Callable:
         attach_source_chunks(graph, chunk_docs, cid)
         graph.query(
             "MERGE (c:ProcessedChunk {hash: $h}) SET c.processed_at = datetime()", {"h": cid})
+        from graphrag_core.graph.schema import chunk_label
         graph.query(
-            "MATCH (d:Document {id: $id}) SET d.source = $src, d.page = $page",
+            "MATCH (d:" + chunk_label() + " {id: $id}) SET d.source = $src, d.page = $page",
             {"id": cid, "src": chunk.metadata.get("source"),
              "page": chunk.metadata.get("page")})
         return cid

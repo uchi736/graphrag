@@ -1,5 +1,7 @@
-import { lazy, Suspense, type ReactNode } from "react"
+import { lazy, Suspense, useState, type ReactNode } from "react"
+import { BookOpen } from "lucide-react"
 import type { EdgeRecord, QaEvidence, SourceChunk } from "@/api/types"
+import { ChunkBrowserModal } from "@/components/documents/ChunkBrowserModal"
 
 // force-graph はサイズが大きいので遅延ロード（QA初期バンドルから隔離）
 const GraphCanvas = lazy(() =>
@@ -27,31 +29,58 @@ function Panel({
   title,
   count,
   defaultOpen,
+  emptyNote,
   children,
 }: {
   title: string
   count: number
   defaultOpen?: boolean
+  /** count=0 のとき、パネルを消す代わりにこの説明文を表示する（機能の存在を可視化） */
+  emptyNote?: string
   children: ReactNode
 }) {
-  if (count === 0) return null
+  if (count === 0 && !emptyNote) return null
   return (
     <details className="rounded-lg border bg-card shadow-sm" open={defaultOpen}>
       <summary className="cursor-pointer px-4 py-2.5 text-sm font-medium">
         {title} <span className="ml-1 text-xs text-muted-foreground">({count})</span>
       </summary>
-      <div className="space-y-2 border-t px-4 py-3">{children}</div>
+      <div className="space-y-2 border-t px-4 py-3">
+        {count === 0 ? (
+          <p className="py-2 text-xs text-muted-foreground">{emptyNote}</p>
+        ) : (
+          children
+        )}
+      </div>
     </details>
   )
 }
 
-function ChunkCard({ chunk }: { chunk: SourceChunk }) {
+function ChunkCard({
+  chunk,
+  onOpenDoc,
+}: {
+  chunk: SourceChunk
+  onOpenDoc?: (source: string, chunkId: string | null) => void
+}) {
   return (
     <div className="rounded-md border bg-background p-3">
-      <span className="mb-1 inline-block rounded bg-[var(--color-brand-from)]/10 px-2 py-0.5 font-mono text-xs text-primary">
-        {chunk.source ?? "不明"}
-        {chunk.page != null && ` · p.${chunk.page}`}
-      </span>
+      <div className="mb-1 flex items-center gap-2">
+        <span className="inline-block rounded bg-[var(--color-brand-from)]/10 px-2 py-0.5 font-mono text-xs text-primary">
+          {chunk.source ?? "不明"}
+          {chunk.page != null && ` · p.${chunk.page}`}
+        </span>
+        {chunk.source && onOpenDoc && (
+          <button
+            onClick={() => onOpenDoc(chunk.source!, chunk.id)}
+            className="ml-auto inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+            title="この文書の全チャンクを開き、該当チャンクにジャンプ"
+          >
+            <BookOpen className="h-3 w-3" />
+            文書内で見る
+          </button>
+        )}
+      </div>
       <p className="max-h-40 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-foreground/85">
         {chunk.text}
       </p>
@@ -60,19 +89,30 @@ function ChunkCard({ chunk }: { chunk: SourceChunk }) {
 }
 
 export function EvidencePanels({ evidence }: { evidence: QaEvidence | null }) {
+  const [openDoc, setOpenDoc] = useState<{ source: string; chunkId: string | null } | null>(null)
   if (!evidence) return null
   const entities = evidence.extracted_entities ?? {}
   const merged = (entities as { merged_entities?: string[] }).merged_entities ?? []
+  const openChunk = (source: string, chunkId: string | null) => setOpenDoc({ source, chunkId })
+
+  const graphEmptyNote = evidence.kg_used
+    ? "この質問ではグラフから関係（トリプル）が取得されませんでした。質問に対応するエンティティがグラフに無いか、パスが見つからなかったため、ベクトル検索のみで回答しています。"
+    : `ナレッジグラフは使用されませんでした${evidence.kg_skip_reason ? `（理由: ${evidence.kg_skip_reason}）` : "（設定でOFF、またはグラフ未構築）"}。`
 
   return (
     <div className="space-y-3">
       <Panel title="📚 参照ドキュメント" count={evidence.vector_sources.length} defaultOpen>
         {evidence.vector_sources.map((c, i) => (
-          <ChunkCard key={c.id ?? i} chunk={c} />
+          <ChunkCard key={c.id ?? i} chunk={c} onOpenDoc={openChunk} />
         ))}
       </Panel>
 
-      <Panel title="🕸️ 参照グラフ（回答に使われた関係）" count={evidence.graph_sources.length} defaultOpen={evidence.kg_used}>
+      <Panel
+        title="🕸️ 参照グラフ（回答に使われた関係）"
+        count={evidence.graph_sources.length}
+        defaultOpen={evidence.graph_sources.length > 0}
+        emptyNote={graphEmptyNote}
+      >
         <Suspense
           fallback={
             <div className="flex h-40 items-center justify-center text-xs text-muted-foreground">
@@ -99,7 +139,7 @@ export function EvidencePanels({ evidence }: { evidence: QaEvidence | null }) {
 
       <Panel title="🔗 KGソースチャンク" count={evidence.kg_source_chunks.length}>
         {evidence.kg_source_chunks.map((c, i) => (
-          <ChunkCard key={c.id ?? i} chunk={c} />
+          <ChunkCard key={c.id ?? i} chunk={c} onOpenDoc={openChunk} />
         ))}
       </Panel>
 
@@ -112,6 +152,14 @@ export function EvidencePanels({ evidence }: { evidence: QaEvidence | null }) {
           ))}
         </div>
       </Panel>
+
+      {openDoc && (
+        <ChunkBrowserModal
+          source={openDoc.source}
+          focusId={openDoc.chunkId}
+          onClose={() => setOpenDoc(null)}
+        />
+      )}
     </div>
   )
 }

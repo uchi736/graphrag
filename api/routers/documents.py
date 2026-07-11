@@ -21,8 +21,9 @@ def document_chunks(
     source: str = Query(..., description="ソース文書名（documents一覧のsource）"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
+    focus: str | None = Query(None, description="このチャンクIDを含むページに offset を自動調整"),
     st: AppState = Depends(require_ready),
 ) -> dict:
-    """指定文書のチャンク本文一覧（ページング）。"""
+    """指定文書のチャンク本文一覧（ページング）。focus指定時は該当ページを返す。"""
     return list_document_chunks(st.settings.pg_conn, st.settings.pg_collection,
-                                source, limit=limit, offset=offset)
+                                source, limit=limit, offset=offset, focus_id=focus)
