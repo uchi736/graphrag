@@ -9,6 +9,9 @@ const NODE_REL_SIZE = 4
 /** 少数グラフ（サブグラフ・QA参照グラフ）とみなすエッジ数。関係名の常時描画等を自動有効化 */
 const SMALL_GRAPH_LINKS = 80
 
+/** 大きいグラフでも、このズーム倍率以上に拡大したら関係名をエッジ上に描画する */
+const EDGE_LABEL_ZOOM = 1.5
+
 /**
  * force-graph によるグラフ描画（旧 neo4j-viz iframe の置換）。
  * - タイプ別色 / 次数でサイズ / 日本語ラベル（ノード半径に連動した可読サイズ＋白フチ）
@@ -31,6 +34,8 @@ export function GraphCanvas({
   dimTypes?: Set<string> | null
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fgRef = useRef<any>(null)
   const [width, setWidth] = useState(800)
   const data = useMemo(() => toGraphData(edges), [edges])
   const small = data.links.length <= SMALL_GRAPH_LINKS
@@ -48,9 +53,23 @@ export function GraphCanvas({
     return () => ro.disconnect()
   }, [])
 
+  // 少数グラフはノード同士が接触しやすいので斥力とリンク距離を広げる
+  useEffect(() => {
+    const fg = fgRef.current
+    if (!fg) return
+    try {
+      fg.d3Force("charge")?.strength(small ? -180 : -40)
+      fg.d3Force("link")?.distance(small ? 70 : 30)
+      fg.d3ReheatSimulation()
+    } catch {
+      /* force未初期化時は無視 */
+    }
+  }, [data, small])
+
   return (
     <div ref={containerRef} className="overflow-hidden rounded-lg border bg-white">
       <ForceGraph2D
+        ref={fgRef}
         width={width}
         height={height}
         graphData={data}
@@ -101,10 +120,11 @@ export function GraphCanvas({
         linkWidth={edgeLabels ? 1.4 : 1}
         linkDirectionalArrowLength={edgeLabels ? 4.5 : 3}
         linkDirectionalArrowRelPos={1}
-        linkCanvasObjectMode={() => (edgeLabels ? "after" : undefined)}
+        linkCanvasObjectMode={() => "after"}
         linkCanvasObject={
-          edgeLabels
-            ? (link, ctx, globalScale) => {
+          (link, ctx, globalScale) => {
+                // 少数グラフ/明示ONは常時、大きいグラフはズームインした時だけ関係名を描画
+                if (!edgeLabels && globalScale < EDGE_LABEL_ZOOM) return
                 const l = link as {
                   relation: string
                   source_type?: string
@@ -135,7 +155,6 @@ export function GraphCanvas({
                 ctx.fillText(l.relation, 0, 0)
                 ctx.restore()
               }
-            : undefined
         }
         onNodeClick={(n) => onNodeClick?.(n as GraphNode)}
       />

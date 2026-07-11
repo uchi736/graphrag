@@ -35,6 +35,8 @@ export default function GraphPage() {
   const active = mode === "overview" ? overview : subgraph
   const edges = active.data ?? []
 
+  // 関係名ラベル: OFF=自動（少数グラフ or ズームイン時のみ表示）/ ON=常時表示
+  const [relLabels, setRelLabels] = useState(false)
   // 凡例フィルタ（選択タイプ以外を淡色化）。モード切替・データ更新でリセット
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set())
   const legendNodes = useMemo(() => toGraphData(edges).nodes, [edges])
@@ -111,6 +113,20 @@ export default function GraphPage() {
           <Download className="h-3.5 w-3.5" /> graph.json
         </button>
 
+        {(mode === "overview" || mode === "subgraph") && (
+          <label
+            className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground"
+            title="OFF: 自動（少数グラフ・ズームイン時のみ表示）/ ON: 常時表示"
+          >
+            <input
+              type="checkbox"
+              checked={relLabels}
+              onChange={(e) => setRelLabels(e.target.checked)}
+            />
+            関係名ラベル
+          </label>
+        )}
+
         {mode === "overview" && (
           <>
             <label
@@ -182,7 +198,12 @@ export default function GraphPage() {
               <div className="mb-2">
                 <GraphLegend nodes={legendNodes} selectedTypes={selectedTypes} onToggle={toggleType} />
               </div>
-              <GraphCanvas edges={edges} onNodeClick={setSelected} dimTypes={selectedTypes} />
+              <GraphCanvas
+                edges={edges}
+                onNodeClick={setSelected}
+                dimTypes={selectedTypes}
+                showEdgeLabels={relLabels}
+              />
             </>
           )}
           {edges.length > 0 && (
