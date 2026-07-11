@@ -1,8 +1,9 @@
 import { useState } from "react"
 import { toast } from "sonner"
-import { AlertTriangle, FileJson, RefreshCw, Sparkles } from "lucide-react"
+import { AlertTriangle, FileJson, Pencil, RefreshCw, Sparkles } from "lucide-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useSchemaReport } from "@/hooks/useGraphData"
+import { SchemaEditorModal } from "@/components/schema/SchemaEditorModal"
 import type { SchemaInfo } from "@/api/types"
 
 function basename(p: string | null): string {
@@ -48,7 +49,9 @@ function SchemaSummary({ label, info, stampedAt }: { label: string; info: Schema
  * KGスキーマカード（構築タブ）。
  * - アクティブ（現グラフ構築時に刻印されたSchemaMeta）と次回ビルド設定
  *   （SHARED_SCHEMA_PATH）を並べ、不一致なら警告
- * - EDCスキーマ同期: 現コレクションの文書サンプル→EDC→スキーマJSON生成ジョブ
+ * - EDCスキーマ同期: 現コレクションの文書サンプル→EDC→スキーマJSON生成ジョブ。
+ *   既定は同梱EDCの子プロセス実行（サーバ不要）、EDC_ENDPOINT指定時のみHTTP
+ * - 編集: 発見スキーマの人手キュレーション（不要タイプ/関係の削除・追加）
  */
 export function SchemaCard({
   attach,
@@ -59,6 +62,7 @@ export function SchemaCard({
 }) {
   const { data, isLoading, refetch } = useSchemaReport()
   const [submitting, setSubmitting] = useState(false)
+  const [editorOpen, setEditorOpen] = useState(false)
   const qc = useQueryClient()
 
   const startEdcSync = async () => {
@@ -77,7 +81,7 @@ export function SchemaCard({
       }
       const { job_id } = await res.json()
       attach(job_id)
-      toast.info("EDCスキーマ同期を開始しました（完了後、生成先パスを SHARED_SCHEMA_PATH に設定して再構築）")
+      toast.info("EDCスキーマ同期を開始しました（完了後「編集」でキュレーション→SHARED_SCHEMA_PATHに設定して再構築）")
       qc.invalidateQueries({ queryKey: ["graph-schema"] })
     } finally {
       setSubmitting(false)
@@ -86,9 +90,14 @@ export function SchemaCard({
 
   if (isLoading || !data) return null
 
+  const edcModeLabel =
+    data.edc_mode === "builtin"
+      ? "内蔵EDCで実行（サーバ不要・vendor/EDC）"
+      : `外部EDC: ${data.edc_endpoint}`
+
   return (
     <div className="rounded-lg border bg-card p-4 shadow-sm">
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <FileJson className="h-4 w-4 text-primary" />
         <span className="text-sm font-medium">KGスキーマ</span>
         {data.match === false && (
@@ -106,10 +115,17 @@ export function SchemaCard({
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
           <button
+            onClick={() => setEditorOpen(true)}
+            className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs hover:bg-muted"
+            title="次回ビルド用スキーマを人手キュレーション（不要なタイプ/関係の削除・追加）"
+          >
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button
             onClick={startEdcSync}
             disabled={busy || submitting}
             className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs hover:bg-muted disabled:opacity-50"
-            title={`現コレクションの文書サンプルをEDC (${data.edc_endpoint}) に流してスキーマを自動発見`}
+            title={`現コレクションの文書サンプルからスキーマを自動発見 — ${edcModeLabel}`}
           >
             <Sparkles className="h-3.5 w-3.5" /> EDCスキーマ同期
           </button>
@@ -125,6 +141,9 @@ export function SchemaCard({
         )}
         <SchemaSummary label="次回ビルド設定（SHARED_SCHEMA_PATH）" info={data.configured} />
       </div>
+      <p className="mt-2 text-right text-[11px] text-muted-foreground">同期モード: {edcModeLabel}</p>
+
+      <SchemaEditorModal open={editorOpen} onClose={() => setEditorOpen(false)} />
     </div>
   )
 }

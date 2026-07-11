@@ -13,19 +13,27 @@ graphrag のKG構築は、許可ノードタイプ・関係タイプを外部ス
   → 構築時に Neo4j へ :SchemaMeta として刻印（どのスキーマで作ったかの証跡）
 ```
 
-## EDC 本体のセットアップ
+## セットアップ = 不要（graphragの一機能として内蔵実行）
 
-**EDC 一式はこのリポジトリに同梱している（[vendor/EDC/](../vendor/EDC/)）** — `git clone` 1回で連携に必要なコードが全部そろう。
+**EDC 一式はこのリポジトリに同梱しており（[vendor/EDC/](../vendor/EDC/)）、既定では
+サーバも venv も .env も不要。** スキーマ同期ジョブが `vendor/EDC/extract_cli.py` を
+子プロセスとしてワンショット実行する:
+
+- 依存は graphrag の `requirements.txt` の部分集合（実測済み）→ 追加インストールなし
+- LLM/embedding の接続先（`VLLM_*`）は graphrag の `.env` から自動注入
+- cwd=vendor/EDC で起動するため、EDC側のテンプレート/スキーマ解決も無設定で動く
+
+### 外部EDCサーバを使う場合（オプション）
+
+Dify等と共用のEDCを別プロセス/別マシンで運用する場合のみ、`EDC_ENDPOINT` を設定する
+（設定時はHTTP経路に切り替わる）:
 
 ```bash
 cd vendor/EDC
-python -m venv .venv && .venv/Scripts/pip install -r requirements-api.txt   # 初回のみ
-cp .env.example .env    # LLM/embedding の接続先を環境に合わせて編集
-.venv/Scripts/python -m uvicorn api:app --host 127.0.0.1 --port 8080
+python -m uvicorn api:app --host 0.0.0.0 --port 8080   # graphragと同じvenvで動く
+# graphrag側: EDC_ENDPOINT=http://<host>:8080
 ```
 
-- ヘルスチェック: `GET http://127.0.0.1:8080/health`
-- graphrag 側からのエンドポイント指定: 環境変数 `EDC_ENDPOINT`（既定 `http://127.0.0.1:8080`）
 - EDC自体の開発は上流リポジトリ https://github.com/uchi736/EDC で行い、
   [vendor/EDC/VENDOR.md](../vendor/EDC/VENDOR.md) の手順で再取り込みする（同梱分は読み取り専用スナップショット）
 
@@ -41,6 +49,10 @@ pydantic の `BaseModel.schema` シャドウ回避のため）。`schema` では
 現在の PGVector コレクションから文書サンプル（既定: 4文書×6チャンク）を取り、
 `schemas/edc_<collection>.json` に書き出すジョブが走る。
 実装: `graphrag_core/services/schema_sync.py` / `POST /api/build/edc-sync`
+
+同期後は同カードの **「編集」で人手キュレーション**できる（発見された
+タイプ/関係のチェックを外して削除・追加・保存。`.bak` を残して上書きし、
+次回ビルドから有効）。API: `GET/PUT /api/graph/schema/file`
 
 ### B. CLI から（チャンクディレクトリを直接サンプリング）
 

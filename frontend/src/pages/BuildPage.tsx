@@ -1,6 +1,8 @@
 import { useRef, useState } from "react"
 import { toast } from "sonner"
 import {
+  Download,
+  FileSpreadsheet,
   FileUp,
   Hammer,
   Loader2,
@@ -15,6 +17,7 @@ import { apiSend } from "@/api/client"
 import { useGraphStatus } from "@/hooks/useGraphData"
 import { useJobProgress } from "@/hooks/useJobProgress"
 import { SchemaCard } from "@/components/schema/SchemaCard"
+import { useSettingsStore, selectQaConfig } from "@/stores/settingsStore"
 import { cn } from "@/lib/utils"
 
 export default function BuildPage() {
@@ -22,9 +25,41 @@ export default function BuildPage() {
   const [csv, setCsv] = useState<File | null>(null)
   const docInput = useRef<HTMLInputElement>(null)
   const csvInput = useRef<HTMLInputElement>(null)
+  const evalInput = useRef<HTMLInputElement>(null)
+  const [evalCsv, setEvalCsv] = useState<File | null>(null)
   const { job, attach, cancel, busy } = useJobProgress()
   const { data: status } = useGraphStatus()
+  const settings = useSettingsStore()
   const qc = useQueryClient()
+
+  const submitBatchEval = async () => {
+    if (!evalCsv) return
+    const fd = new FormData()
+    fd.append("file", evalCsv)
+    fd.append("config", JSON.stringify(selectQaConfig(settings)))
+    const res = await fetch("/api/eval/batch", { method: "POST", body: fd })
+    if (!res.ok) {
+      const err = await res.json().catch(() => null)
+      const detail = err?.detail
+      toast.error(typeof detail === "string" ? detail : (detail?.message ?? `${res.status}`))
+      return
+    }
+    const { job_id, n_questions } = await res.json()
+    attach(job_id)
+    toast.info(`バッチ評価を開始しました（${n_questions}問、現在の検索設定で実行）`)
+  }
+
+  const downloadResultCsv = () => {
+    const csvText = job.result?.csv
+    if (typeof csvText !== "string") return
+    const blob = new Blob(["﻿" + csvText], { type: "text/csv;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "batch_eval_results.csv"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   const provenance = useMutation({
     mutationFn: () => apiSend("POST", "/api/graph/provenance"),
@@ -179,6 +214,40 @@ export default function BuildPage() {
         )}
       </div>
 
+      {/* バッチ評価 */}
+      <div className="rounded-lg border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <FileSpreadsheet className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium">バッチ評価</span>
+          <span className="text-xs text-muted-foreground">
+            question 列を持つCSVを一括QA実行（expected 等の列は結果に引き継ぎ）。現在の検索設定を使用
+          </span>
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={() => evalInput.current?.click()}
+              className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs hover:bg-muted"
+            >
+              <FileUp className="h-3.5 w-3.5" />
+              {evalCsv ? evalCsv.name : "質問CSVを選択"}
+            </button>
+            <button
+              onClick={submitBatchEval}
+              disabled={busy || !evalCsv}
+              className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              <Play className="h-3.5 w-3.5" /> 実行
+            </button>
+          </div>
+        </div>
+        <input
+          ref={evalInput}
+          type="file"
+          accept=".csv"
+          className="hidden"
+          onChange={(e) => setEvalCsv(e.target.files?.[0] ?? null)}
+        />
+      </div>
+
       {/* ジョブ進捗 */}
       {job.state !== "idle" && (
         <div className="rounded-lg border bg-card p-4 shadow-sm">
@@ -219,7 +288,22 @@ export default function BuildPage() {
             </details>
           )}
           {job.state === "succeeded" && job.result && (
-            <p className="mt-2 text-xs text-muted-foreground">結果: {JSON.stringify(job.result)}</p>
+            typeof job.result.csv === "string" ? (
+              <div className="mt-2 flex items-center gap-3">
+                <button
+                  onClick={downloadResultCsv}
+                  className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+                >
+                  <Download className="h-3.5 w-3.5" /> 結果CSVをダウンロード
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  {String(job.result.n)}問 完了
+                  {Number(job.result.n_errors) > 0 && `（エラー ${String(job.result.n_errors)}件）`}
+                </span>
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">結果: {JSON.stringify(job.result)}</p>
+            )
           )}
         </div>
       )}

@@ -166,6 +166,50 @@ def delete_document_endpoint(doc_id: str, st: AppState = Depends(require_ready))
     return result
 
 
+@router.post("/eval/batch", status_code=202)
+async def batch_eval(
+    file: UploadFile = File(...),
+    config: str = Form("{}"),
+    st: AppState = Depends(require_ready),
+) -> dict:
+    """CSVバッチ評価ジョブ。question 列必須、他の列（expected等）は結果に引き継ぐ。
+
+    config: QA検索設定9キーのJSON文字列（UIの現在設定をそのまま渡す）。
+    結果はジョブ result の csv（文字列）としてダウンロード可能。
+    """
+    import json as _json
+    from graphrag_core.config import build_pipeline_config
+    from graphrag_core.services.batch_eval import parse_questions_csv, run_batch_eval
+    from graphrag_core.services.qa import QADeps
+
+    data = await file.read()
+    try:
+        rows = parse_questions_csv(data)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    try:
+        from api.routers.qa import QAConfig
+        overrides = QAConfig(**_json.loads(config or "{}")).model_dump()
+    except Exception as e:
+        raise HTTPException(400, f"config が不正です: {e}")
+
+    settings = st.settings
+    deps = QADeps(graph=st.graph, llm=st.llm, embeddings=st.embeddings,
+                  vector_store=st.vector_store,
+                  pg_conn=settings.pg_conn, pg_collection=settings.pg_collection)
+    cfg = build_pipeline_config(settings, **overrides)
+
+    def run(progress, should_cancel):
+        return run_batch_eval(rows, deps, cfg, progress=progress,
+                              should_cancel=should_cancel)
+
+    try:
+        job = st.jobs.submit("batch_eval", run)
+    except JobBusy as e:
+        raise HTTPException(409, {"message": str(e), "running_job_id": e.running_job_id})
+    return {"job_id": job.id, "n_questions": len(rows)}
+
+
 @router.post("/build/edc-sync", status_code=202)
 async def edc_sync(
     payload: Optional[dict] = None,

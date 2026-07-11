@@ -121,7 +121,22 @@ export interface SchemaReport {
   configured: SchemaInfo
   /** active.source と configured.source の一致。active 無しなら null */
   match: boolean | null
-  edc_endpoint: string
+  /** builtin=同梱EDCを子プロセス実行（サーバ不要） / http=EDC_ENDPOINT指定時 */
+  edc_mode: "builtin" | "http"
+  edc_endpoint: string | null
+}
+
+// ---- GET/PUT /api/graph/schema/file ----
+export interface SchemaFileResponse {
+  path: string | null
+  exists: boolean
+  data: {
+    domain?: string
+    version?: string
+    node_types: string[]
+    node_type_definitions?: Record<string, string>
+    relations: { name: string; description?: string }[]
+  }
 }
 
 // ---- GET /api/documents ----

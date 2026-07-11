@@ -46,6 +46,41 @@ def schema(st: AppState = Depends(require_ready)) -> dict:
     return schema_report(st.graph)
 
 
+class SchemaFileBody(BaseModel):
+    """スキーマ編集UIの保存ボディ。relations は文字列 or {name, description}。"""
+    node_types: List[str] = Field(min_length=1)
+    relations: List[Any] = Field(min_length=1)
+    domain: Optional[str] = None
+    path: Optional[str] = None
+
+
+@router.get("/schema/file")
+def schema_file(st: AppState = Depends(require_ready)) -> dict:
+    """SHARED_SCHEMA_PATH のスキーマJSONを生で返す（キュレーション編集用）。"""
+    from graphrag_core.services.schema_sync import read_schema_file
+    return read_schema_file()
+
+
+@router.put("/schema/file")
+def schema_file_save(body: SchemaFileBody, st: AppState = Depends(require_ready)) -> dict:
+    """人手キュレーション済みスキーマを保存（.bakバックアップ付き上書き）。"""
+    from graphrag_core.services.schema_sync import save_schema_file
+    try:
+        return save_schema_file(
+            body.node_types, body.relations,
+            pg_collection=st.settings.pg_collection,
+            domain=body.domain, path=body.path)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@router.get("/export")
+def export_graph(st: AppState = Depends(require_ready)) -> dict:
+    """全ノード・エッジを graph.json 形式（node_link_data互換）で返す。"""
+    from graphrag_core.graph.neo4j_ops import export_graph_json
+    return export_graph_json(st.graph, output_path=None)
+
+
 @router.post("/provenance")
 def stamp_provenance(st: AppState = Depends(require_ready)) -> dict:
     ok = stamp_graph_provenance(st.graph, st.settings.pg_collection)

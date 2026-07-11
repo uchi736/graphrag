@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { RefreshCw } from "lucide-react"
+import { Download, RefreshCw } from "lucide-react"
+import { toast } from "sonner"
 import { useSettingsStore } from "@/stores/settingsStore"
 import { useGraphOverview, useSubgraph, useGraphStatus } from "@/hooks/useGraphData"
 import { GraphCanvas } from "@/components/graph/GraphCanvas"
@@ -32,6 +33,27 @@ export default function GraphPage() {
   const active = mode === "overview" ? overview : subgraph
   const edges = active.data ?? []
 
+  const [exporting, setExporting] = useState(false)
+  const exportGraphJson = async () => {
+    setExporting(true)
+    try {
+      const res = await fetch("/api/graph/export")
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "graph.json"
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success("graph.json をダウンロードしました")
+    } catch (e) {
+      toast.error(`エクスポート失敗: ${e instanceof Error ? e.message : e}`)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -63,6 +85,15 @@ export default function GraphPage() {
             {status.graph.rel_count.toLocaleString()} エッジ
           </span>
         )}
+
+        <button
+          onClick={exportGraphJson}
+          disabled={exporting}
+          className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs hover:bg-muted disabled:opacity-50"
+          title="全ノード・エッジを graph.json（node_link_data互換）でダウンロード"
+        >
+          <Download className="h-3.5 w-3.5" /> graph.json
+        </button>
 
         {mode === "overview" && (
           <>
