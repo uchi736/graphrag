@@ -115,12 +115,17 @@ def create_app() -> FastAPI:
     if _FRONTEND_DIST.exists():
         app.mount("/assets", StaticFiles(directory=_FRONTEND_DIST / "assets"), name="assets")
 
+        # index.html はキャッシュさせない（ハッシュ付きassetsは長期キャッシュ可）。
+        # これが無いとブラウザが旧 index.html を掴み、再ビルド後も画面が変わらない。
+        _NO_CACHE = {"Cache-Control": "no-cache, must-revalidate"}
+
         @app.get("/{path:path}", include_in_schema=False)
         def spa_fallback(path: str):
             candidate = _FRONTEND_DIST / path
             if path and candidate.is_file():
-                return FileResponse(candidate)
-            return FileResponse(_FRONTEND_DIST / "index.html")
+                headers = _NO_CACHE if candidate.name == "index.html" else None
+                return FileResponse(candidate, headers=headers)
+            return FileResponse(_FRONTEND_DIST / "index.html", headers=_NO_CACHE)
 
     return app
 
