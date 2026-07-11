@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type ReactNode } from "react"
+import { lazy, memo, Suspense, useMemo, useState, type ReactNode } from "react"
 import { BookOpen } from "lucide-react"
 import type { EdgeRecord, QaEvidence, SourceChunk } from "@/api/types"
 import { ChunkBrowserModal } from "@/components/documents/ChunkBrowserModal"
@@ -88,8 +88,12 @@ function ChunkCard({
   )
 }
 
-export function EvidencePanels({ evidence }: { evidence: QaEvidence | null }) {
+function EvidencePanelsInner({ evidence }: { evidence: QaEvidence | null }) {
   const [openDoc, setOpenDoc] = useState<{ source: string; chunkId: string | null } | null>(null)
+  // 参照が変わらない限り同一配列を渡す。毎レンダーで新配列を作ると
+  // force-graph が graphData 変更とみなし物理シミュレーションを再加熱してしまう
+  // （トークンストリーミング中ずっとグラフが揺れ続ける原因）。
+  const graphEdges = useMemo(() => (evidence ? triplesToEdges(evidence) : []), [evidence])
   if (!evidence) return null
   const entities = evidence.extracted_entities ?? {}
   const merged = (entities as { merged_entities?: string[] }).merged_entities ?? []
@@ -120,7 +124,7 @@ export function EvidencePanels({ evidence }: { evidence: QaEvidence | null }) {
             </div>
           }
         >
-          <GraphCanvas edges={triplesToEdges(evidence)} height={380} showEdgeLabels />
+          <GraphCanvas edges={graphEdges} height={380} showEdgeLabels />
         </Suspense>
         <p className="text-right text-xs text-muted-foreground">
           {evidence.graph_sources.length} 関係 — エッジにカーソルを乗せると関係名を表示
@@ -163,3 +167,7 @@ export function EvidencePanels({ evidence }: { evidence: QaEvidence | null }) {
     </div>
   )
 }
+
+// トークンイベント毎の QaPage 再レンダリングから根拠パネル一式を遮断する
+// （evidence の参照はストリーミング中不変なので memo が効く）。
+export const EvidencePanels = memo(EvidencePanelsInner)
