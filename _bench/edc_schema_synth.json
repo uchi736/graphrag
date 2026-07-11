@@ -1,0 +1,188 @@
+{
+  "domain": "synth_v1",
+  "version": "edc-20260710",
+  "generated_at": "2026-07-10T14:36:24.846014+00:00",
+  "generated_by": "scripts/edc_schema_sync.py (EDC /extract, doctype=auto, enrich_schema=True)",
+  "notes": [
+    "EDCフレームワークによる自動スキーマ発見（Extract-Define-Canonicalize）",
+    "SYN01_白波_設備保全管理規程: doctype=社内規程_就業規則 (+16関係/12型, triplets=11)",
+    "SYN02_白波_検査様式集: doctype=社内規程_就業規則 (+15関係/12型, triplets=20)",
+    "SYN03_白波_用語集: doctype=社内規程_就業規則 (+15関係/12型, triplets=15)",
+    "SYN04_白波_機器台帳: doctype=UNKNOWN (+3関係/0型, triplets=24)",
+    "SYN05_白波_不適合事例集: doctype=NCR_不適合是正処置報告書 (+16関係/17型, triplets=15)"
+  ],
+  "node_types": [
+    "Action",
+    "Actor",
+    "Cause",
+    "Condition",
+    "Date",
+    "Defect",
+    "Document",
+    "Entity",
+    "Identifier",
+    "Law",
+    "Location",
+    "Norm",
+    "Organization",
+    "Parameter",
+    "Period",
+    "Person",
+    "Process",
+    "Product",
+    "Role",
+    "Section",
+    "Standard",
+    "Term"
+  ],
+  "node_type_definitions": {
+    "Document": "文書・届出書類",
+    "Section": "章・節・条項・項目などの文書構造単位",
+    "Term": "用語・型式名・略語など、辞書アンカー対象の用語エンティティ",
+    "Entity": "上記以外の実体の総称(設備・人・組織・事象等。ドメイン型で具体化される)",
+    "Norm": "規程・制度・ルール",
+    "Actor": "対象者(労働者・使用者・管理監督者等)",
+    "Action": "行為・手続き(届出・採用・解雇・休業等)",
+    "Condition": "条件・状態(請求・傷病等)",
+    "Period": "期間・時間範囲(2週間・3か月等)",
+    "Law": "法令・条文(労働基準法等)",
+    "Organization": "組織・機関",
+    "Role": "役職・権限",
+    "Product": "製品・装置・対象物(蒸気ドラム等)",
+    "Process": "工程・作業・検査(溶接・UT等)",
+    "Defect": "欠陥・不適合事象(割れ・水素割れ等)",
+    "Cause": "原因・要因(予熱不足等)",
+    "Standard": "規格・基準・手順(WPS・JIS等)",
+    "Parameter": "パラメータ・数値条件(予熱温度・炭素当量等)",
+    "Person": "個人(起票者・確認者等)",
+    "Date": "日付・期日",
+    "Identifier": "番号・識別子(報告書番号・製番等)",
+    "Location": "場所・位置"
+  },
+  "relations": [
+    {
+      "name": "APPLIES_TO",
+      "description": "規範/規定が適用される対象(労働者・使用者等)"
+    },
+    {
+      "name": "APPLIES_WHEN",
+      "description": "規範/手続きが適用される条件・場合"
+    },
+    {
+      "name": "CAUSES",
+      "description": "原因・要因が事象/不適合を直接引き起こす"
+    },
+    {
+      "name": "CONTRIBUTES_TO",
+      "description": "直接原因ではないが発生確率を高めた背景・寄与要因"
+    },
+    {
+      "name": "DEFINES",
+      "description": "主語(条項・文書)が目的語(用語)の定義を与える。定義文かどうかで MENTIONS と区別"
+    },
+    {
+      "name": "FOLLOWS",
+      "description": "一連の是正プロセスにおける時系列的な手順・後続"
+    },
+    {
+      "name": "GOVERNED_BY",
+      "description": "規定の根拠となる法令・上位規程"
+    },
+    {
+      "name": "HAS_STEP",
+      "description": "手続き/フローが含む手順・ステップ"
+    },
+    {
+      "name": "IS_A",
+      "description": "主語が目的語の一種である(上位下位・分類)"
+    },
+    {
+      "name": "MENTIONS",
+      "description": "主語が目的語に言及する(定義ではない単純な言及)"
+    },
+    {
+      "name": "MITIGATES",
+      "description": "影響を限定し被害を最小化するための応急/暫定処置"
+    },
+    {
+      "name": "PART_OF",
+      "description": "主語が目的語の構成要素・一部である"
+    },
+    {
+      "name": "PRECEDES",
+      "description": "手順が別の手順に先行する"
+    },
+    {
+      "name": "PREVENTS",
+      "description": "再発を防止するための恒久的な是正処置"
+    },
+    {
+      "name": "REFERS_TO",
+      "description": "主語が目的語(他条項・文書・規格)を参照する"
+    },
+    {
+      "name": "REQUIRES",
+      "description": "対象が満たす/提出する必要がある事項"
+    },
+    {
+      "name": "REQUIRES_APPROVAL_FROM",
+      "description": "手続きが必要とする承認者・承認権限"
+    },
+    {
+      "name": "SUBORDINATE_TO",
+      "description": "主語が目的語の下位・従属である(章節などの階層)"
+    },
+    {
+      "name": "VALIDATED_BY",
+      "description": "処置/工程が基準を満たすかを確認する検査・検証"
+    },
+    {
+      "name": "does_not_apply_to",
+      "description": "The subject entity does not cover or is not applicable to the object entity."
+    },
+    {
+      "name": "has_action",
+      "description": "The subject entity involves the corrective action or measure specified by the object entity."
+    },
+    {
+      "name": "has_former_name",
+      "description": "The subject entity was previously known by the name specified by the object entity."
+    },
+    {
+      "name": "has_identifier",
+      "description": "The subject entity is identified by the unique code or identifier specified by the object entity."
+    },
+    {
+      "name": "has_item",
+      "description": "The subject entity contains the specific item or data field specified by the object entity."
+    },
+    {
+      "name": "has_main_parts",
+      "description": "The subject entity consists of or contains the component specified by the object entity as one of its main parts."
+    },
+    {
+      "name": "has_purpose",
+      "description": "The subject entity is designed to achieve the goal or objective specified by the object entity."
+    },
+    {
+      "name": "has_retention_period",
+      "description": "The subject entity must be preserved for the duration of time specified by the object entity."
+    },
+    {
+      "name": "issued_by",
+      "description": "The subject entity was issued or published by the organization or entity specified by the object entity."
+    },
+    {
+      "name": "official_name",
+      "description": "The subject entity is formally known by the name specified by the object entity."
+    },
+    {
+      "name": "registers",
+      "description": "The subject entity serves as a record or ledger that registers the object entity."
+    },
+    {
+      "name": "used_in",
+      "description": "The subject entity is utilized within the context or time period specified by the object entity."
+    }
+  ]
+}
