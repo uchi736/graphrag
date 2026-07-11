@@ -132,7 +132,8 @@ def build_knowledge_base(
 
         from langchain_experimental.graph_transformers import LLMGraphTransformer
         from langchain_core.prompts import ChatPromptTemplate
-        from graphrag_core.graph.schema import get_allowed_node_types, get_allowed_relations
+        from graphrag_core.graph.schema import (
+            entity_naming_instructions, get_allowed_node_types, get_allowed_relations)
 
         _kg_kwargs = dict(
             llm=_llm,
@@ -147,6 +148,7 @@ def build_knowledge_base(
                 "抽出する: 技術用語、概念、固有名詞、プロセス名、規格名。"
                 "抽出しない: 一般的な名詞（「こと」「もの」「方法」）、代名詞、動詞。"
                 "RELATED_TOは他に適切な関係がない場合の最終手段として使用。"
+                + entity_naming_instructions()
             )
         else:
             _kg_kwargs["prompt"] = ChatPromptTemplate.from_messages(

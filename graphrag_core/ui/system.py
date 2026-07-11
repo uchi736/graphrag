@@ -193,12 +193,14 @@ def build_rag_system(ctx, source_docs: list, csv_edges: list | None = None):
         # LLMGraphTransformerのデフォルトpromptがJSON出力形式を指示するため、
         # カスタムpromptを渡すとJSON指示が欠落しパース失敗する。
         # ドメイン固有の指示はadditional_instructionsで渡す。
+        from graphrag_core.graph.schema import (
+            entity_naming_instructions, get_allowed_node_types, get_allowed_relations)
         _kg_additional = (
             "抽出する: 技術用語、概念、固有名詞、プロセス名、規格名。"
             "抽出しない: 一般的な名詞（「こと」「もの」「方法」）、代名詞、動詞。"
             "RELATED_TOは他に適切な関係がない場合の最終手段として使用。"
+            + entity_naming_instructions()
         )
-        from graphrag_core.graph.schema import get_allowed_node_types, get_allowed_relations
         _kg_kwargs = dict(
             llm=llm,
             allowed_nodes=get_allowed_node_types(),

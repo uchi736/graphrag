@@ -197,14 +197,16 @@ def build_knowledge_graph(
         # VLLM (ignore_tool_usage=True) ではカスタムpromptを渡さない。
         # LLMGraphTransformerのデフォルトpromptがJSON出力形式を指示するため、
         # カスタムpromptを渡すとJSON指示が欠落しパース失敗する。
+        from graphrag_core.graph.schema import (
+            entity_naming_instructions, get_allowed_node_types, get_allowed_relations)
         _kg_additional = (
             "抽出する: 技術用語、概念、固有名詞、プロセス名、規格名。"
             "抽出しない: 一般的な名詞（「こと」「もの」「方法」）、代名詞、動詞。"
             "抽出しない: 数値・日付・年度・単位のみの値（「210円」「53」「令和6年度」）。"
             "値はノードにしない。"
             "RELATED_TOは他に適切な関係がない場合の最終手段として使用。"
+            + entity_naming_instructions()
         )
-        from graphrag_core.graph.schema import get_allowed_node_types, get_allowed_relations
         # strict_mode=True: スキーマ外の野良関係タイプ（typo含め125種が混入した実績）を
         # 抽出時点でフィルタする。post-hocのrename（consolidate.py）は残存分の保険
         _kg_kwargs = dict(

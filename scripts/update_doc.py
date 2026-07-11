@@ -89,7 +89,8 @@ def load_file_chunks(path: Path, doc_id: str):
 def build_add_chunk_fn(graph, llm):
     from langchain_experimental.graph_transformers import LLMGraphTransformer
     from graphrag_core.config import get_settings
-    from graphrag_core.graph.schema import get_allowed_node_types, get_allowed_relations
+    from graphrag_core.graph.schema import (
+        entity_naming_instructions, get_allowed_node_types, get_allowed_relations)
     from graphrag_core.graph.enrichment import attach_source_chunks
 
     try:
@@ -115,6 +116,7 @@ def build_add_chunk_fn(graph, llm):
         "抽出しない: 一般的な名詞（『こと』『もの』『方法』）、代名詞、動詞。"
         "抽出しない: 数値・日付・単位のみの値。値はノードにしない。"
         "RELATED_TOは他に適切な関係がない場合の最終手段として使用。"
+        + entity_naming_instructions()
     )
     transformer = LLMGraphTransformer(
         llm=llm,

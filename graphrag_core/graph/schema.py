@@ -137,6 +137,32 @@ def load_schema() -> Dict:
     }
 
 
+def entity_naming_instructions() -> str:
+    """LLMGraphTransformer の additional_instructions に足す命名制約＋型定義。
+
+    EDC等の外部スキーマは Cause/Action など命題的タイプを含み、文まるごとが
+    ノードIDになりやすい（他文書で再出現せず結合キーとして機能しない）。
+    名詞句への圧縮を指示し、スキーマJSONに node_type_definitions があれば
+    型の意図も併せて伝える。全ビルダー（build系/増分更新）で共用すること。
+    """
+    parts = [
+        "エンティティ名は20文字以内の簡潔な名詞句にする。"
+        "文や節をそのままエンティティ名にしない"
+        "（例:「毎月の機能点検で予備機切替を確認していなかった」→「予備機切替確認の未実施」）。"
+    ]
+    path = _schema_path()
+    if path and path.exists():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            defs = data.get("node_type_definitions") or {}
+            pairs = "、".join(f"{k}={v}" for k, v in defs.items() if v)
+            if pairs:
+                parts.append("ノードタイプの意味: " + pairs + "。")
+        except Exception:
+            pass
+    return "".join(parts)
+
+
 def get_allowed_relations() -> List[str]:
     """LLMGraphTransformer の allowed_relationships に渡すリスト"""
     return load_schema()["relations"]

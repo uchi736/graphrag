@@ -119,7 +119,8 @@ def main():
     if pending:
         from langchain_experimental.graph_transformers import LLMGraphTransformer
         from graphrag_core.llm.factory import create_chat_llm
-        from graphrag_core.graph.schema import get_allowed_node_types, get_allowed_relations
+        from graphrag_core.graph.schema import (
+            entity_naming_instructions, get_allowed_node_types, get_allowed_relations)
         from graphrag_core.graph.enrichment import attach_source_chunks
 
         try:
@@ -137,6 +138,7 @@ def main():
             "抽出しない: 一般的な名詞（『こと』『もの』『方法』）、代名詞、動詞。"
             "抽出しない: 数値・日付・単位のみの値。値はノードにしない。"
             "RELATED_TOは他に適切な関係がない場合の最終手段として使用。"
+            + entity_naming_instructions()
         )
         is_vllm = s.llm_provider.lower() == "vllm"
         transformer = LLMGraphTransformer(
