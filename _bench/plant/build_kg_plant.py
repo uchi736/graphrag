@@ -235,7 +235,7 @@ def main():
     except Exception as e:
         print(f"  ⚠️ enrich err: {e}")
 
-    print("🏷️ provenance刻印(plant_v15)...")
+    print(f"🏷️ provenance刻印({args.provenance})...")
     try:
         from graphrag_core.graph.provenance import stamp_graph_provenance
         ok = stamp_graph_provenance(graph, args.provenance, doc_count=len(docs))
