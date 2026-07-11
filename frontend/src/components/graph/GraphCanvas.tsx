@@ -129,6 +129,7 @@ export function GraphCanvas({
                   relation: string
                   source_type?: string
                   target_type?: string
+                  pair_index?: number
                   source: { x?: number; y?: number } | string
                   target: { x?: number; y?: number } | string
                 }
@@ -138,22 +139,38 @@ export function GraphCanvas({
                 const sy = l.source.y ?? 0
                 const tx = l.target.x ?? 0
                 const ty = l.target.y ?? 0
+                // ツールチップと同じ「濃色の角丸バッジ＋白文字」を水平描画。
+                // 同一ペア間の複数エッジはエッジの法線方向に段積みして重なり回避
                 const fontSize = Math.max(8 / globalScale, 2)
+                const padX = fontSize * 0.5
+                const padY = fontSize * 0.28
+                let mx = (sx + tx) / 2
+                let my = (sy + ty) / 2
+                const k = l.pair_index ?? 0
+                if (k > 0) {
+                  const len = Math.hypot(tx - sx, ty - sy) || 1
+                  const nx = -(ty - sy) / len
+                  const ny = (tx - sx) / len
+                  const off = Math.ceil(k / 2) * (fontSize + padY * 2 + 1) * (k % 2 === 1 ? 1 : -1)
+                  mx += nx * off
+                  my += ny * off
+                }
                 ctx.font = `${fontSize}px "Yu Gothic UI", "Meiryo", sans-serif`
-                // エッジ方向に沿わせ、上下逆さにならないよう反転
-                let angle = Math.atan2(ty - sy, tx - sx)
-                if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI
-                ctx.save()
-                ctx.translate((sx + tx) / 2, (sy + ty) / 2)
-                ctx.rotate(angle)
                 const w = ctx.measureText(l.relation).width
-                ctx.fillStyle = "rgba(255,255,255,0.85)"
-                ctx.fillRect(-w / 2 - 1.5, -fontSize / 2 - 1, w + 3, fontSize + 2)
-                ctx.fillStyle = "rgba(102,110,234,0.95)"
+                const bx = mx - w / 2 - padX
+                const by = my - fontSize / 2 - padY
+                const bw = w + padX * 2
+                const bh = fontSize + padY * 2
+                const r = Math.min(2 / globalScale + 1, bh / 2)
+                ctx.fillStyle = "rgba(71,77,94,0.88)"
+                ctx.beginPath()
+                if (typeof ctx.roundRect === "function") ctx.roundRect(bx, by, bw, bh, r)
+                else ctx.rect(bx, by, bw, bh)
+                ctx.fill()
+                ctx.fillStyle = "rgba(255,255,255,0.96)"
                 ctx.textAlign = "center"
                 ctx.textBaseline = "middle"
-                ctx.fillText(l.relation, 0, 0)
-                ctx.restore()
+                ctx.fillText(l.relation, mx, my)
               }
         }
         onNodeClick={(n) => onNodeClick?.(n as GraphNode)}
