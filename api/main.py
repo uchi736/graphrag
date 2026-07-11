@@ -125,6 +125,12 @@ def create_app() -> FastAPI:
             if path and candidate.is_file():
                 headers = _NO_CACHE if candidate.name == "index.html" else None
                 return FileResponse(candidate, headers=headers)
+            # 存在しない assets はSPAフォールバックしない（旧キャッシュの
+            # index.html が古いハッシュのJSを要求した際、HTMLをJSとして
+            # 返してしまう混乱を防ぐ。404ならブラウザが再取得側に倒れる）
+            if path.startswith("assets/"):
+                from fastapi.responses import Response
+                return Response(status_code=404)
             return FileResponse(_FRONTEND_DIST / "index.html", headers=_NO_CACHE)
 
     return app
