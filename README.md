@@ -1,21 +1,26 @@
-# Graph-RAG with Streamlit UI
+# Graph-RAG (React UI + FastAPI / 完全オンプレ対応)
 
 最新版のLangChain APIに対応した、Graph-RAGシステムの完全実装です。
-**Streamlit UI**を搭載し、PDF/テキストファイルから自動的にナレッジグラフを構築・可視化できます。
+**React SPA + FastAPI** のWeb UIを搭載し、PDF/テキストファイルから自動的にナレッジグラフを構築・可視化できます。
+LLM・embedding・リランカー・PDF解析まで**完全オンプレミス構成**（vLLM）が既定です。
 
 ![Graph-RAG Demo](https://img.shields.io/badge/Python-3.10+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 ## 主な機能
 
-### Streamlit WebUI
-- **PDF/テキスト/Markdownファイルアップロード**: ドラッグ&ドロップで簡単アップロード
-  - **Azure Document Intelligence**: 高精度PDF解析（テーブル・レイアウト保持、OCR対応）
-  - **PyMuPDF**: 軽量PDF解析（フォールバック）
-  - **Azure DI出力キャッシュ**: 処理結果を.mdファイルとして保存、再利用可能
-- **ワンクリックでナレッジグラフ構築**: LLMが自動的にエンティティとリレーションを抽出
-- **既存グラフの自動検出**: Neo4jに既にデータがあれば即座に復元
-- **再開機能**: 処理が中断しても続きから再開可能（チャンクハッシュで管理）
+### Web UI（React + FastAPI、5タブ）
+- **質問応答**: SSEトークンストリーミング、根拠パネル（参照ドキュメント／**参照グラフ**＝回答に使われた関係の可視化／推論パス／KGソースチャンク）。参照カードから**文書内チャンクへジャンプ**（該当チャンクをハイライト）
+- **グラフ探索**: force-graph可視化（タイプ別色分け・次数サイズ）、サブグラフ表示、ノード/エッジCRUD、自然言語→Cypher
+- **登録ドキュメント**: ソース別チャンク集計、チャンク本文ブラウザ、**1文書の増分更新/削除**
+- **構築/取り込み**: アップロード→KG構築ジョブ（SSE進捗・キャンセル・再開）、**KGスキーマカード**（現グラフ刻印 vs 次回ビルド設定の不一致警告、EDCスキーマ同期）
+- **設定**: ヘルスチェック、危険操作（グラフ/DBクリア）
+- 旧 Streamlit UI（`scripts/app.py`）も移行期間中は併存
+
+### ドキュメント取り込み・構築
+- **PDF解析**: オンプレOCR（PaddleX）/ Azure Document Intelligence / PyMuPDF を切替可能
+- **再開機能**: 処理が中断しても続きから再開可能（内容ハッシュのチャンクIDで管理）
+- **増分更新**: 文書改訂時に該当文書スコープだけ差分更新（`scripts/update_doc.py` / API・UI）
 
 ### CLIツール
 - **build_kg.py**: Streamlitを使わずにナレッジグラフを構築
@@ -41,14 +46,13 @@
 - **参照追跡（オプション）**: 「P.98参照」「『◯◯』をご覧ください」を REFERS_TO エッジで1ホップ追跡（`enable_reference_follow`、デフォルトOFF）
 
 ### 高度なグラフ可視化
-- **可視化エンジン**: Neo4j公式 `neo4j-viz` ライブラリ（ネイティブなグラフDBスタイル）
+- **可視化エンジン**: `react-force-graph-2d`（Canvas・d3-force、React UI）/ `neo4j-viz`（Streamlit）
 - **3つの表示モード**:
-  - **グラフ可視化**: インタラクティブな探索
+  - **グラフ可視化**: インタラクティブな探索（ノードクリック→詳細→中心にサブグラフ展開）
   - **データテーブル**: ノード・エッジ一覧とCSV出力
-  - **Cypherクエリ検索**: 自然言語→Cypher変換機能
-- **ノードタイプ自動判定**: 専門用語を自動分類
-- **タイプ別色分け**: 視覚的にわかりやすいカラーコーディング
-- **接続数に応じたノードサイズ**: 重要なエンティティが一目でわかる
+  - **Cypherクエリ検索**: 自然言語→Cypher変換機能（参照専用実行・書込拒否）
+- **タイプ別色分け・接続数に応じたノードサイズ**: 重要なエンティティが一目でわかる
+- **QA参照グラフ**: 回答に使われた関係だけを関係名ラベル付きで描画
 
 ### Graph-First RAGアーキテクチャ
 ```
@@ -68,16 +72,20 @@
 ```
 
 ### 技術スタック
+- **フロントエンド**: React + TypeScript + Vite + Tailwind（zustand / TanStack Query / react-force-graph-2d、CDN不使用＝オフラインビルド可）
+- **バックエンドAPI**: FastAPI（SSEストリーミング、プロセス内ジョブ管理 → **workers=1 必須**）
 - **LLMGraphTransformer**: カスタムプロンプト対応（ChatPromptTemplate）
 - **Neo4j**: グラフデータベース（必須）
 - **PGVector**: ベクトルデータベース（PostgreSQL）
 - **LLMプロバイダー**:
-  - **Azure OpenAI**: GPT-4o, text-embedding-3-small
-  - **VLLM**: セルフホステッドモデル対応
+  - **VLLM**: セルフホステッドモデル（既定。gemma等）
+  - **Azure OpenAI**: 明示的に有効化した場合のみ
 - **PDF処理**:
+  - **オンプレOCR**: PaddleX PP-OCRv5（リモートエンドポイント）
   - **Azure Document Intelligence**: 高精度PDF解析
   - **PyMuPDF**: 軽量PDF解析
 - **日本語処理**: Sudachi形態素解析
+- **スキーマ自動発見**: EDC（Extract-Define-Canonicalize、`vendor/EDC/` に同梱）
 - **Langfuse**: LLMトレーシング（SDK v4、オプション）
 
 ## ファイル構成
@@ -105,12 +113,20 @@ graphrag/
 │   │   ├── references.py       # 参照グラフ（節/ページ/文書名参照のルールベース抽出）
 │   │   ├── conditions.py       # 条件付き関係(qualifier)のreify格納（:CondFact/:Cond/[:WHEN]）
 │   │   ├── provenance.py       # グラフ出自(PG_COLLECTION)の刻印と整合性チェック
+│   │   ├── incremental.py      # 文書スコープの部分グラフ更新（差分検出→剪定→再抽出→同期）
 │   │   └── dictionary.py       # 専門用語辞書の適用（canonical_form/aliases付与）
 │   ├── retrieval/              # 検索
 │   │   ├── hybrid.py           # 日本語ハイブリッド検索（BM25 + Vector、RRF統合）
 │   │   ├── reranker.py         # cross-encoderリランカークライアント（vLLM /score互換）
 │   │   ├── entity_vector.py    # エンティティベクトル化・類似度検索
 │   │   └── pipeline.py         # 共通QAパイプライン
+│   ├── services/               # UI非依存サービス層（Streamlit / FastAPI 双方から利用）
+│   │   ├── qa.py               # QA一元実装（検索+生成、SSEイベント生成）
+│   │   ├── build.py            # KG構築/チャンク更新（進捗コールバック+協調キャンセル）
+│   │   ├── graph_explore.py    # 可視化用エッジ取得・NL→Cypher・参照専用実行
+│   │   ├── documents.py        # 登録文書集計・チャンク閲覧・増分更新用抽出関数
+│   │   ├── schema_sync.py      # スキーマ突き合わせ + EDCスキーマ自動発見ジョブ
+│   │   ├── ingest.py / admin.py / retrievers.py / progress.py
 │   ├── document/               # ドキュメント処理
 │   │   └── azure_di.py         # Azure Document Intelligence ほか
 │   └── ui/                     # Streamlit UIコンポーネント（タブ別に分割）
@@ -127,19 +143,29 @@ graphrag/
 │       ├── visualization.py    # グラフ可視化
 │       ├── data_tables.py      # データテーブル表示
 │       └── dialogs.py          # 編集ダイアログ
+├── api/                        # FastAPI 配送層（React UI のバックエンド）
+│   ├── main.py                 # create_app + lifespan（AppState初期化）+ SPA静的配信
+│   ├── state.py / deps.py / sse.py / jobs.py  # 共有状態・503ゲート・SSE・プロセス内ジョブ
+│   └── routers/                # admin / qa / graph / documents / build
+├── frontend/                   # React SPA（Vite + TypeScript + Tailwind）
+│   └── src/{api,stores,hooks,pages,components,lib}/
 ├── scripts/                    # エントリーポイント
-│   ├── app.py                  # Streamlit WebUI（薄いオーケストレータ。ロジックはui/*へ委譲）
+│   ├── app.py                  # Streamlit WebUI（移行期間中併存。ロジックはservices/*へ委譲）
 │   ├── build_kg.py             # CLIナレッジグラフ構築（統合・参照グラフ・enrichment込み）
+│   ├── update_doc.py           # 1文書の増分更新CLI（差分→剪定→再抽出→同期）
+│   ├── edc_schema_sync.py      # EDCスキーマ自動発見CLI（チャンクディレクトリから）
 │   ├── build_reference_graph.py # 既存グラフへの参照グラフ後付け（再構築不要）
 │   ├── batch_eval.py           # CSVバッチ評価
 │   ├── init_japanese_search.py # 日本語検索初期化
 │   ├── check_pg_connection.py  # PostgreSQL接続テスト
 │   ├── check_schema.py         # スキーマ確認ユーティリティ
 │   └── reset_pgvector_tables.py # PGVectorテーブルリセット
+├── vendor/EDC/                 # EDCフレームワーク同梱（スキーマ自動発見。VENDOR.md参照）
+├── schemas/                    # EDC同期で生成したスキーマJSON（SHARED_SCHEMA_PATHに指定）
 ├── _bench/                     # Fujitsu RAG Hard Bench 実験一式（EXPERIMENTS.md に記録）
 ├── tests/                      # テスト
 │   └── test_vllm.py            # VLLM接続テスト
-├── docs/                       # ドキュメント
+├── docs/                       # ドキュメント（EDC_INTEGRATION.md ほか）
 ├── requirements.txt            # Python依存関係
 ├── .env.sample                 # 環境変数テンプレート
 └── output/                     # Azure DI処理結果（自動生成）
@@ -293,16 +319,14 @@ streamlit run scripts/app.py   # http://localhost:8501
 
 ### 2回目以降
 
-既にグラフデータがある場合:
-- アプリ起動時にNeo4jのデータを自動検出
-- **「既存グラフを読み込む」をクリック**するだけで即座に利用可能
-- 再構築不要！
+既にグラフデータがある場合、再構築は不要です:
+- **React UI**: ステートレスなので起動した時点でそのまま質問可能（グラフの有無・出自は構築タブとヘルスチェックに表示）
+- **Streamlit UI**: 起動時にNeo4jのデータを自動検出 → 「既存グラフを読み込む」をクリック
 
 ### 再開機能
 
-大量のドキュメントを処理する場合、途中で中断しても続きから再開できます:
+大量のドキュメントを処理する場合、途中で中断しても続きから再開できます（構築/取り込みタブ）:
 
-**Streamlit UI**:
 - **「新規構築」**: 処理済みデータをクリアして最初から構築
 - **「続きから再開」**: 未処理のチャンクのみ処理
 
@@ -371,11 +395,10 @@ python scripts/batch_eval.py --input questions.csv  # デフォルト出力名
 
 **出力CSV列**: 入力の追加列 + question, answer, doc_sources, doc_chunk_1..N, kg_chunk_1..N, graph_triples, llm_entities, vector_entities
 
-## サイドバー機能
+## 検索設定（React UIは質問応答タブ上部、Streamlitはサイドバー）
 
 ### グラフ可視化設定
-- **可視化エンジン**: Neo4j-viz
-- **最大表示ノード数**: 50〜100,000個
+- **最大表示ノード数**: 表示エッジ上限を調整可能
 
 ### 検索設定
 - **TopK**: 検索で取得するチャンク数（1〜20）
