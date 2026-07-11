@@ -280,12 +280,13 @@ def build_rag_system(ctx, source_docs: list, csv_edges: list | None = None):
                 )
 
         # Documentノード（add_graph_documentsが作成）にsource名を付与
+        from graphrag_core.graph.schema import chunk_label
         for chunk in chunks:
             chunk_id = chunk.metadata.get("id")
             doc_name = chunk.metadata.get("source", "Unknown")
             if chunk_id:
                 graph.query("""
-                    MATCH (d:Document {id: $chunk_id})
+                    MATCH (d:""" + chunk_label() + """ {id: $chunk_id})
                     SET d.source = $doc_name
                 """, params={"chunk_id": chunk_id, "doc_name": doc_name})
 

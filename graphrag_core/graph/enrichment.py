@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Iterable
 
-from graphrag_core.graph.schema import entity_node_predicate
+from graphrag_core.graph.schema import entity_node_predicate, chunk_edge, chunk_label
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def compute_mention_count(graph) -> int:
             f"""
             MATCH (t)
             WHERE {_pred}
-            OPTIONAL MATCH (t)<-[:MENTIONS]-(d:Document)
+            OPTIONAL MATCH (t)<-[:{chunk_edge()}]-(d:{chunk_label()})
             WITH t, COUNT(DISTINCT d) AS n
             SET t.mention_count = n
             """
@@ -114,7 +114,7 @@ def compute_pagerank(graph, alpha: float = 0.85, max_iter: int = 100) -> int:
         edges = graph.query(
             f"""
             MATCH (a)-[r]->(b)
-            WHERE type(r) <> 'MENTIONS'
+            WHERE type(r) <> '{chunk_edge()}'
               AND {entity_node_predicate("a")}
               AND {entity_node_predicate("b")}
             RETURN a.id AS s, b.id AS t

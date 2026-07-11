@@ -494,13 +494,13 @@ class EntityVectorizer:
             # ラベルのホワイトリストではなく共通述語（チャンク/管理ノード除外）で対象を決める。
             # 全エンティティを漏れなく対象にするため SKIP/LIMIT でページネーションする
             # （ORDER BY n.id でページ間の安定性を保証）。
-            from graphrag_core.graph.schema import entity_node_predicate
+            from graphrag_core.graph.schema import entity_node_predicate, chunk_edge, chunk_label
             query = f"""
             MATCH (n)
             WHERE {entity_node_predicate("n")}
             WITH n ORDER BY n.id
             SKIP $skip LIMIT $batch
-            OPTIONAL MATCH (n)<-[:MENTIONS]-(doc:Document)
+            OPTIONAL MATCH (n)<-[:{chunk_edge()}]-(doc:{chunk_label()})
             WITH n, COLLECT(DISTINCT substring(doc.text, 0, 500)) AS chunk_texts
             RETURN n.id AS entity_id,
                    labels(n) AS types,

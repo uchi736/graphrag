@@ -40,6 +40,23 @@ DEFAULT_DOMAIN: str = "default/builtin"
 DEFAULT_VERSION: str = "builtin-v1"
 
 
+def chunk_label() -> str:
+    """チャンクノードのラベル。既定 'Document'、llm-graph-builder 製グラフでは 'Chunk'。
+
+    Cypher へは f-string / 連結で埋め込む（ラベルはパラメータ化できないため）。
+    値は Settings 由来の英数字ラベルのみを想定。
+    """
+    return get_settings().kg_chunk_label
+
+
+def chunk_edge() -> str:
+    """チャンク→エンティティのエッジ型。既定 'MENTIONS'、llm-graph-builder では 'HAS_ENTITY'。
+
+    トラバーサル除外（type(r) <> '...'）にも同じ値を使うこと。
+    """
+    return get_settings().kg_chunk_edge
+
+
 def entity_node_predicate(var: str) -> str:
     """エンティティノード判定の共通Cypher述語（ラベル非依存）。
 

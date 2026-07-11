@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 from graphrag_core.llm.factory import create_chat_llm
 from graphrag_core.llm.langfuse_utils import get_langfuse_callback, observe
 from graphrag_core.prompts import NL_TO_CYPHER_PROMPT
+from graphrag_core.graph.schema import chunk_edge, chunk_label
 
 
 class WriteQueryRejected(ValueError):
@@ -28,11 +29,11 @@ def get_enhanced_graph_data(graph, limit: int = 200) -> List[Dict]:
     limit = max(1, min(int(limit), 5000))
     query = f"""
     MATCH (n)-[r]->(m)
-    WHERE type(r) <> 'MENTIONS'
+    WHERE type(r) <> '{chunk_edge()}'
     AND NOT n.id =~ '[0-9a-f]{{32,}}'
     AND NOT m.id =~ '[0-9a-f]{{32,}}'
-    OPTIONAL MATCH (n)<-[:MENTIONS]-(doc_n:Document)
-    OPTIONAL MATCH (m)<-[:MENTIONS]-(doc_m:Document)
+    OPTIONAL MATCH (n)<-[:{chunk_edge()}]-(doc_n:{chunk_label()})
+    OPTIONAL MATCH (m)<-[:{chunk_edge()}]-(doc_m:{chunk_label()})
     WITH n, r, m, labels(n) as source_labels, labels(m) as target_labels,
          COLLECT(DISTINCT doc_n.source) AS source_docs,
          COLLECT(DISTINCT doc_m.source) AS target_docs
@@ -60,7 +61,7 @@ def get_enhanced_subgraph_data(graph, center_nodes: List[str], hop: int = 1,
     MATCH (c) WHERE c.id IN $entities
     MATCH (c)-[*1..{hop}]-(n)
     MATCH (n)-[r]->(m)
-    WHERE type(r) <> 'MENTIONS'
+    WHERE type(r) <> '{chunk_edge()}'
       AND NOT n.id =~ '[0-9a-f]{{32,}}' AND NOT m.id =~ '[0-9a-f]{{32,}}'
     RETURN DISTINCT
       n.id AS source,
@@ -93,7 +94,7 @@ def search_node_ids(graph, q: str = "", limit: int = 100) -> List[str]:
     limit = max(1, min(int(limit), 500))
     if q:
         rows = graph.query(
-            "MATCH (n) WHERE n.id IS NOT NULL AND NOT n:Document AND NOT n:ProcessedChunk "
+            "MATCH (n) WHERE n.id IS NOT NULL AND NOT n:" + chunk_label() + " AND NOT n:ProcessedChunk "
             "AND NOT n.id =~ '[0-9a-f]{32,}' "
             "AND toLower(n.id) CONTAINS toLower($q) "
             "RETURN n.id AS id ORDER BY size(n.id) LIMIT $limit",
@@ -101,7 +102,7 @@ def search_node_ids(graph, q: str = "", limit: int = 100) -> List[str]:
         )
     else:
         rows = graph.query(
-            "MATCH (n) WHERE n.id IS NOT NULL AND NOT n:Document AND NOT n:ProcessedChunk "
+            "MATCH (n) WHERE n.id IS NOT NULL AND NOT n:" + chunk_label() + " AND NOT n:ProcessedChunk "
             "AND NOT n.id =~ '[0-9a-f]{32,}' "
             "RETURN n.id AS id ORDER BY n.id LIMIT $limit",
             params={"limit": limit},

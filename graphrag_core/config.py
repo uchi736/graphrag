@@ -85,6 +85,13 @@ class Settings:
     # 未設定 or ファイル無しならデフォルト12関係にフォールバック
     shared_schema_path: str = field(default_factory=lambda: _env("SHARED_SCHEMA_PATH", ""))
 
+    # --- KG Chunk Schema (外部構築グラフへの接続プロファイル) ---
+    # チャンクノードのラベルとチャンク→エンティティのエッジ型。
+    # 既定は graphrag ネイティブ（LangChain include_source 由来の :Document / MENTIONS）。
+    # llm-graph-builder 製グラフに接続する場合: KG_CHUNK_LABEL=Chunk, KG_CHUNK_EDGE=HAS_ENTITY
+    kg_chunk_label: str = field(default_factory=lambda: _env("KG_CHUNK_LABEL", "Document"))
+    kg_chunk_edge: str = field(default_factory=lambda: _env("KG_CHUNK_EDGE", "MENTIONS"))
+
     # --- Term Dictionary (外部用語辞書) ---
     # JSON/CSV のパス。指定されていれば build_kg 末尾で Term ノードに
     # canonical_form / aliases / category / definition を後付けする

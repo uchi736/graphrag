@@ -26,6 +26,8 @@ import unicodedata
 from collections import defaultdict
 from typing import Any, Dict, List
 
+from graphrag_core.graph.schema import chunk_label
+
 logger = logging.getLogger(__name__)
 
 # ── 正規表現パターン ──────────────────────────────────────────────────
@@ -73,7 +75,7 @@ def load_chunks(graph) -> List[dict]:
     skip, batch = 0, 2000
     while True:
         rows = graph.query(
-            "MATCH (d:Document) WHERE d.id =~ '[0-9a-f]{32,}' AND d.text IS NOT NULL "
+            "MATCH (d:" + chunk_label() + ") WHERE d.id =~ '[0-9a-f]{32,}' AND d.text IS NOT NULL "
             "RETURN d.id AS id, d.text AS text, d.source AS source, d.page AS page "
             "ORDER BY d.source, d.page, d.id SKIP $skip LIMIT $batch",
             {"skip": skip, "batch": batch},
@@ -242,8 +244,8 @@ def write_reference_graph(graph, extraction: dict, batch_size: int = 1000) -> di
         graph.query(
             """
             UNWIND $rows AS row
-            MATCH (a:Document {id: row.src})
-            MATCH (b:Document {id: row.tgt})
+            MATCH (a:""" + chunk_label() + """ {id: row.src})
+            MATCH (b:""" + chunk_label() + """ {id: row.tgt})
             MERGE (a)-[r:REFERS_TO {kind: row.kind}]->(b)
             SET r.ref_text = row.ref
             """,
@@ -256,7 +258,7 @@ def write_reference_graph(graph, extraction: dict, batch_size: int = 1000) -> di
         graph.query(
             """
             UNWIND $rows AS row
-            MATCH (c:Document {id: row.id})
+            MATCH (c:""" + chunk_label() + """ {id: row.id})
             SET c.ref_docs = row.docs
             """,
             {"rows": doc_rows[i: i + batch_size]},
@@ -310,9 +312,9 @@ def follow_references(
         rows = graph.query(
             """
             UNWIND $locs AS loc
-            MATCH (c:Document)
+            MATCH (c:""" + chunk_label() + """)
             WHERE c.source = loc.source AND toString(c.page) = loc.page
-            OPTIONAL MATCH (c)-[r:REFERS_TO]->(t:Document)
+            OPTIONAL MATCH (c)-[r:REFERS_TO]->(t:""" + chunk_label() + """)
             RETURN collect(DISTINCT {
                        id: t.id, text: substring(t.text, 0, 2000),
                        source: t.source, page: t.page, kind: r.kind

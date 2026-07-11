@@ -29,7 +29,7 @@ import hashlib
 import logging
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 
-from graphrag_core.graph.schema import entity_node_predicate
+from graphrag_core.graph.schema import entity_node_predicate, chunk_edge, chunk_label
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def make_chunk_id(doc_id: str, content: str) -> str:
 def get_doc_chunk_ids(graph, doc_id: str) -> Set[str]:
     """Neo4j 上でこの文書に属する既存チャンク(Document)ID集合。"""
     rows = graph.query(
-        "MATCH (d:Document {source: $s}) RETURN d.id AS id", {"s": doc_id}
+        "MATCH (d:" + chunk_label() + " {source: $s}) RETURN d.id AS id", {"s": doc_id}
     )
     return {r["id"] for r in (rows or []) if r.get("id")}
 
@@ -101,7 +101,7 @@ def prune_chunks(graph, chunk_ids: List[str], dry_run: bool = False) -> Dict[str
             "AND any(x IN r.source_chunks WHERE x IN $ids) "
             "RETURN count(r) AS c", {"ids": ids})[0]["c"]
         docs = graph.query(
-            "MATCH (d:Document) WHERE d.id IN $ids RETURN count(d) AS c", {"ids": ids})[0]["c"]
+            "MATCH (d:" + chunk_label() + ") WHERE d.id IN $ids RETURN count(d) AS c", {"ids": ids})[0]["c"]
         return {"edges_pruned": edges_touched, "edges_deleted_est": edges_emptied,
                 "documents_deleted": docs, "orphan_entities_deleted": "n/a(dry)",
                 "orphan_entity_ids": [], "processed_deleted": len(ids)}
@@ -120,15 +120,15 @@ def prune_chunks(graph, chunk_ids: List[str], dry_run: bool = False) -> Dict[str
     stats["edges_deleted"] = r[0]["c"] if r else 0
     # 3. Document(チャンク)ノード削除 → MENTIONS / REFERS_TO も消える
     r = graph.query(
-        "UNWIND $ids AS cid MATCH (d:Document {id: cid}) "
+        "UNWIND $ids AS cid MATCH (d:" + chunk_label() + " {id: cid}) "
         "WITH d LIMIT 500000 DETACH DELETE d RETURN count(d) AS c", {"ids": ids})
     stats["documents_deleted"] = r[0]["c"] if r else 0
     # 4. 孤立エンティティ削除（MENTIONS 0・意味エッジ0）。Document は除外。
     #    削除前に id を収集し、エンティティベクトル同期に使えるよう返す。
     orphan_rows = graph.query(
-        f"MATCH (n) WHERE {_ent} AND NOT n:Document "
-        "AND NOT (n)<-[:MENTIONS]-() "
-        "AND NOT EXISTS { MATCH (n)-[e]-() WHERE type(e) <> 'MENTIONS' } "
+        f"MATCH (n) WHERE {_ent} AND NOT n:{chunk_label()} "
+        "AND NOT (n)<-[:" + chunk_edge() + "]-() "
+        "AND NOT EXISTS { MATCH (n)-[e]-() WHERE type(e) <> '" + chunk_edge() + "' } "
         "RETURN elementId(n) AS eid, n.id AS id LIMIT 500000") or []
     stats["orphan_entity_ids"] = sorted({r["id"] for r in orphan_rows if r.get("id")})
     if orphan_rows:
@@ -198,7 +198,7 @@ def sync_entity_vectors(
     entities = []
     if added_chunk_ids:
         rows = graph.query(
-            "MATCH (d:Document)-[:MENTIONS]->(e) WHERE d.id IN $ids "
+            "MATCH (d:" + chunk_label() + ")-[:" + chunk_edge() + "]->(e) WHERE d.id IN $ids "
             "RETURN DISTINCT e.id AS id, labels(e) AS labels",
             {"ids": added_chunk_ids}) or []
         for r in rows:

@@ -130,9 +130,10 @@ def graph_list_all_edges(graph) -> List[Dict[str, Any]]:
 def graph_get_data_for_cache(graph) -> List[Dict[str, Any]]:
     """グラフデータ取得（キャッシュ用）"""
     try:
+        from graphrag_core.graph.schema import chunk_edge
         result = graph.query(
             "MATCH (s)-[r]->(t) "
-            "WHERE type(r) <> 'MENTIONS' "
+            "WHERE type(r) <> '" + chunk_edge() + "' "
             "AND NOT s.id =~ '[0-9a-f]{32,}' AND NOT t.id =~ '[0-9a-f]{32,}' "
             "RETURN s.id AS source, type(r) AS relation, t.id AS target "
             "LIMIT 200"

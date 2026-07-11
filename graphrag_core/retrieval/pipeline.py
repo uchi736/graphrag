@@ -24,6 +24,7 @@ from graphrag_core.prompts import (
 from graphrag_core.retrieval.hybrid import HybridRetriever, rerank_with_llm
 from graphrag_core.text.japanese import SUDACHI_AVAILABLE
 from graphrag_core.retrieval.entity_vector import EntityVectorizer
+from graphrag_core.graph.schema import chunk_edge, chunk_label
 from graphrag_core.llm.langfuse_utils import observe, get_langfuse_callback
 from graphrag_core.llm.factory import create_chat_llm
 
@@ -574,7 +575,7 @@ def get_graph_context(
             "MATCH (n) WHERE " + _key_match + " AND " + _hex + " "
             + _start_select +
             "MATCH path = (start_node)-[r]-(end_node) "
-            "WHERE type(r) <> 'MENTIONS' AND NOT end_node.id =~ '[0-9a-f]{32,}' "
+            "WHERE type(r) <> '" + chunk_edge() + "' AND NOT end_node.id =~ '[0-9a-f]{32,}' "
             "AND COALESCE(end_node.is_anaphor, false) = false "
             # extraction_count（同一エッジが何チャンクから抽出されたか）と
             # pagerank でスコアリングしてから LIMIT（無作為truncationを排除）
@@ -591,7 +592,7 @@ def get_graph_context(
             "MATCH (n) WHERE " + _key_match + " AND " + _hex + " "
             + _start_select +
             f"MATCH path = (start_node)-[*1..{hop_count}]-(end_node) "
-            "WHERE ALL(r IN relationships(path) WHERE type(r) <> 'MENTIONS') "
+            "WHERE ALL(r IN relationships(path) WHERE type(r) <> '" + chunk_edge() + "') "
             "AND ALL(node IN nodes(path) WHERE " + _hex_node + ") "
             # 値ノードは中継(先頭・末尾以外)に置かない
             "AND ALL(node IN nodes(path)[1..-1] WHERE COALESCE(node.is_value, false) = false) "
@@ -639,7 +640,7 @@ def get_graph_context(
                 "WITH collect(DISTINCT n) AS matched_nodes "
                 "UNWIND matched_nodes AS start_node "
                 "MATCH (start_node)-[r]-(connected_node) "
-                "WHERE type(r) <> 'MENTIONS' AND NOT connected_node.id =~ '[0-9a-f]{32,}' "
+                "WHERE type(r) <> '" + chunk_edge() + "' AND NOT connected_node.id =~ '[0-9a-f]{32,}' "
                 "WITH r, startNode(r) AS actual_start, endNode(r) AS actual_end "
                 "RETURN DISTINCT actual_start.id AS start, type(r) AS type, actual_end.id AS end "
                 f"LIMIT {limit}"
@@ -657,7 +658,7 @@ def get_graph_context(
         WHERE ANY(entity IN $entities WHERE
             ANY(k IN COALESCE(n.search_keys, [toLower(n.id)]) WHERE k CONTAINS entity)
             OR ANY(k IN COALESCE(m.search_keys, [toLower(m.id)]) WHERE k CONTAINS entity))
-        AND type(r) <> 'MENTIONS'
+        AND type(r) <> '""" + chunk_edge() + """'
         AND NOT n.id =~ '[0-9a-f]{32,}' AND NOT m.id =~ '[0-9a-f]{32,}'
         RETURN DISTINCT n.id AS start, type(r) AS type, m.id AS end
         LIMIT 20
@@ -788,7 +789,7 @@ def retriever_and_merge(
                 MATCH (a {id: tk.s})-[r]-(b {id: tk.o})
                 WHERE type(r) = tk.p AND r.source_chunks IS NOT NULL
                 UNWIND r.source_chunks AS cid
-                MATCH (d:Document {id: cid})
+                MATCH (d:""" + chunk_label() + """ {id: cid})
                 RETURN DISTINCT
                   d.id AS chunk_id,
                   substring(d.text, 0, 2000) AS text,
@@ -819,7 +820,7 @@ def retriever_and_merge(
                         # チャンク群から任意の数件が返り、候補プールが不安定になる
                         chunk_query = """
                         UNWIND $entity_names AS entity_name
-                        MATCH (e {id: entity_name})<-[:MENTIONS]-(doc:Document)
+                        MATCH (e {id: entity_name})<-[:""" + chunk_edge() + """]-(doc:""" + chunk_label() + """)
                         WITH doc, count(DISTINCT entity_name) AS entity_hits
                         ORDER BY entity_hits DESC
                         RETURN doc.id AS chunk_id,

@@ -11,6 +11,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
+from graphrag_core.graph.schema import chunk_edge
+
 logger = logging.getLogger(__name__)
 
 
@@ -376,7 +378,7 @@ def neo4j_list_all_edges(graph) -> List[Dict[str, Any]]:
     try:
         result = graph.query(
             "MATCH (s)-[r]->(t) "
-            "WHERE type(r) <> 'MENTIONS' "
+            "WHERE type(r) <> '" + chunk_edge() + "' "
             "AND NOT s.id =~ '[0-9a-f]{32,}' AND NOT t.id =~ '[0-9a-f]{32,}' "
             "RETURN s.id AS source, type(r) AS type, t.id AS target "
             "LIMIT 500"
@@ -445,7 +447,7 @@ def export_graph_json(graph, output_path: str = "graph.json") -> dict:
     try:
         edge_result = graph.query(
             "MATCH (s)-[r]->(t) "
-            "WHERE type(r) <> 'MENTIONS' "
+            "WHERE type(r) <> '" + chunk_edge() + "' "
             "AND NOT s.id =~ '[0-9a-f]{32,}' AND NOT t.id =~ '[0-9a-f]{32,}' "
             "RETURN s.id AS source, type(r) AS type, t.id AS target, properties(r) AS props "
             "ORDER BY s.id, t.id"

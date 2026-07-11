@@ -29,7 +29,7 @@ from __future__ import annotations
 import logging
 import re
 
-from graphrag_core.graph.schema import entity_node_predicate
+from graphrag_core.graph.schema import entity_node_predicate, chunk_edge, chunk_label
 
 logger = logging.getLogger(__name__)
 
@@ -433,7 +433,7 @@ def resolve_anaphora_nodes(graph, alias_maps: dict) -> dict:
 
         # 言及元文書を取得し、文書スコープで解決を試みる
         srcs = graph.query(
-            "MATCH (n {id: $id})<-[:MENTIONS]-(d:Document) "
+            "MATCH (n {id: $id})<-[:" + chunk_edge() + "]-(d:" + chunk_label() + ") "
             "RETURN DISTINCT d.source AS s",
             {"id": nid},
         )
