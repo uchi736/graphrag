@@ -26,3 +26,7 @@ sudachidict_core>=20240716
 json-repair>=0.25.0
 rank-bm25>=0.2.2
 langfuse>=4.0.0
+# HTTP API (React SPA 配信 + 外部連携。api/ を uvicorn で起動)
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9

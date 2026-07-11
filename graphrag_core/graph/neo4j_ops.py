@@ -168,7 +168,7 @@ def neo4j_get_node_info(graph, node_id: str) -> Optional[Dict[str, Any]]:
         result = graph.query(
             "MATCH (n {id: $id}) "
             "RETURN n.id AS id, labels(n) AS labels, properties(n) AS props, "
-            "size((n)-[]-()) AS degree",
+            "COUNT { (n)--() } AS degree",
             {"id": node_id},
         )
         if result:
@@ -347,7 +347,7 @@ def neo4j_list_all_nodes(graph) -> List[Dict[str, Any]]:
             "MATCH (n) "
             "WHERE NOT n:ProcessedChunk AND NOT n:Chunk "
             "AND NOT n.id =~ '[0-9a-f]{32,}' "
-            "RETURN n.id AS id, labels(n) AS labels, size((n)-[]-()) AS degree "
+            "RETURN n.id AS id, labels(n) AS labels, COUNT { (n)--() } AS degree "
             "ORDER BY degree DESC LIMIT 500"
         )
         nodes = []

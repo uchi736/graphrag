@@ -1,10 +1,11 @@
 """
 graphrag_core/ui/documents_tab.py
 『📄 登録ドキュメント』タブ。render_documents_tab(ctx)。
-langchain_pg_embedding をソース別にチャンク数集計して表示する読み取り専用ビュー。
+集計は services/documents.list_registered_documents に委譲（st非依存化）。
 """
 import streamlit as st
 
+from graphrag_core.services.documents import list_registered_documents
 from graphrag_core.ui.feedback import show_error
 
 
@@ -16,33 +17,21 @@ def render_documents_tab(ctx):
 
     if ctx.pg_conn:
         try:
-            import psycopg
-            raw_conn = ctx.normalize_pg_connection_string(ctx.pg_conn)
-            with psycopg.connect(raw_conn) as conn:
-                with conn.cursor() as cur:
-                    cur.execute("""
-                        SELECT
-                            COALESCE(e.cmetadata->>'source', '(unknown)') as source,
-                            COUNT(*) as chunk_count
-                        FROM langchain_pg_embedding e
-                        JOIN langchain_pg_collection c ON e.collection_id = c.uuid
-                        WHERE c.name = %s
-                        GROUP BY e.cmetadata->>'source'
-                        ORDER BY chunk_count DESC
-                    """, (ctx.pg_collection,))
-                    rows = cur.fetchall()
-
-            if rows:
-                total_chunks = sum(r[1] for r in rows)
+            data = list_registered_documents(ctx.pg_conn, ctx.pg_collection)
+            docs = data["documents"]
+            if docs:
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.metric("総チャンク数", f"{total_chunks:,}")
+                    st.metric("総チャンク数", f"{data['total_chunks']:,}")
                 with col2:
-                    st.metric("ドキュメント数", len(rows))
+                    st.metric("ドキュメント数", len(docs))
 
                 st.markdown("### ソースファイル一覧")
                 import pandas as pd
-                df = pd.DataFrame(rows, columns=["ソースファイル", "チャンク数"])
+                df = pd.DataFrame(
+                    [(d["source"], d["chunk_count"]) for d in docs],
+                    columns=["ソースファイル", "チャンク数"],
+                )
                 st.dataframe(df, width="stretch", hide_index=True)
             else:
                 st.info("登録されたドキュメントはありません")

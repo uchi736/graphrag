@@ -38,7 +38,8 @@ from graphrag_core.retrieval.pipeline import retriever_and_merge as qa_retriever
 from graphrag_core.graph.provenance import stamp_graph_provenance, graph_matches_collection
 from graphrag_core.graph.incremental import make_chunk_id
 from graphrag_core.document.pdf import load_pdf_text
-from graphrag_core.ui.state import create_vector_retriever
+from graphrag_core.services.qa import QADeps, make_qa_chain
+from graphrag_core.services.retrievers import create_vector_retriever
 
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_neo4j import Neo4jGraph
@@ -130,48 +131,16 @@ def restore_from_existing_graph(ctx):
 
         vector_store = retry_on_timeout(create_vector_store, max_retries=3, delay=2.0)
 
-        retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
-        vector_retriever = create_vector_retriever(vector_store, retrieval_top_k)
-
         llm = create_chat_llm(temperature=0)
 
-        def retriever_and_merge(question: str):
-            config = ctx.build_config()  # クエリ毎に最新設定を読む（設定変更が再構築なしで即反映）
-            # グラフ↔コレクション不整合時は KG をスキップ（graph=None でベクトル+BM25のみ）
-            _g = graph if graph_matches_collection(graph, ctx.pg_collection) else None
-            return qa_retriever_and_merge(
-                question, _g, llm, embeddings, vector_retriever,
-                ctx.pg_conn, ctx.pg_collection, config
-            )
-
-        prompt = PromptTemplate.from_template(QA_PROMPT)
-
-        llm_chain = (
-            prompt
-            | create_chat_llm(temperature=0)
-            | StrOutputParser()
+        # 検索+回答生成は services.qa に一元化（KGゲート/graph_paths含む）。
+        # config_provider=ctx.build_config で「設定変更が再構築なしで即反映」を維持。
+        deps = QADeps(
+            graph=graph, llm=llm, embeddings=embeddings,
+            vector_store=vector_store,
+            pg_conn=ctx.pg_conn, pg_collection=ctx.pg_collection,
         )
-
-        @observe(name="answer_generation")
-        def generate_with_sources(data):
-            answer = llm_chain.invoke(
-                {"question": data["question"], "context": data["context"]},
-                config=get_langfuse_callback()
-            )
-            return {
-                "answer": answer,
-                "vector_sources": data["vector_sources"],
-                "kg_source_chunks": data.get("kg_source_chunks", []),
-                "graph_sources": data["graph_sources"],
-                "graph_paths": data.get("graph_paths", []),
-                "extracted_entities": data.get("extracted_entities", {})
-            }
-
-        chain = (
-            RunnablePassthrough()
-            | RunnableLambda(retriever_and_merge)
-            | RunnableLambda(generate_with_sources)
-        )
+        chain = make_qa_chain(deps, ctx.build_config)
 
         return chain, graph
     except Exception as e:
@@ -430,46 +399,13 @@ def build_rag_system(ctx, source_docs: list, csv_edges: list | None = None):
     # 以後アプリ実行時にこの出自と現 PG_COLLECTION を照合し、不整合なら KG をスキップする。
     stamp_graph_provenance(graph, ctx.pg_collection, doc_count=len(chunks))
 
-    # QAチェーン構築
-    retrieval_top_k = st.session_state.get('retrieval_top_k', 5)
-    vector_retriever = create_vector_retriever(vector_store, retrieval_top_k)
-
-    def retriever_and_merge(question: str):
-        config = ctx.build_config()  # クエリ毎に最新設定を読む（設定変更が再構築なしで即反映）
-        # グラフ↔コレクション不整合時は KG をスキップ（graph=None でベクトル+BM25のみ）
-        _g = graph if graph_matches_collection(graph, ctx.pg_collection) else None
-        return qa_retriever_and_merge(
-            question, _g, llm, embeddings, vector_retriever,
-            ctx.pg_conn, ctx.pg_collection, config
-        )
-
-    prompt = PromptTemplate.from_template(QA_PROMPT)
-
-    llm_chain = (
-        prompt
-        | create_chat_llm(temperature=0)
-        | StrOutputParser()
+    # QAチェーン構築（services.qa に一元化。restore 側と完全に同一実装）
+    deps = QADeps(
+        graph=graph, llm=llm, embeddings=embeddings,
+        vector_store=vector_store,
+        pg_conn=ctx.pg_conn, pg_collection=ctx.pg_collection,
     )
-
-    @observe(name="answer_generation")
-    def generate_with_sources(data):
-        answer = llm_chain.invoke(
-            {"question": data["question"], "context": data["context"]},
-            config=get_langfuse_callback()
-        )
-        return {
-            "answer": answer,
-            "vector_sources": data["vector_sources"],
-            "kg_source_chunks": data.get("kg_source_chunks", []),
-            "graph_sources": data["graph_sources"],
-            "extracted_entities": data.get("extracted_entities", {})
-        }
-
-    chain = (
-        RunnablePassthrough()
-        | RunnableLambda(retriever_and_merge)
-        | RunnableLambda(generate_with_sources)
-    )
+    chain = make_qa_chain(deps, ctx.build_config)
 
     return chain, graph
 

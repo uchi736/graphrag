@@ -99,19 +99,8 @@ def create_graph_instance(enhanced_schema: bool = False) -> Neo4jGraph:
     )
 
 
-def create_vector_retriever(vector_store, top_k: int):
-    """バージョン差異を吸収してRetrieverを構築する。"""
-    if vector_store is None:
-        return None
-    if HAS_PARENT:
-        try:
-            return ParentDocumentRetriever(
-                vectorstore=vector_store, search_kwargs={"k": top_k},
-            )
-        except Exception as e:
-            print(f"[Retriever] ParentDocumentRetriever unavailable. "
-                  f"fallback=vector_store.as_retriever ({e})")
-    return vector_store.as_retriever(search_kwargs={"k": top_k})
+# services/retrievers.py へ移設（st非依存化）。後方互換のため re-export。
+from graphrag_core.services.retrievers import create_vector_retriever  # noqa: E402,F401
 
 
 def check_existing_graph(graph) -> dict:

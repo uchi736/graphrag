@@ -33,6 +33,11 @@ class HybridRetriever:
         """キャッシュをクリア（テスト・再構築時用）"""
         cls._instances.clear()
 
+    @classmethod
+    def clear_instance(cls, pg_conn_string: str, collection_name: str = "graphrag"):
+        """対象コレクションのインスタンスだけ破棄（増分更新/再構築後のBM25再構築用）"""
+        cls._instances.pop((pg_conn_string, collection_name), None)
+
     def __init__(self, pg_conn_string: str, collection_name: str = "graphrag"):
         # SQLAlchemy形式 → psycopg形式に正規化
         self.conn_string = normalize_pg_connection_string(pg_conn_string)

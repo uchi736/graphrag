@@ -249,11 +249,25 @@ docker run -d --name neo4j \
 
 ### 4. アプリケーションの起動
 
+**React UI + FastAPI（推奨）:**
+
 ```bash
-streamlit run scripts/app.py
+# 初回のみ: フロントエンドをビルド
+cd frontend && npm ci && npm run build && cd ..
+
+# APIサーバ起動（React UI を同一ポートで配信。ジョブ管理がプロセス内のため workers=1 必須）
+python -m uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
 
-ブラウザで `http://localhost:8501` にアクセスしてください。
+ブラウザで `http://localhost:8000` にアクセスしてください。
+QAはSSEストリーミング、KG構築はジョブ進捗表示に対応しています。
+（開発時は `cd frontend && npm run dev` で Vite dev server(:5173) + `/api` プロキシ）
+
+**旧 Streamlit UI（移行期間中は併用可）:**
+
+```bash
+streamlit run scripts/app.py   # http://localhost:8501
+```
 
 ## 使い方
 

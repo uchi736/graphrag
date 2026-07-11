@@ -18,111 +18,41 @@ from graphrag_core.llm.langfuse_utils import observe, get_langfuse_callback
 # =====================================================================
 # グラフデータ取得関数
 # =====================================================================
-def get_enhanced_graph_data(graph, limit=200):
-    """グラフバックエンドから拡張グラフデータを取得"""
-    if hasattr(graph, 'get_graph_data'):
-        return graph.get_graph_data(limit=limit)
-
-    # Neo4jの場合はCypherクエリ
-    query = f"""
-    MATCH (n)-[r]->(m)
-    WHERE type(r) <> 'MENTIONS'
-    AND NOT n.id =~ '[0-9a-f]{{32,}}'
-    AND NOT m.id =~ '[0-9a-f]{{32,}}'
-    OPTIONAL MATCH (n)<-[:MENTIONS]-(doc_n:Document)
-    OPTIONAL MATCH (m)<-[:MENTIONS]-(doc_m:Document)
-    WITH n, r, m, labels(n) as source_labels, labels(m) as target_labels,
-         COLLECT(DISTINCT doc_n.source) AS source_docs,
-         COLLECT(DISTINCT doc_m.source) AS target_docs
-    RETURN
-      n.id AS source,
-      CASE WHEN size(source_labels) > 0 THEN source_labels[0] ELSE 'Unknown' END AS source_type,
-      type(r) AS relation,
-      m.id AS target,
-      CASE WHEN size(target_labels) > 0 THEN target_labels[0] ELSE 'Unknown' END AS target_type,
-      COUNT {{ (n)--() }} AS source_degree,
-      COUNT {{ (m)--() }} AS target_degree,
-      source_docs,
-      target_docs
-    LIMIT {limit}
-    """
-    return graph.query(query)
+# データ取得/Cypher の実体は services/graph_explore.py へ移設（st非依存化）。
+# ここは st.error 等の表示挙動を維持する薄いラッパのみ。
+from graphrag_core.services.graph_explore import (  # noqa: E402,F401
+    WriteQueryRejected,
+    get_enhanced_graph_data,
+    get_enhanced_subgraph_data,
+)
+from graphrag_core.services.graph_explore import (  # noqa: E402
+    natural_language_to_cypher as _svc_nl_to_cypher,
+    execute_readonly_cypher as _svc_execute_cypher,
+)
 
 
-def get_enhanced_subgraph_data(graph, center_nodes: List[str], hop: int = 1, limit: int = 500):
-    """指定ノード群を中心にN-hop範囲のエッジを取得"""
-    hop = max(1, min(int(hop), 3))
-    query = f"""
-    MATCH (c) WHERE c.id IN $entities
-    MATCH (c)-[*1..{hop}]-(n)
-    MATCH (n)-[r]->(m)
-    WHERE type(r) <> 'MENTIONS'
-      AND NOT n.id =~ '[0-9a-f]{{32,}}' AND NOT m.id =~ '[0-9a-f]{{32,}}'
-    RETURN DISTINCT
-      n.id AS source,
-      COALESCE(labels(n)[0], 'Unknown') AS source_type,
-      type(r) AS relation,
-      m.id AS target,
-      COALESCE(labels(m)[0], 'Unknown') AS target_type
-    LIMIT {limit}
-    """
-    results = graph.query(query, params={'entities': center_nodes})
-    return [
-        {
-            'source': r.get('source', ''),
-            'source_type': r.get('source_type', 'Unknown'),
-            'target': r.get('target', ''),
-            'target_type': r.get('target_type', 'Unknown'),
-            'relation': r.get('relation', 'RELATED'),
-            'edge_key': 0,
-            'source_degree': 0,
-            'target_degree': 0,
-            'source_docs': [],
-            'target_docs': [],
-        }
-        for r in (results or [])
-    ]
-
-
-# =====================================================================
-# Cypher クエリ関数
-# =====================================================================
-@observe(name="cypher_generation")
 def natural_language_to_cypher(query: str) -> str:
-    """自然言語クエリをCypherクエリに変換"""
+    """自然言語クエリをCypherクエリに変換（表示付きラッパ）"""
     try:
-        llm = create_chat_llm(temperature=0)
-        prompt = NL_TO_CYPHER_PROMPT.format(query=query)
-        response = llm.invoke(prompt, config=get_langfuse_callback())
-        cypher_query = response.content.strip()
-        if cypher_query.startswith("```"):
-            lines = cypher_query.split("\n")
-            cypher_query = "\n".join(lines[1:-1]) if len(lines) > 2 else cypher_query
-        return cypher_query
+        return _svc_nl_to_cypher(query)
     except Exception as e:
         st.error(f"Cypherクエリ変換エラー: {e}")
         return ""
 
 
 def execute_cypher_and_visualize(cypher_query: str, graph):
-    """Cypherクエリ（参照のみ）を実行して結果を返す"""
-    import re
+    """Cypherクエリ（参照のみ）を実行して結果を返す（表示付きラッパ）"""
     try:
-        # 書き込み系キーワードを単語境界で検出（OFFSET や id の部分一致で誤検知しない）
-        if re.search(r'\b(CREATE|MERGE|DELETE|SET|REMOVE|DETACH|DROP|CALL|LOAD)\b',
-                     cypher_query, flags=re.IGNORECASE):
-            st.error("このツールは参照クエリ(MATCH/RETURN)のみ実行できます。書き込み系キーワードが含まれています。")
-            return None
-        # LIMIT が無ければ付与して暴走（巨大結果でUIフリーズ）を防ぐ
-        run_query = cypher_query
-        if not re.search(r'\bLIMIT\b', cypher_query, flags=re.IGNORECASE):
-            run_query = cypher_query.rstrip().rstrip(';') + " LIMIT 500"
+        result = _svc_execute_cypher(graph, cypher_query)
+        if result["applied_limit"]:
             st.info("結果上限として LIMIT 500 を付与しました。")
-        result = graph.query(run_query)
-        if not result:
+        if not result["rows"]:
             st.warning("クエリ結果が空です")
             return None
-        return result
+        return result["rows"]
+    except WriteQueryRejected as e:
+        st.error(str(e))
+        return None
     except Exception as e:
         show_error("クエリ実行エラー", e)
         return None

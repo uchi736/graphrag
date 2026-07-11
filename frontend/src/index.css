@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/*
+  GraphRAG テーマ。完全オンプレ運用のため Web フォントの @import は禁止
+  （システムフォントスタックのみ）。現行UIのグラデーション
+  (#667eea → #764ba2) をブランドアクセントとして踏襲する。
+*/
+@theme {
+  --font-sans: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic UI",
+    "Meiryo", system-ui, sans-serif;
+  --font-mono: "Consolas", "SF Mono", ui-monospace, monospace;
+
+  --color-brand-from: #667eea;
+  --color-brand-to: #764ba2;
+  --color-brand: #6b6bd6;
+
+  --color-background: #f7f7fa;
+  --color-foreground: #1d2333;
+  --color-card: #ffffff;
+  --color-card-foreground: #1d2333;
+  --color-muted: #eef0f5;
+  --color-muted-foreground: #5d6577;
+  --color-border: #e2e5ee;
+  --color-primary: #6b6bd6;
+  --color-primary-foreground: #ffffff;
+  --color-destructive: #b3402f;
+  --color-success: #2e7d4f;
+  --color-warning: #b98300;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@utility brand-gradient {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-brand-from) 0%,
+    var(--color-brand-to) 100%
+  );
+}
