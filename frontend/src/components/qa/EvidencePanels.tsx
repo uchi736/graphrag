@@ -1,5 +1,27 @@
-import type { ReactNode } from "react"
-import type { QaEvidence, SourceChunk } from "@/api/types"
+import { lazy, Suspense, type ReactNode } from "react"
+import type { EdgeRecord, QaEvidence, SourceChunk } from "@/api/types"
+
+// force-graph はサイズが大きいので遅延ロード（QA初期バンドルから隔離）
+const GraphCanvas = lazy(() =>
+  import("@/components/graph/GraphCanvas").then((m) => ({ default: m.GraphCanvas })),
+)
+
+/** QAで実際に使われたトリプルを EdgeRecord に変換して可視化用に渡す */
+function triplesToEdges(evidence: QaEvidence): EdgeRecord[] {
+  return evidence.graph_sources
+    .filter((t) => t.start && t.end)
+    .map((t) => ({
+      source: t.start,
+      source_type: "Unknown",
+      relation: t.type,
+      target: t.end,
+      target_type: "Unknown",
+      source_degree: 0,
+      target_degree: 0,
+      source_docs: [],
+      target_docs: [],
+    }))
+}
 
 function Panel({
   title,
@@ -50,7 +72,22 @@ export function EvidencePanels({ evidence }: { evidence: QaEvidence | null }) {
         ))}
       </Panel>
 
-      <Panel title="🕸️ グラフ推論パス" count={evidence.graph_paths.length}>
+      <Panel title="🕸️ 参照グラフ（回答に使われた関係）" count={evidence.graph_sources.length} defaultOpen={evidence.kg_used}>
+        <Suspense
+          fallback={
+            <div className="flex h-40 items-center justify-center text-xs text-muted-foreground">
+              グラフを読み込み中…
+            </div>
+          }
+        >
+          <GraphCanvas edges={triplesToEdges(evidence)} height={380} />
+        </Suspense>
+        <p className="text-right text-xs text-muted-foreground">
+          {evidence.graph_sources.length} 関係 — エッジにカーソルを乗せると関係名を表示
+        </p>
+      </Panel>
+
+      <Panel title="🧭 グラフ推論パス" count={evidence.graph_paths.length}>
         <ul className="space-y-1 font-mono text-xs text-foreground/85">
           {evidence.graph_paths.map((p, i) => (
             <li key={i} className="rounded bg-muted px-2 py-1">

@@ -53,3 +53,17 @@ export function useDocuments() {
     staleTime: 60_000,
   })
 }
+
+export function useDocumentChunks(source: string | null, offset: number) {
+  return useQuery({
+    queryKey: ["document-chunks", source, offset],
+    queryFn: () =>
+      apiGet<import("@/api/types").DocumentChunksResponse>("/api/documents/chunks", {
+        source: source ?? "",
+        limit: 50,
+        offset,
+      }),
+    enabled: source !== null,
+    staleTime: 60_000,
+  })
+}

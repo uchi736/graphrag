@@ -1,8 +1,11 @@
+import { useState } from "react"
 import { RefreshCw } from "lucide-react"
 import { useDocuments } from "@/hooks/useGraphData"
+import { ChunkBrowserModal } from "@/components/documents/ChunkBrowserModal"
 
 export default function DocumentsPage() {
   const { data, isLoading, isError, error, refetch, isFetching } = useDocuments()
+  const [selected, setSelected] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -52,20 +55,28 @@ export default function DocumentsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/60 text-left text-xs text-muted-foreground">
-              <th className="px-4 py-2.5 font-medium">ソースファイル</th>
+              <th className="px-4 py-2.5 font-medium">ソースファイル（クリックでチャンクを表示）</th>
               <th className="px-4 py-2.5 text-right font-medium">チャンク数</th>
             </tr>
           </thead>
           <tbody>
             {data.documents.map((d) => (
-              <tr key={d.source} className="border-b last:border-0 hover:bg-muted/40">
-                <td className="px-4 py-2 font-mono text-xs">{d.source}</td>
+              <tr
+                key={d.source}
+                onClick={() => setSelected(d.source)}
+                className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
+              >
+                <td className="px-4 py-2 font-mono text-xs text-primary underline-offset-2 hover:underline">
+                  {d.source}
+                </td>
                 <td className="px-4 py-2 text-right font-mono">{d.chunk_count.toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      <ChunkBrowserModal source={selected} onClose={() => setSelected(null)} />
     </div>
   )
 }

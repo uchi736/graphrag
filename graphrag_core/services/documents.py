@@ -14,6 +14,41 @@ from graphrag_core.config import get_settings
 from graphrag_core.db.utils import normalize_pg_connection_string
 
 
+def list_document_chunks(pg_conn: str, pg_collection: str, source: str,
+                         limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+    """指定ソース文書のチャンク本文を取得する（登録ドキュメントのチャンク閲覧用）。"""
+    import psycopg
+    raw_conn = normalize_pg_connection_string(pg_conn)
+    limit = max(1, min(int(limit), 200))
+    offset = max(0, int(offset))
+    with psycopg.connect(raw_conn) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT COUNT(*)
+                FROM langchain_pg_embedding e
+                JOIN langchain_pg_collection c ON e.collection_id = c.uuid
+                WHERE c.name = %s AND COALESCE(e.cmetadata->>'source','(unknown)') = %s
+            """, (pg_collection, source))
+            total = cur.fetchone()[0]
+            cur.execute("""
+                SELECT COALESCE(e.cmetadata->>'id', e.id) AS chunk_id,
+                       e.cmetadata->>'page' AS page,
+                       e.document
+                FROM langchain_pg_embedding e
+                JOIN langchain_pg_collection c ON e.collection_id = c.uuid
+                WHERE c.name = %s AND COALESCE(e.cmetadata->>'source','(unknown)') = %s
+                ORDER BY chunk_id
+                LIMIT %s OFFSET %s
+            """, (pg_collection, source, limit, offset))
+            rows = cur.fetchall()
+    return {
+        "source": source,
+        "total": total,
+        "offset": offset,
+        "chunks": [{"id": r[0], "page": r[1], "text": r[2]} for r in rows],
+    }
+
+
 def list_registered_documents(pg_conn: str, pg_collection: str) -> Dict[str, Any]:
     """コレクション内のソース別チャンク数を集計する。"""
     import psycopg

@@ -111,3 +111,11 @@ export interface DocumentsSummary {
   total_chunks: number
   documents: { source: string; chunk_count: number }[]
 }
+
+// ---- GET /api/documents/chunks ----
+export interface DocumentChunksResponse {
+  source: string
+  total: number
+  offset: number
+  chunks: { id: string; page: string | null; text: string }[]
+}
