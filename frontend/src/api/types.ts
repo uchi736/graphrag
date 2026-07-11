@@ -139,6 +139,26 @@ export interface SchemaFileResponse {
   }
 }
 
+// ---- /api/dictionary（専門用語辞書＝名寄せ） ----
+export interface DictEntry {
+  canonical: string
+  aliases: string[]
+  category?: string
+  definition?: string
+}
+
+export interface DictReportEntry extends DictEntry {
+  matched_ids: string[]
+  status: "merge_candidate" | "matched" | "unmatched"
+}
+
+export interface DictionaryReport {
+  path: string
+  exists: boolean
+  entries: DictReportEntry[]
+  counts: { merge_candidate: number; matched: number; unmatched: number }
+}
+
 // ---- GET /api/documents ----
 export interface DocumentsSummary {
   collection: string

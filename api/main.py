@@ -102,6 +102,7 @@ def create_app() -> FastAPI:
 
     from api.routers import admin as admin_router
     from api.routers import build as build_router
+    from api.routers import dictionary as dictionary_router
     from api.routers import documents as documents_router
     from api.routers import graph as graph_router
     from api.routers import qa as qa_router
@@ -110,6 +111,7 @@ def create_app() -> FastAPI:
     app.include_router(graph_router.router)
     app.include_router(documents_router.router)
     app.include_router(build_router.router)
+    app.include_router(dictionary_router.router)
 
     # React SPA 静的配信（frontend/dist がある場合のみ）。/api/* が優先。
     if _FRONTEND_DIST.exists():

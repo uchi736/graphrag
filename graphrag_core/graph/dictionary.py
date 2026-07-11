@@ -83,6 +83,108 @@ def load_dictionary(path: str | Path) -> list[dict]:
     return entries
 
 
+def merge_dictionary_aliases(graph, entries: list[dict]) -> dict:
+    """辞書の canonical/aliases に基づき別名ノードを正規形ノードへ統合する（名寄せ）。
+
+    エントリごとに id が canonical/aliases に一致するエンティティノードを収集し:
+    - 2ノード以上 → keeper（canonical と同名のノード。無ければ次数最大を canonical へ改名）
+      に他ノードのエッジを付け替えて統合（source_chunks 合算・ラベル引き継ぎ、
+      consolidate._move_rels を再利用）。吸収した旧IDは keeper.aliases に積む
+    - 1ノードで id≠canonical → canonical へ改名（旧IDは aliases へ）
+    - 0ノード → 何もしない（unmatched として報告）
+
+    破壊的操作。実行後は apply_dictionary（プロパティ付与）→ enrich_post_update
+    （search_keys 再計算）を続けて呼ぶこと。
+
+    Returns:
+        {"merged_groups": 統合したエントリ数, "removed_nodes": 吸収削除ノード数,
+         "renamed": 改名ノード数, "unmatched": 一致なしエントリ数}
+    """
+    from graphrag_core.graph.consolidate import _move_rels
+    from graphrag_core.graph.schema import entity_node_predicate
+
+    merged_groups = removed = renamed = unmatched = 0
+    _pred = entity_node_predicate("n")
+
+    for entry in entries:
+        canonical = entry["canonical"]
+        keys = [canonical] + entry["aliases"]
+        rows = graph.query(
+            f"""
+            MATCH (n) WHERE n.id IN $keys AND {_pred}
+            RETURN elementId(n) AS eid, n.id AS id, labels(n) AS labels,
+                   COUNT {{ (n)--() }} AS deg
+            """,
+            {"keys": keys},
+        ) or []
+        if not rows:
+            unmatched += 1
+            continue
+
+        # keeper 選定: canonical と同名 > 次数最大
+        keeper = next((r for r in rows if r["id"] == canonical), None)
+        if keeper is None:
+            keeper = max(rows, key=lambda r: r["deg"])
+        dups = [r for r in rows if r["eid"] != keeper["eid"]]
+
+        # keeper の id を canonical へ（旧IDを aliases に退避）
+        if keeper["id"] != canonical:
+            graph.query(
+                """
+                MATCH (k) WHERE elementId(k) = $eid
+                SET k.aliases = COALESCE(k.aliases, []) +
+                    (CASE WHEN k.id IN COALESCE(k.aliases, []) THEN [] ELSE [k.id] END),
+                    k.id = $canonical
+                """,
+                {"eid": keeper["eid"], "canonical": canonical},
+            )
+            renamed += 1
+
+        keep_labels = set(keeper["labels"])
+        for dup in dups:
+            try:
+                for direction in (True, False):
+                    arrow = "-[r]->" if direction else "<-[r]-"
+                    types = graph.query(
+                        f"MATCH (d){arrow}() WHERE elementId(d) = $dup "
+                        "RETURN DISTINCT type(r) AS t",
+                        {"dup": dup["eid"]},
+                    ) or []
+                    for row in types:
+                        _move_rels(graph, dup["eid"], keeper["eid"], row["t"],
+                                   outgoing=direction)
+                new_labels = [l for l in dup["labels"] if l not in keep_labels]
+                if new_labels:
+                    label_expr = "".join(f":`{l}`" for l in new_labels)
+                    graph.query(
+                        f"MATCH (k) WHERE elementId(k) = $keep SET k{label_expr}",
+                        {"keep": keeper["eid"]},
+                    )
+                    keep_labels.update(new_labels)
+                # 吸収した旧IDを aliases へ退避してから削除
+                graph.query(
+                    """
+                    MATCH (k) WHERE elementId(k) = $keep
+                    SET k.aliases = COALESCE(k.aliases, []) +
+                        (CASE WHEN $old IN COALESCE(k.aliases, []) THEN [] ELSE [$old] END)
+                    """,
+                    {"keep": keeper["eid"], "old": dup["id"]},
+                )
+                graph.query("MATCH (d) WHERE elementId(d) = $dup DETACH DELETE d",
+                            {"dup": dup["eid"]})
+                removed += 1
+            except Exception as e:
+                logger.warning("dictionary merge failed for %s ← %s: %s",
+                               canonical, dup["id"], e)
+        if dups:
+            merged_groups += 1
+
+    logger.info("merge_dictionary_aliases: %d groups merged, %d nodes removed, "
+                "%d renamed, %d unmatched", merged_groups, removed, renamed, unmatched)
+    return {"merged_groups": merged_groups, "removed_nodes": removed,
+            "renamed": renamed, "unmatched": unmatched}
+
+
 def apply_dictionary(graph, entries: list[dict]) -> dict:
     """辞書entriesを既存Termノードに適用する。
 

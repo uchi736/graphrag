@@ -17,6 +17,7 @@ import { apiSend } from "@/api/client"
 import { useGraphStatus } from "@/hooks/useGraphData"
 import { useJobProgress } from "@/hooks/useJobProgress"
 import { SchemaCard } from "@/components/schema/SchemaCard"
+import { DictionaryCard } from "@/components/schema/DictionaryCard"
 import { useSettingsStore, selectQaConfig } from "@/stores/settingsStore"
 import { cn } from "@/lib/utils"
 
@@ -145,6 +146,9 @@ export default function BuildPage() {
 
       {/* KGスキーマ（アクティブ vs 次回ビルド設定 + EDC同期） */}
       <SchemaCard attach={attach} busy={busy} />
+
+      {/* 専門用語辞書（名寄せ） */}
+      <DictionaryCard attach={attach} busy={busy} />
 
       {/* アップロード */}
       <div className="grid gap-4 sm:grid-cols-2">
