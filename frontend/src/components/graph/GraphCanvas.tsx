@@ -12,10 +12,13 @@ export function GraphCanvas({
   edges,
   height = 620,
   onNodeClick,
+  showEdgeLabels = false,
 }: {
   edges: EdgeRecord[]
   height?: number
   onNodeClick?: (node: GraphNode) => void
+  /** 関係名をエッジ上に常時描画（QA参照グラフ等、エッジが主役の少数グラフ用） */
+  showEdgeLabels?: boolean
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(800)
@@ -58,9 +61,43 @@ export function GraphCanvas({
           ctx.fillText(label, g.x ?? 0, (g.y ?? 0) + g.size + 1.5)
         }}
         linkLabel={(l) => (l as { relation: string }).relation}
-        linkColor={() => "rgba(120,130,150,0.35)"}
-        linkDirectionalArrowLength={3}
+        linkColor={() => (showEdgeLabels ? "rgba(100,110,140,0.75)" : "rgba(120,130,150,0.35)")}
+        linkWidth={showEdgeLabels ? 1.4 : 1}
+        linkDirectionalArrowLength={showEdgeLabels ? 4.5 : 3}
         linkDirectionalArrowRelPos={1}
+        linkCanvasObjectMode={() => (showEdgeLabels ? "after" : undefined)}
+        linkCanvasObject={
+          showEdgeLabels
+            ? (link, ctx, globalScale) => {
+                const l = link as {
+                  relation: string
+                  source: { x?: number; y?: number } | string
+                  target: { x?: number; y?: number } | string
+                }
+                if (typeof l.source !== "object" || typeof l.target !== "object") return
+                const sx = l.source.x ?? 0
+                const sy = l.source.y ?? 0
+                const tx = l.target.x ?? 0
+                const ty = l.target.y ?? 0
+                const fontSize = Math.max(8 / globalScale, 2)
+                ctx.font = `${fontSize}px "Yu Gothic UI", "Meiryo", sans-serif`
+                // エッジ方向に沿わせ、上下逆さにならないよう反転
+                let angle = Math.atan2(ty - sy, tx - sx)
+                if (angle > Math.PI / 2 || angle < -Math.PI / 2) angle += Math.PI
+                ctx.save()
+                ctx.translate((sx + tx) / 2, (sy + ty) / 2)
+                ctx.rotate(angle)
+                const w = ctx.measureText(l.relation).width
+                ctx.fillStyle = "rgba(255,255,255,0.85)"
+                ctx.fillRect(-w / 2 - 1.5, -fontSize / 2 - 1, w + 3, fontSize + 2)
+                ctx.fillStyle = "rgba(102,110,234,0.95)"
+                ctx.textAlign = "center"
+                ctx.textBaseline = "middle"
+                ctx.fillText(l.relation, 0, 0)
+                ctx.restore()
+              }
+            : undefined
+        }
         onNodeClick={(n) => onNodeClick?.(n as GraphNode)}
       />
     </div>

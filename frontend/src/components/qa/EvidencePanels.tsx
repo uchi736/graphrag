@@ -120,7 +120,7 @@ export function EvidencePanels({ evidence }: { evidence: QaEvidence | null }) {
             </div>
           }
         >
-          <GraphCanvas edges={triplesToEdges(evidence)} height={380} />
+          <GraphCanvas edges={triplesToEdges(evidence)} height={380} showEdgeLabels />
         </Suspense>
         <p className="text-right text-xs text-muted-foreground">
           {evidence.graph_sources.length} 関係 — エッジにカーソルを乗せると関係名を表示
