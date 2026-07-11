@@ -89,7 +89,7 @@ def stamp_provenance(st: AppState = Depends(require_ready)) -> dict:
 
 @router.get("/overview")
 def overview(
-    limit: int = Query(200, ge=1, le=5000),
+    limit: int = Query(200, ge=1, le=20000),
     st: AppState = Depends(require_ready),
 ) -> list:
     """全体エッジリスト（EdgeRecord[]。可視化・データテーブル共用）。"""

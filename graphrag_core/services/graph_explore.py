@@ -26,7 +26,7 @@ def get_enhanced_graph_data(graph, limit: int = 200) -> List[Dict]:
     """全体エッジリスト（degree / 言及ドキュメント付き）。"""
     if hasattr(graph, "get_graph_data"):
         return graph.get_graph_data(limit=limit)
-    limit = max(1, min(int(limit), 5000))
+    limit = max(1, min(int(limit), 20000))
     query = f"""
     MATCH (n)-[r]->(m)
     WHERE type(r) <> '{chunk_edge()}'

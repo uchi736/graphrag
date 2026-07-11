@@ -113,16 +113,19 @@ export default function GraphPage() {
 
         {mode === "overview" && (
           <>
-            <label className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-              最大表示ノード
+            <label
+              className="ml-auto flex items-center gap-2 text-xs text-muted-foreground"
+              title="取得するエッジ数の上限。現在のグラフ規模（数千エッジ）なら全量表示可能"
+            >
+              最大表示エッジ
               <input
                 type="number"
                 min={50}
-                max={2000}
+                max={20000}
                 step={50}
                 value={maxNodes}
                 onChange={(e) => setView("max_nodes", Number(e.target.value))}
-                className="w-20 rounded-md border bg-background px-2 py-1 text-sm"
+                className="w-24 rounded-md border bg-background px-2 py-1 text-sm"
               />
             </label>
             <button
