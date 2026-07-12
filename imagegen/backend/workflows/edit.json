@@ -1,0 +1,73 @@
+{
+  "4": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "sd_xl_base_1.0.safetensors"
+    },
+    "_meta": { "title": "Load Checkpoint" }
+  },
+  "10": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "base.png",
+      "upload": "image"
+    },
+    "_meta": { "title": "Load Base Image" }
+  },
+  "14": {
+    "class_type": "VAEEncode",
+    "inputs": {
+      "pixels": ["10", 0],
+      "vae": ["4", 2]
+    },
+    "_meta": { "title": "VAE Encode (base -> latent)" }
+  },
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "edit instruction",
+      "clip": ["4", 1]
+    },
+    "_meta": { "title": "Instruction Prompt" }
+  },
+  "7": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "text": "",
+      "clip": ["4", 1]
+    },
+    "_meta": { "title": "Negative Prompt" }
+  },
+  "3": {
+    "class_type": "KSampler",
+    "inputs": {
+      "seed": 0,
+      "steps": 20,
+      "cfg": 7.0,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 0.75,
+      "model": ["4", 0],
+      "positive": ["6", 0],
+      "negative": ["7", 0],
+      "latent_image": ["14", 0]
+    },
+    "_meta": { "title": "KSampler" }
+  },
+  "8": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": ["3", 0],
+      "vae": ["4", 2]
+    },
+    "_meta": { "title": "VAE Decode" }
+  },
+  "9": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "filename_prefix": "imagegen_edit",
+      "images": ["8", 0]
+    },
+    "_meta": { "title": "Save Image" }
+  }
+}

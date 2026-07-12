@@ -1,0 +1,7 @@
+# 画像生成・編集アプリ バックエンド依存
+# （graphrag 本体とは独立して動かせる最小構成）
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+requests>=2.31.0
+python-dotenv>=1.0.1

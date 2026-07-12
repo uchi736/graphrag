@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>画像生成・編集</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>画像生成・編集</h1>
+    <span id="health" class="health" title="ComfyUI 接続状態">● ComfyUI 確認中…</span>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="generate">生成</button>
+    <button class="tab" data-tab="edit">編集</button>
+  </nav>
+
+  <main>
+    <!-- ========== 生成タブ ========== -->
+    <section id="panel-generate" class="panel active">
+      <form id="form-generate" class="form">
+        <label>プロンプト
+          <textarea name="prompt" rows="3" required placeholder="生成したい画像を記述"></textarea>
+        </label>
+        <label>ネガティブプロンプト
+          <textarea name="negative_prompt" rows="2" placeholder="除外したい要素（任意）"></textarea>
+        </label>
+        <div class="grid">
+          <label>幅<input type="number" name="width" value="1024" min="64" max="4096" step="8" /></label>
+          <label>高さ<input type="number" name="height" value="1024" min="64" max="4096" step="8" /></label>
+          <label>ステップ数<input type="number" name="steps" value="20" min="1" max="150" /></label>
+          <label>CFG<input type="number" name="cfg" value="7.0" min="0" max="30" step="0.5" /></label>
+          <label>シード<input type="number" name="seed" placeholder="空でランダム" /></label>
+          <label>モデル<select name="model" data-model-select></select></label>
+        </div>
+        <button type="submit" class="run">生成する</button>
+      </form>
+      <div class="result" data-result></div>
+    </section>
+
+    <!-- ========== 編集タブ ========== -->
+    <section id="panel-edit" class="panel">
+      <form id="form-edit" class="form">
+        <label>ベース画像
+          <input type="file" name="base_image" accept="image/*" required />
+        </label>
+        <img class="preview" data-preview alt="" hidden />
+        <label>指示プロンプト
+          <textarea name="prompt" rows="3" required placeholder="どう書き換えるか自然言語で指示"></textarea>
+        </label>
+        <label>ネガティブプロンプト
+          <textarea name="negative_prompt" rows="2" placeholder="除外したい要素（任意）"></textarea>
+        </label>
+        <div class="grid">
+          <label>変化の強さ (strength)
+            <input type="number" name="strength" value="0.75" min="0" max="1" step="0.05" />
+          </label>
+          <label>ステップ数<input type="number" name="steps" value="20" min="1" max="150" /></label>
+          <label>CFG<input type="number" name="cfg" value="7.0" min="0" max="30" step="0.5" /></label>
+          <label>シード<input type="number" name="seed" placeholder="空でランダム" /></label>
+          <label>モデル<select name="model" data-model-select></select></label>
+        </div>
+        <button type="submit" class="run">編集する</button>
+      </form>
+      <div class="result" data-result></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
