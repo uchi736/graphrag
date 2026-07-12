@@ -1,0 +1,661 @@
+<title>調達インテリジェンス — 出張報告書からの新規ベンダ開拓 (GraphRAG デモ)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bg:#0b0e17; --panel:#111726; --panel-2:#161d2f; --panel-3:#1c2540;
+    --line:#26314b; --line-soft:#1d2740;
+    --ink:#e9edf8; --ink-dim:#9aa6c4; --ink-faint:#6b7799;
+    --accent:#6d8bff; --accent-soft:#223056;
+    --vendor:#f2a54c; --tech:#35c2b0; --need:#ff6b8b; --event:#b07cff; --doc:#7d8aa8;
+    --good:#43c98a; --warn:#f2a54c; --bad:#ef5f6b;
+    --accent-glow:rgba(109,139,255,.16);
+    --shadow:0 18px 44px -20px rgba(0,0,0,.75);
+    --radius:14px;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Roboto Mono",Menlo,monospace;
+    --jp:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic Medium","Yu Gothic","Noto Sans JP",Meiryo,system-ui,sans-serif;
+  }
+  :root{ --accent-soft:#223056; }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#eef1f8; --panel:#ffffff; --panel-2:#f4f6fc; --panel-3:#e9eefa;
+      --line:#d7deee; --line-soft:#e4e9f5;
+      --ink:#141b2c; --ink-dim:#4f5c7a; --ink-faint:#7481a0;
+      --accent:#4560d8; --accent-soft:#e0e6fb;
+      --vendor:#c9791f; --tech:#12867a; --need:#d83f61; --event:#7c4fd0; --doc:#6a7793;
+      --accent-glow:rgba(69,96,216,.12);
+      --shadow:0 18px 40px -24px rgba(30,45,90,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0b0e17; --panel:#111726; --panel-2:#161d2f; --panel-3:#1c2540;
+    --line:#26314b; --line-soft:#1d2740;
+    --ink:#e9edf8; --ink-dim:#9aa6c4; --ink-faint:#6b7799;
+    --accent:#6d8bff; --accent-soft:#223056;
+    --vendor:#f2a54c; --tech:#35c2b0; --need:#ff6b8b; --event:#b07cff; --doc:#7d8aa8;
+    --good:#43c98a; --warn:#f2a54c; --bad:#ef5f6b; --accent-glow:rgba(109,139,255,.16);
+    --shadow:0 18px 44px -20px rgba(0,0,0,.75);
+  }
+  :root[data-theme="light"]{
+    --bg:#eef1f8; --panel:#ffffff; --panel-2:#f4f6fc; --panel-3:#e9eefa;
+    --line:#d7deee; --line-soft:#e4e9f5;
+    --ink:#141b2c; --ink-dim:#4f5c7a; --ink-faint:#7481a0;
+    --accent:#4560d8; --accent-soft:#e0e6fb;
+    --vendor:#c9791f; --tech:#12867a; --need:#d83f61; --event:#7c4fd0; --doc:#6a7793;
+    --good:#1f9d68; --warn:#c9791f; --bad:#d4404f; --accent-glow:rgba(69,96,216,.12);
+    --shadow:0 18px 40px -24px rgba(30,45,90,.4);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 82% -10%, var(--accent-glow), transparent 60%),
+      var(--bg);
+    color:var(--ink); font-family:var(--jp);
+    -webkit-font-smoothing:antialiased; line-height:1.6;
+    padding:clamp(14px,3vw,34px);
+  }
+  .wrap{max-width:1280px;margin:0 auto}
+
+  /* ---- Header ---- */
+  header.top{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between;margin-bottom:22px}
+  .brand{display:flex;flex-direction:column;gap:8px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:9px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,var(--accent),transparent)}
+  h1{margin:0;font-size:clamp(23px,3.4vw,34px);font-weight:800;letter-spacing:.01em;text-wrap:balance;line-height:1.2}
+  h1 .thin{font-weight:500;color:var(--ink-dim)}
+  .sub{color:var(--ink-dim);font-size:14px;max-width:60ch}
+  .theme-toggle{border:1px solid var(--line);background:var(--panel-2);color:var(--ink-dim);
+    font-family:var(--mono);font-size:11px;letter-spacing:.12em;padding:9px 13px;border-radius:9px;cursor:pointer;transition:.18s}
+  .theme-toggle:hover{color:var(--ink);border-color:var(--accent)}
+
+  /* ---- Query bar ---- */
+  .querybar{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;box-shadow:var(--shadow)}
+  .qlabel{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:11px}
+  .qrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .qfield{flex:1;min-width:260px;display:flex;align-items:center;gap:10px;background:var(--bg);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+  .qfield svg{flex:none;color:var(--accent)}
+  .qfield input{flex:1;background:none;border:none;color:var(--ink);font-family:var(--jp);font-size:14.5px;outline:none;min-width:0}
+  .qfield input::placeholder{color:var(--ink-faint)}
+  .runbtn{border:none;background:var(--accent);color:#fff;font-family:var(--jp);font-weight:700;font-size:14px;
+    padding:12px 20px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:.16s;white-space:nowrap}
+  .runbtn:hover{filter:brightness(1.08);transform:translateY(-1px)}
+  .runbtn:active{transform:translateY(0)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
+  .chip{border:1px solid var(--line);background:var(--panel-3);color:var(--ink-dim);font-size:12.5px;
+    padding:7px 12px;border-radius:20px;cursor:pointer;transition:.15s;font-family:var(--jp)}
+  .chip:hover{border-color:var(--accent);color:var(--ink)}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .modes{display:flex;gap:6px;margin-top:13px;align-items:center;flex-wrap:wrap}
+  .modes .mlbl{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-right:4px}
+  .seg{display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:3px}
+  .seg button{border:none;background:none;color:var(--ink-dim);font-family:var(--jp);font-size:12.5px;padding:6px 13px;border-radius:6px;cursor:pointer;transition:.15s}
+  .seg button.on{background:var(--accent);color:#fff;font-weight:700}
+  .seg button:not(.on):hover{color:var(--ink)}
+
+  /* ---- Main grid ---- */
+  .grid{display:grid;grid-template-columns:250px 1fr 400px;gap:16px;align-items:start}
+  @media (max-width:1120px){.grid{grid-template-columns:1fr 1fr}.pipe-col{grid-column:1/-1;order:1}.graph-col{order:2}.results-col{order:3}}
+  @media (max-width:720px){.grid{grid-template-columns:1fr}.pipe-col,.graph-col,.results-col{grid-column:1}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card h2{margin:0;padding:15px 17px 12px;font-size:13px;font-weight:700;letter-spacing:.02em;
+    display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line-soft)}
+  .card h2 .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-glow)}
+  .card h2 .count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-faint);font-weight:500}
+
+  /* ---- Pipeline ---- */
+  .pipe{padding:8px 10px 12px}
+  .step{display:flex;gap:11px;padding:10px 8px;border-radius:9px;position:relative;transition:.3s}
+  .step::before{content:"";position:absolute;left:19px;top:34px;bottom:-6px;width:2px;background:var(--line-soft)}
+  .step:last-child::before{display:none}
+  .snum{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);background:var(--panel-2);
+    display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--ink-faint);z-index:1;transition:.3s}
+  .stext{min-width:0}
+  .stitle{font-size:13px;font-weight:600;transition:.3s;color:var(--ink-dim)}
+  .sdesc{font-size:11.5px;color:var(--ink-faint);margin-top:2px;line-height:1.45}
+  .sval{font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:5px;min-height:0;opacity:0;transition:.3s;word-break:break-word}
+  .step.active .snum{border-color:var(--accent);color:#fff;background:var(--accent);box-shadow:0 0 0 5px var(--accent-glow)}
+  .step.active .stitle{color:var(--ink)}
+  .step.done .snum{border-color:var(--good);color:var(--good);background:transparent}
+  .step.done .snum::after{content:"✓"}
+  .step.done .snum span{display:none}
+  .step.active .sval,.step.done .sval{opacity:1}
+
+  /* ---- Graph ---- */
+  .graph-col .card{overflow:hidden}
+  .graphwrap{position:relative}
+  canvas{display:block;width:100%;height:auto;touch-action:none}
+  .legend{position:absolute;left:12px;bottom:12px;display:flex;gap:12px;flex-wrap:wrap;
+    background:color-mix(in srgb,var(--panel) 82%,transparent);backdrop-filter:blur(6px);
+    border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+  .legend span{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-dim);font-family:var(--mono)}
+  .legend i{width:9px;height:9px;border-radius:50%}
+  .ghint{position:absolute;right:12px;top:12px;font-family:var(--mono);font-size:10px;color:var(--ink-faint);
+    background:color-mix(in srgb,var(--panel) 82%,transparent);border:1px solid var(--line);border-radius:7px;padding:5px 9px}
+
+  /* ---- Results ---- */
+  .results{padding:11px;display:flex;flex-direction:column;gap:11px;max-height:640px;overflow-y:auto}
+  .results::-webkit-scrollbar{width:8px}.results::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  .empty{padding:40px 20px;text-align:center;color:var(--ink-faint);font-size:13px}
+  .empty svg{opacity:.4;margin-bottom:10px}
+  .vcard{border:1px solid var(--line);border-radius:11px;background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    padding:14px;position:relative;overflow:hidden;opacity:0;transform:translateY(8px);animation:pop .45s forwards}
+  @keyframes pop{to{opacity:1;transform:none}}
+  .vcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--vendor)}
+  .vhead{display:flex;align-items:flex-start;gap:10px}
+  .vname{font-size:15px;font-weight:800;letter-spacing:.01em}
+  .vmeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:3px 7px;border-radius:5px;border:1px solid var(--line);color:var(--ink-dim)}
+  .tag.new{color:var(--good);border-color:color-mix(in srgb,var(--good) 45%,var(--line))}
+  .tag.exist{color:var(--ink-faint)}
+  .tag.hop{color:var(--event);border-color:color-mix(in srgb,var(--event) 45%,var(--line))}
+  .score{margin-left:auto;text-align:right;flex:none}
+  .score b{font-family:var(--mono);font-size:23px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .score small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--ink-faint);text-transform:uppercase;margin-top:3px}
+  .path{margin-top:11px;font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:5px;line-height:1.9}
+  .pnode{padding:2px 8px;border-radius:6px;font-family:var(--mono);font-size:11px;border:1px solid transparent}
+  .pnode.need{color:var(--need);background:color-mix(in srgb,var(--need) 12%,transparent);border-color:color-mix(in srgb,var(--need) 30%,transparent)}
+  .pnode.tech{color:var(--tech);background:color-mix(in srgb,var(--tech) 12%,transparent);border-color:color-mix(in srgb,var(--tech) 30%,transparent)}
+  .pnode.vendor{color:var(--vendor);background:color-mix(in srgb,var(--vendor) 14%,transparent);border-color:color-mix(in srgb,var(--vendor) 32%,transparent)}
+  .pnode.event{color:var(--event);background:color-mix(in srgb,var(--event) 12%,transparent);border-color:color-mix(in srgb,var(--event) 30%,transparent)}
+  .parrow{color:var(--ink-faint);font-size:11px}
+  .why{margin-top:11px;font-size:12.5px;color:var(--ink-dim);line-height:1.55;
+    border-top:1px dashed var(--line-soft);padding-top:10px}
+  .why b{color:var(--ink)}
+  .cites{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+  .cite{display:flex;gap:8px;align-items:baseline;font-size:11.5px;color:var(--ink-dim)}
+  .cite svg{flex:none;color:var(--doc);transform:translateY(2px)}
+  .cite b{color:var(--ink);font-weight:600}
+  .cite em{font-style:normal;color:var(--ink-faint);font-family:var(--mono);font-size:10.5px}
+
+  /* ---- Approaches section ---- */
+  .approaches{margin-top:26px}
+  .sechead{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+  .sechead h2{margin:0;font-size:17px;font-weight:800}
+  .sechead p{margin:0;color:var(--ink-dim);font-size:13px}
+  .acards{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}
+  @media (max-width:960px){.acards{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:560px){.acards{grid-template-columns:1fr}}
+  .acard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;position:relative}
+  .acard .an{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.1em}
+  .acard h3{margin:8px 0 4px;font-size:14.5px;font-weight:800}
+  .acard .role{font-size:11.5px;color:var(--accent);font-weight:600;margin-bottom:9px}
+  .acard p{margin:0;font-size:12.5px;color:var(--ink-dim);line-height:1.55}
+  .acard .pro,.acard .con{display:flex;gap:7px;font-size:11.5px;margin-top:7px;line-height:1.4}
+  .acard .pro span:first-child{color:var(--good)}
+  .acard .con span:first-child{color:var(--bad)}
+  .acard .con span:last-child,.acard .pro span:last-child{color:var(--ink-dim)}
+  .acard.hl{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),var(--shadow)}
+  .acard.hl .badge{position:absolute;top:-9px;right:12px;background:var(--accent);color:#fff;font-size:10px;
+    font-family:var(--mono);letter-spacing:.1em;padding:3px 9px;border-radius:20px;font-weight:700}
+
+  footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--line-soft);
+    color:var(--ink-faint);font-size:11.5px;font-family:var(--mono);line-height:1.7}
+  footer b{color:var(--ink-dim);font-weight:600}
+  .flow{color:var(--ink-dim)}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow">Procurement Intelligence · GraphRAG</div>
+      <h1>出張報告書から、<span class="thin">まだ取引のない</span>新規ベンダを掘り当てる</h1>
+      <div class="sub">現場の出張報告・展示会視察メモ・技術面談議事録を知識グラフ化し、調達ニーズから<b>技術→ベンダ</b>のマルチホップ探索で候補を提案。各提案には<b>根拠パス</b>と<b>出典</b>が付きます。</div>
+    </div>
+    <button class="theme-toggle" id="themeBtn" type="button">◐ THEME</button>
+  </header>
+
+  <!-- Query bar -->
+  <div class="querybar">
+    <div class="qlabel">調達ニーズを入力</div>
+    <div class="qrow">
+      <label class="qfield">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" type="text" value="軽量・高耐熱の一次構造部品を量産できる新規サプライヤーを探したい" autocomplete="off">
+      </label>
+      <button class="runbtn" id="run" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        探索する
+      </button>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="modes">
+      <span class="mlbl">検索方式</span>
+      <div class="seg" id="modeSeg">
+        <button data-mode="graph" class="on" type="button">GraphRAG（グラフ探索）</button>
+        <button data-mode="vector" type="button">ベクトルRAGのみ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="grid">
+    <!-- Pipeline -->
+    <div class="pipe-col">
+      <div class="card">
+        <h2><span class="dot"></span>検索パイプライン</h2>
+        <div class="pipe" id="pipe"></div>
+      </div>
+    </div>
+
+    <!-- Graph -->
+    <div class="graph-col">
+      <div class="card">
+        <h2><span class="dot"></span>ナレッジグラフ<span class="count" id="gcount">18 nodes · 24 edges</span></h2>
+        <div class="graphwrap">
+          <canvas id="cv" width="760" height="560"></canvas>
+          <div class="ghint">探索パスを強調表示</div>
+          <div class="legend">
+            <span><i style="background:var(--need)"></i>ニーズ</span>
+            <span><i style="background:var(--tech)"></i>技術</span>
+            <span><i style="background:var(--vendor)"></i>ベンダ</span>
+            <span><i style="background:var(--event)"></i>展示会/接点</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="results-col">
+      <div class="card">
+        <h2><span class="dot" style="background:var(--vendor)"></span>提案ベンダ候補<span class="count" id="rcount"></span></h2>
+        <div class="results" id="results">
+          <div class="empty">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h18M3 12h18M3 17h10"/></svg>
+            <div>ニーズを選んで「探索する」を押すと、<br>候補ベンダが根拠付きで表示されます。</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approaches -->
+  <div class="approaches">
+    <div class="sechead">
+      <h2>アプローチの選択肢</h2>
+      <p>ニーズの複雑さ・網羅性の要求に応じて組み合わせる</p>
+    </div>
+    <div class="acards">
+      <div class="acard">
+        <div class="an">01</div><h3>ベクトルRAG</h3>
+        <div class="role">意味検索ベースライン</div>
+        <p>報告書をチャンク化して埋め込み。ニーズ文で類似検索し、明示的に書かれたベンダを抽出。</p>
+        <div class="pro"><span>＋</span><span>導入が容易・実装が軽い</span></div>
+        <div class="con"><span>−</span><span>表現の違いや間接的な繋がりを取りこぼす</span></div>
+      </div>
+      <div class="acard hl">
+        <div class="badge">本デモ</div>
+        <div class="an">02</div><h3>GraphRAG</h3>
+        <div class="role">エンティティ＋関係の探索</div>
+        <p>ベンダ/技術/展示会/ニーズを抽出し知識グラフ化。<b>ニーズ→技術→ベンダ</b>を多段探索し、直接書かれていない候補も発見。</p>
+        <div class="pro"><span>＋</span><span>間接的な候補を発見・根拠パスで説明可能</span></div>
+        <div class="con"><span>−</span><span>抽出品質とスキーマ設計が要</span></div>
+      </div>
+      <div class="acard">
+        <div class="an">03</div><h3>構造化抽出＋フィルタ</h3>
+        <div class="role">ベンダプロファイルDB</div>
+        <p>対応技術・実績・認証・地域・価格帯を構造化DBへ抽出し、条件フィルタ＋スコアで絞り込む。</p>
+        <div class="pro"><span>＋</span><span>厳密な条件検索・比較表化が容易</span></div>
+        <div class="con"><span>−</span><span>スキーマ外の発想が出にくい</span></div>
+      </div>
+      <div class="acard">
+        <div class="an">04</div><h3>ハイブリッド</h3>
+        <div class="role">本リポジトリの構成</div>
+        <p>Graph-First探索＋日本語ハイブリッド検索（Sudachi＋RRF）＋cross-encoderリランクを併用し、フォールバックで網羅性を担保。</p>
+        <div class="pro"><span>＋</span><span>精度と網羅性のバランス・表記揺れに強い</span></div>
+        <div class="con"><span>−</span><span>構成要素が多く運用設計が必要</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="flow"><b>実装フロー: </b>ニーズ入力 → エンティティ抽出 → エンティティベクトル検索/正規化照合 → 1–3ホップ グラフ探索(Neo4j Cypher) → LLMリランク → MENTIONS関係でチャンク取得 → 根拠パス＋出典つき提案生成</div>
+    <div style="margin-top:6px">※ 本デモのデータ（ベンダ・技術・出張報告書）はGraphRAG構成を示すためのサンプルです。実運用では自社の報告書コーパスから知識グラフを構築します。</div>
+  </footer>
+</div>
+
+<script>
+/* ============ Mock knowledge graph ============ */
+const T={need:'need',tech:'tech',vendor:'vendor',event:'event'};
+const NODES=[
+  // needs (col 0)
+  {id:'N1',t:T.need,label:'軽量・高耐熱\n一次構造',col:0,row:0},
+  {id:'N2',t:T.need,label:'量産成形対応',col:0,row:1},
+  {id:'N3',t:T.need,label:'コスト30%削減',col:0,row:2},
+  {id:'N4',t:T.need,label:'サステナ調達',col:0,row:3},
+  // tech (col 1)
+  {id:'T1',t:T.tech,label:'熱可塑性CFRP',col:1,row:0},
+  {id:'T2',t:T.tech,label:'高耐熱\nポリイミド樹脂',col:1,row:1},
+  {id:'T3',t:T.tech,label:'CMC\nセラミック複合材',col:1,row:2},
+  {id:'T4',t:T.tech,label:'AFP自動積層',col:1,row:3},
+  {id:'T5',t:T.tech,label:'チタン\n積層造形(AM)',col:1,row:4},
+  {id:'T6',t:T.tech,label:'バイオ由来\nエポキシ',col:1,row:5},
+  {id:'T7',t:T.tech,label:'精密5軸加工',col:1,row:6},
+  // vendors (col 2)
+  {id:'V1',t:T.vendor,label:'帝国カーボン工業',col:2,row:0},
+  {id:'V2',t:T.vendor,label:'Alpine Composite',col:2,row:1},
+  {id:'V3',t:T.vendor,label:'Nitto Thermal',col:2,row:2},
+  {id:'V4',t:T.vendor,label:'Meridian Alloys',col:2,row:4},
+  {id:'V5',t:T.vendor,label:'双葉精密',col:2,row:6},
+  {id:'V6',t:T.vendor,label:'Verde Polymers',col:2,row:5},
+  // events (col 1.5 floating)
+  {id:'E1',t:T.event,label:'名古屋\n航空宇宙展24',col:1.5,row:-0.6},
+  {id:'E2',t:T.event,label:'JEC World 24',col:1.5,row:2.7},
+];
+const EDGES=[
+  ['N1','T1'],['N1','T2'],['N1','T3'],
+  ['N2','T4'],['N2','T1'],
+  ['N3','T7'],['N3','T5'],
+  ['N4','T6'],
+  ['T1','V1'],['T4','V1'],['T2','V2'],['T3','V3'],['T5','V4'],['T7','V5'],['T6','V6'],
+  ['V1','V5'],           // partner
+  ['E1','V1'],['E1','T1'],
+  ['E2','V2'],['E2','T2'],['E2','V6'],['E2','T6'],
+];
+const NMAP=Object.fromEntries(NODES.map(n=>[n.id,n]));
+
+/* ============ Queries ============ */
+const QUERIES={
+  q1:{
+    text:'軽量・高耐熱の一次構造部品を量産できる新規サプライヤーを探したい',
+    entities:['軽量','高耐熱','一次構造','量産'],
+    hopNodes:['N1','N2','T1','T2','T3','T4','V1','V2','V3','V5','E2'],
+    hopEdges:[['N1','T1'],['N1','T2'],['N1','T3'],['N2','T4'],['N2','T1'],['T1','V1'],['T2','V2'],['T3','V3'],['T4','V1'],['V1','V5'],['E2','V2'],['E2','T2']],
+    results:[
+      {id:'V2',name:'Alpine Composite AG',region:'スイス',status:'new',discover:'2ホップ間接',score:92,
+        path:[['need','軽量・高耐熱'],['tech','高耐熱ポリイミド'],['vendor','Alpine Composite']],
+        why:'<b>JEC World 2024</b>で高耐熱ポリイミド樹脂を出展。ニーズ「高耐熱一次構造」に技術面で直結。報告書に「調達候補」の明記は無いが、<b>展示会→技術→ニーズ</b>の経路で発見。',
+        cites:[['JEC World 2024 視察メモ','出張報告 D2 · p.5','Dr. Keller が耐熱280℃級の含浸プロセスを説明']]},
+      {id:'V3',name:'Nitto Thermal',region:'日本',status:'new',discover:'直接言及',score:88,
+        path:[['need','軽量・高耐熱'],['tech','CMC複合材'],['vendor','Nitto Thermal']],
+        why:'CMC（セラミックマトリックス複合材）で耐熱性に強み。社内<b>軽量化WGニーズ</b>ともタグが一致し、新規開拓候補として有望。',
+        cites:[['JEC World 2024 視察メモ','出張報告 D2 · p.8','小型サンプル入手済み'],['軽量化WG 技術ニーズ','社内資料 D5 · p.2','耐熱要件600℃を明記']]},
+      {id:'V1',name:'帝国カーボン工業',region:'日本',status:'exist',discover:'直接言及',score:84,
+        path:[['need','量産成形対応'],['tech','熱可塑性CFRP / AFP'],['vendor','帝国カーボン工業']],
+        why:'既存取引先。熱可塑性CFRPとAFP自動積層で<b>量産適性</b>が高い。ベースライン比較用の本命だが「新規」ではない点に留意。',
+        cites:[['名古屋 航空宇宙展2024','出張報告 D1 · p.3','量産ライン増設を計画中と山田氏'],['帝国カーボン 技術面談','議事録 D3 · p.1']]},
+      {id:'V5',name:'双葉精密',region:'日本',status:'exist',discover:'2ホップ間接',score:76,
+        path:[['need','量産成形対応'],['vendor','帝国カーボン'],['vendor','双葉精密']],
+        why:'帝国カーボンの<b>協力会社（治具・後加工）</b>として言及。複合材成形の周辺工程を担える補完ベンダとして、パートナー経路で浮上。',
+        cites:[['名古屋 航空宇宙展2024','出張報告 D1 · p.6','帝国カーボンの治具製作を担当']]},
+    ]
+  },
+  q2:{
+    text:'コスト30%削減を狙える精密加工・治具の代替ベンダを開拓したい',
+    entities:['コスト削減','精密加工','治具','代替ベンダ'],
+    hopNodes:['N3','T7','T5','V5','V4'],
+    hopEdges:[['N3','T7'],['N3','T5'],['T7','V5'],['T5','V4']],
+    results:[
+      {id:'V4',name:'Meridian Alloys',region:'英国',status:'new',discover:'直接言及',score:86,
+        path:[['need','コスト30%削減'],['tech','チタン積層造形(AM)'],['vendor','Meridian Alloys']],
+        why:'チタンAMで<b>切削材料費を大幅削減</b>できる可能性。治具の一体造形で工程集約→コスト低減の代替候補。',
+        cites:[['東南アジア調達先開拓','出張報告 D4 · p.4','AMで内製治具費▲35%の試算']]},
+      {id:'V5',name:'双葉精密',region:'日本',status:'exist',discover:'直接言及',score:81,
+        path:[['need','コスト30%削減'],['tech','精密5軸加工'],['vendor','双葉精密']],
+        why:'既存の精密5軸加工先。量産数量の見直しで<b>単価交渉余地</b>あり。代替検討時のベンチマークに。',
+        cites:[['帝国カーボン 技術面談','議事録 D3 · p.2']]},
+    ]
+  },
+  q3:{
+    text:'バイオ由来・環境対応の樹脂サプライヤー（サステナブル調達）',
+    entities:['バイオ由来','環境対応','樹脂','サステナブル'],
+    hopNodes:['N4','T6','V6','E2'],
+    hopEdges:[['N4','T6'],['T6','V6'],['E2','V6'],['E2','T6']],
+    results:[
+      {id:'V6',name:'Verde Polymers',region:'オランダ',status:'new',discover:'2ホップ間接',score:90,
+        path:[['need','サステナ調達'],['tech','バイオ由来エポキシ'],['vendor','Verde Polymers']],
+        why:'<b>JEC World 2024</b>でバイオ由来エポキシを出展。CO2削減を掲げる社内サステナ方針に合致する新規候補。',
+        cites:[['JEC World 2024 視察メモ','出張報告 D2 · p.11','バイオ炭素含有率60%のサンプル']]},
+    ]
+  },
+};
+
+/* ============ Pipeline steps ============ */
+const STEPS=[
+  {t:'ニーズ理解',d:'クエリからエンティティ・制約を抽出',key:'entities'},
+  {t:'エンティティ照合',d:'ベクトル検索＋正規化で表記揺れ吸収',key:'match'},
+  {t:'グラフ探索',d:'1–3ホップでニーズ→技術→ベンダを辿る',key:'hops'},
+  {t:'リランク',d:'根拠数・新規度・適合度でスコアリング',key:'rank'},
+  {t:'提案生成',d:'根拠パスと出典を添えて回答',key:'gen'},
+];
+
+/* ============ State ============ */
+let mode='graph', activeQ='q1';
+let highlight={nodes:new Set(),edges:new Set()};
+let anim={t:0};
+
+/* ============ Chips ============ */
+const chipData=[
+  {k:'q1',l:'軽量・高耐熱の一次構造部品'},
+  {k:'q2',l:'コスト削減・精密加工の代替先'},
+  {k:'q3',l:'バイオ由来・サステナ樹脂'},
+];
+const chipsEl=document.getElementById('chips');
+chipData.forEach(c=>{
+  const b=document.createElement('button');
+  b.className='chip'+(c.k===activeQ?' active':'');b.textContent=c.l;b.type='button';
+  b.onclick=()=>{activeQ=c.k;document.getElementById('q').value=QUERIES[c.k].text;
+    [...chipsEl.children].forEach(x=>x.classList.remove('active'));b.classList.add('active');run();};
+  chipsEl.appendChild(b);
+});
+
+/* ============ Build pipeline DOM ============ */
+const pipeEl=document.getElementById('pipe');
+STEPS.forEach((s,i)=>{
+  const d=document.createElement('div');d.className='step';d.dataset.i=i;
+  d.innerHTML=`<div class="snum"><span>${i+1}</span></div><div class="stext">
+    <div class="stitle">${s.t}</div><div class="sdesc">${s.d}</div><div class="sval" id="sv${i}"></div></div>`;
+  pipeEl.appendChild(d);
+});
+
+/* ============ Canvas graph ============ */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let DPR=Math.min(window.devicePixelRatio||1,2);
+const COLORS={need:'--need',tech:'--tech',vendor:'--vendor',event:'--event'};
+function cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+function layout(){
+  const w=cv.clientWidth, h=560;
+  const padX=w*0.11, padY=48;
+  const colX=[padX, w*0.5, w-padX];
+  const eventX=w*0.5;
+  NODES.forEach(n=>{
+    if(n.t===T.event){
+      n.x=eventX + (n.row<1?-w*0.30:w*0.30);
+      n.y=padY + (h-2*padY)*( (n.row+1)/7 );
+    }else{
+      const x=colX[n.col];
+      const rows={0:4,1:7,2:7}[n.col];
+      n.x=x;
+      n.y=padY + (h-2*padY)*( n.row/(rows-1) );
+    }
+  });
+}
+function resize(){
+  const w=cv.clientWidth;
+  cv.width=w*DPR; cv.height=560*DPR;
+  cv.style.height='560px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  layout(); draw();
+}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+function draw(){
+  const w=cv.clientWidth,h=560;
+  ctx.clearRect(0,0,w,h);
+  const ink=cssv('--ink'), dim=cssv('--ink-faint'), line=cssv('--line'), panel=cssv('--panel-2');
+  // edges
+  EDGES.forEach(e=>{
+    const a=NMAP[e[0]],b=NMAP[e[1]];
+    const key=e[0]+'>'+e[1];
+    const on=highlight.edges.has(key);
+    ctx.beginPath();
+    const mx=(a.x+b.x)/2;
+    ctx.moveTo(a.x,a.y);
+    ctx.bezierCurveTo(mx,a.y,mx,b.y,b.x,b.y);
+    if(on){
+      ctx.strokeStyle=cssv('--accent');ctx.lineWidth=2.4;ctx.globalAlpha=1;
+      ctx.setLineDash([5,4]);ctx.lineDashOffset=-anim.t*0.05;
+    }else{
+      ctx.strokeStyle=line;ctx.lineWidth=1;ctx.globalAlpha=highlight.nodes.size?0.28:0.6;ctx.setLineDash([]);
+    }
+    ctx.stroke();
+  });
+  ctx.globalAlpha=1;ctx.setLineDash([]);
+  // nodes
+  NODES.forEach(n=>{
+    const col=cssv(COLORS[n.t]);
+    const on=highlight.nodes.has(n.id);
+    const dimmed=highlight.nodes.size&&!on;
+    const lines=n.label.split('\n');
+    ctx.font='600 '+(n.t===T.vendor?12.5:11.5)+'px '+cssv('--jp').split(',')[0];
+    const tw=Math.max(...lines.map(l=>ctx.measureText(l).width));
+    const pw=tw+26, ph=lines.length>1?38:26;
+    ctx.globalAlpha=dimmed?0.32:1;
+    // glow for highlighted
+    if(on){ctx.shadowColor=col;ctx.shadowBlur=16;}
+    roundRect(n.x-pw/2,n.y-ph/2,pw,ph,ph/2>10?11:ph/2);
+    ctx.fillStyle=panel;ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.lineWidth=on?2.2:1.3;
+    ctx.strokeStyle=on?col:cssv('--line');
+    ctx.stroke();
+    // dot
+    ctx.beginPath();ctx.arc(n.x-pw/2+11,n.y,3.4,0,7);ctx.fillStyle=col;ctx.fill();
+    // label
+    ctx.fillStyle=dimmed?dim:cssv('--ink');
+    ctx.textAlign='left';ctx.textBaseline='middle';
+    const ly=lines.length>1?n.y-6:n.y;
+    lines.forEach((l,i)=>ctx.fillText(l,n.x-pw/2+18,ly+i*13));
+  });
+  ctx.globalAlpha=1;
+}
+let raf;
+function loop(){anim.t+=1;draw();if(highlight.edges.size)raf=requestAnimationFrame(loop);}
+
+/* ============ Run ============ */
+function typeset(el,text,speed,cb){
+  el.textContent='';let i=0;
+  (function tick(){el.textContent=text.slice(0,i++);
+    if(i<=text.length)setTimeout(tick,speed);else cb&&cb();})();
+}
+let running=false;
+async function run(){
+  if(running)return; running=true;
+  const Q=QUERIES[activeQ];
+  document.getElementById('q').value=Q.text;
+  // reset
+  highlight={nodes:new Set(),edges:new Set()};
+  document.querySelectorAll('.step').forEach(s=>{s.classList.remove('active','done');});
+  document.querySelectorAll('.sval').forEach(v=>v.textContent='');
+  document.getElementById('results').innerHTML='';
+  draw();
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+  // step 1 entities
+  await activate(0); setSV(0, Q.entities.join(' / '));
+  await wait(560);
+  // step 2 match
+  await activate(1); setSV(1, mode==='vector'?'埋め込み類似 top-k を取得':'正規化キー照合 → 起点ノード確定');
+  await wait(560);
+  // step 3 hops (graph mode animates path)
+  await activate(2);
+  if(mode==='graph'){
+    setSV(2,'Neo4j 1–3ホップ探索中…');
+    const ns=Q.hopNodes, es=Q.hopEdges;
+    for(let i=0;i<ns.length;i++){highlight.nodes.add(ns[i]);
+      if(es[i-1])highlight.edges.add(es[i-1][0]+'>'+es[i-1][1]);
+      draw(); await wait(150);}
+    es.forEach(e=>highlight.edges.add(e[0]+'>'+e[1]));
+    cancelAnimationFrame(raf);loop();
+    setSV(2, ns.filter(x=>NMAP[x].t==='vendor').length+' 件のベンダ到達 · '+es.length+' エッジ経由');
+  }else{
+    setSV(2,'グラフ探索は未使用（ベクトルのみ）');
+  }
+  await wait(560);
+  // step 4 rank
+  await activate(3);
+  let results=Q.results.slice();
+  if(mode==='vector') results=results.filter(r=>r.discover==='直接言及');
+  setSV(3, results.length+' 件を根拠数・新規度でリランク');
+  await wait(520);
+  // step 5 gen
+  await activate(4,true); setSV(4,'根拠パス＋出典を付与して提案');
+  document.querySelector('.step[data-i="4"]').classList.add('done');
+  renderResults(results, Q);
+  running=false;
+}
+function setSV(i,txt){document.getElementById('sv'+i).textContent=txt;}
+async function activate(i,keep){
+  const steps=document.querySelectorAll('.step');
+  for(let k=0;k<i;k++)steps[k].classList.add('done'),steps[k].classList.remove('active');
+  steps[i].classList.add('active');
+  return Promise.resolve();
+}
+
+/* ============ Render results ============ */
+function renderResults(results,Q){
+  const wrap=document.getElementById('results');
+  wrap.innerHTML='';
+  document.getElementById('rcount').textContent=results.length+' 件';
+  if(!results.length){
+    wrap.innerHTML='<div class="empty"><div>ベクトルRAGのみでは、この経路の候補は<br>直接言及が無く取りこぼされました。<br><b>GraphRAG</b>に切り替えると発見できます。</div></div>';
+    return;
+  }
+  results.forEach((r,idx)=>{
+    const sc=r.score>=88?'--good':r.score>=80?'--warn':'--ink-dim';
+    const statusTag=r.status==='new'?'<span class="tag new">新規開拓</span>':'<span class="tag exist">既存取引</span>';
+    const hopTag=r.discover.includes('2ホップ')?'<span class="tag hop">'+r.discover+'</span>':'<span class="tag">'+r.discover+'</span>';
+    const pathHtml=r.path.map((p,i)=>{
+      const arrow=i<r.path.length-1?'<span class="parrow">→</span>':'';
+      return '<span class="pnode '+p[0]+'">'+p[1]+'</span>'+arrow;
+    }).join('');
+    const citesHtml=r.cites.map(c=>`<div class="cite">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      <div><b>${c[0]}</b> <em>${c[1]}</em>${c[2]?'<div style="color:var(--ink-faint);font-size:11px;margin-top:2px">“'+c[2]+'”</div>':''}</div></div>`).join('');
+    const el=document.createElement('div');el.className='vcard';el.style.animationDelay=(idx*0.09)+'s';
+    el.innerHTML=`
+      <div class="vhead">
+        <div>
+          <div class="vname">${r.name}</div>
+          <div class="vmeta"><span class="tag">${r.region}</span>${statusTag}${hopTag}</div>
+        </div>
+        <div class="score"><b style="color:${cssv(sc)}">${r.score}</b><small>適合度</small></div>
+      </div>
+      <div class="path">${pathHtml}</div>
+      <div class="why">${r.why}</div>
+      <div class="cites">${citesHtml}</div>`;
+    wrap.appendChild(el);
+  });
+}
+
+/* ============ Mode toggle ============ */
+document.getElementById('modeSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  mode=b.dataset.mode;
+  [...e.currentTarget.children].forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  run();
+});
+document.getElementById('run').onclick=run;
+document.getElementById('q').addEventListener('keydown',e=>{if(e.key==='Enter')run();});
+
+/* ============ Theme ============ */
+document.getElementById('themeBtn').onclick=()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':cur==='light'?'dark':
+    (matchMedia('(prefers-color-scheme: dark)').matches?'light':'dark');
+  document.documentElement.setAttribute('data-theme',next);
+  resize();
+};
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{resize();});
+
+/* ============ Init ============ */
+window.addEventListener('resize',()=>{DPR=Math.min(window.devicePixelRatio||1,2);resize();});
+resize();
+setTimeout(run,350);
+</script>
