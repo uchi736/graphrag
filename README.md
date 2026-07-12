@@ -36,6 +36,7 @@ LLM・embedding・リランカー・PDF解析まで**完全オンプレミス構
 - **グラフ編集機能**: ノード・エッジの追加・編集・削除
 
 ### 高度な検索機能
+- **高/低レベルキーワード分離（LightRAG流 dual-level）**: 質問から固有名（低）とテーマ語（高）を同時抽出。テーマ語は**エッジのキーワード索引**（`{collection}_relations`、`scripts/build_relation_keywords.py` で構築）に埋め込み照合し、固有名を含まない抽象質問でもKGが寄与する。エンティティ照合が全滅した場合は質問全文→エンティティ埋め込みのフォールバック（llm-graph-builder流）も発動。**グラフ再構築後は build_relation_keywords.py を再実行すること**
 - **日本語ハイブリッド検索**: Sudachiによる形態素解析 + RRFスコア統合
 - **cross-encoderリランキング**: bge-reranker-v2-m3等によるドキュメント/パス/KGチャンクの再評価（LLMリランクはフォールバック）。広めに取得（rerank_pool_size）→ top_k に絞る2段構成
 - **正規化エンティティ照合**: NFKC正規化済み `search_keys`（id + 辞書aliases + canonical_form + かな揺れ骨格キー）に対するCONTAINS照合で表記揺れ（全角半角・大小文字・送り仮名・助詞・長音）を吸収

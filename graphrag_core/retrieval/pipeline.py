@@ -155,16 +155,32 @@ def extract_entities_from_question(
     result = {
         "llm_entities": [],
         "vector_entities": [],
-        "merged_entities": []
+        "merged_entities": [],
+        "theme_keywords": [],
     }
     entities = []
 
-    # 1. LLMによるエンティティ抽出
-    extraction_prompt = ENTITY_EXTRACTION_PROMPT.format(question=question)
+    # 1. LLMによる高/低レベルキーワード同時抽出（LightRAG dual-level 流）。
+    #    低レベル=固有名（search_keys照合用）、高レベル=テーマ語（関係キーワード索引用）。
+    #    LLM呼び出し回数は従来と同じ1回。JSONパース失敗時は旧カンマ区切り解釈へ。
+    from graphrag_core.prompts import DUAL_KEYWORD_EXTRACTION_PROMPT
+    extraction_prompt = DUAL_KEYWORD_EXTRACTION_PROMPT.format(question=question)
     try:
         response = llm.invoke(extraction_prompt, config=get_langfuse_callback())
-        llm_entities = [e.strip() for e in response.content.split(',') if e.strip()]
-        # プロンプトは該当なし時に「なし」と出力させるため、エンティティとして扱わない
+        content = response.content.strip()
+        llm_entities = []
+        try:
+            import json as _json
+            import re as _re
+            t = _re.sub(r"^```[a-zA-Z]*\n?|\n?```$", "", content)
+            m = _re.search(r"\{.*\}", t, _re.DOTALL)
+            data = _json.loads(m.group(0) if m else t)
+            llm_entities = [str(e).strip() for e in (data.get("entities") or []) if str(e).strip()]
+            result["theme_keywords"] = [
+                str(k).strip() for k in (data.get("themes") or []) if str(k).strip()][:6]
+        except Exception:
+            # JSONで返らなかった場合は旧挙動（カンマ区切り）として解釈
+            llm_entities = [e.strip() for e in content.split(',') if e.strip()]
         llm_entities = [e for e in llm_entities if e not in ("なし", "None", "N/A", "n/a")]
         result["llm_entities"] = llm_entities
         entities.extend(llm_entities)
@@ -489,24 +505,85 @@ def get_graph_context(
     doc_context: str = "",
     precomputed_entities: dict = None,
 ) -> Dict[str, Any]:
-    """質問からエンティティを抽出し、N-hopトラバーサルでサブグラフを取得
+    """質問からグラフコンテキストを取得する（3経路）。
 
-    Args:
-        precomputed_entities: 事前に抽出済みのentity_result（並列化時に使用）
+    1. 低レベル経路: エンティティ抽出→search_keys照合→N-hopパス探索（従来）
+    2. テーマ経路: 高レベルキーワード→関係キーワード索引（{collection}_relations）
+       に埋め込み照合し、話題の合う関係を追加（LightRAG dual-level 流。
+       固有名を含まない抽象質問への対策）
+    3. フォールバック: 1が全滅時、質問全文→エンティティ埋め込みで起点を
+       シードして再探索（llm-graph-builder の entity_vector 流）
 
     Returns:
-        Dict with keys:
-        - triples: 関係性トリプルのリスト
-        - paths: パスのリスト
-        - extracted_entities: 抽出エンティティ情報
+        Dict with keys: triples / paths / extracted_entities
     """
-    # 1. エンティティ抽出（事前計算済みならスキップ）
     if precomputed_entities is not None:
         entity_result = precomputed_entities
     else:
         entity_result = extract_entities_from_question(
             question, llm, embeddings=embeddings, pg_conn=pg_conn, config=config
         )
+
+    ctx = _graph_context_by_entities(
+        question, graph, llm, embeddings=embeddings, pg_conn=pg_conn,
+        config=config, doc_context=doc_context, entity_result=entity_result)
+
+    # 経路2: テーマ経路（高レベルキーワード → 関係キーワード索引）
+    themes = entity_result.get("theme_keywords") or []
+    collection = (config or {}).get("pg_collection")
+    if (themes and pg_conn and collection and embeddings
+            and _cfg(config, 'enable_theme_keywords') is not False):
+        try:
+            from graphrag_core.graph.relation_keywords import search_relations_by_theme
+            theme_triples = search_relations_by_theme(
+                pg_conn, collection, embeddings, themes, k=8)
+            seen = {(t.get("start"), t.get("type"), t.get("end"))
+                    for t in ctx.get("triples", [])}
+            added = [t for t in theme_triples
+                     if (t["start"], t["type"], t["end"]) not in seen]
+            if added:
+                ctx["triples"] = list(ctx.get("triples", [])) + added
+                log = (config or {}).get("_path_rerank_log")
+                if isinstance(log, list):
+                    log.append(f"テーマ経路: {themes} → 関係{len(added)}件追加")
+                logger.info("[Theme Route] %s -> +%d relations", themes, len(added))
+        except Exception as e:
+            logger.warning("theme relation search failed (経路2スキップ): %s", e)
+
+    # 経路3: エンティティ照合が全滅したら、質問全文→エンティティ埋め込みでシード
+    if (not ctx.get("triples") and embeddings and pg_conn
+            and _cfg(config, 'enable_entity_vector')):
+        try:
+            ev = EntityVectorizer(pg_conn, embeddings)
+            seed = [eid for eid, _ in ev.search_similar_entities(question, k=3) if eid]
+            if seed:
+                fb_result = {**entity_result, "merged_entities": seed}
+                ctx2 = _graph_context_by_entities(
+                    question, graph, llm, embeddings=embeddings, pg_conn=pg_conn,
+                    config=config, doc_context=doc_context, entity_result=fb_result)
+                if ctx2.get("triples"):
+                    ctx2["extracted_entities"] = {
+                        **entity_result, "fallback_seed_entities": seed}
+                    logger.info("[Entity Fallback] question-vector seed=%s", seed)
+                    ctx = ctx2
+        except Exception as e:
+            logger.warning("entity-vector fallback failed (経路3スキップ): %s", e)
+
+    return ctx
+
+
+def _graph_context_by_entities(
+    question: str,
+    graph,
+    llm,
+    embeddings=None,
+    pg_conn: str = None,
+    config: dict = None,
+    doc_context: str = "",
+    entity_result: dict = None,
+) -> Dict[str, Any]:
+    """低レベル経路の本体: エンティティ→search_keys照合→N-hopパス探索（従来実装）。"""
+    entity_result = entity_result or {}
     entities = entity_result.get("merged_entities", [])
     if not entities:
         return {"triples": [], "paths": [], "extracted_entities": entity_result}
@@ -689,6 +766,11 @@ def retriever_and_merge(
 ) -> Dict[str, Any]:
     """エンティティ抽出とドキュメント検索を並列実行し、グラフリランキング"""
     from concurrent.futures import ThreadPoolExecutor
+
+    # テーマ経路（関係キーワード索引 {collection}_relations）がコレクション名を
+    # 必要とするため config 経由で伝搬する
+    config = dict(config or {})
+    config.setdefault("pg_collection", pg_collection)
 
     # ── Phase 1: エンティティ抽出 + ドキュメント検索を並列実行 ──
     def _search_documents():

@@ -100,6 +100,9 @@ function EvidencePanelsInner({ evidence }: { evidence: QaEvidence | null }) {
   if (!evidence) return null
   const entities = evidence.extracted_entities ?? {}
   const merged = (entities as { merged_entities?: string[] }).merged_entities ?? []
+  const themes = (entities as { theme_keywords?: string[] }).theme_keywords ?? []
+  const fallbackSeeds =
+    (entities as { fallback_seed_entities?: string[] }).fallback_seed_entities ?? []
   const openChunk = (source: string, chunkId: string | null) => setOpenDoc({ source, chunkId })
 
   const graphEmptyNote = evidence.kg_used
@@ -151,11 +154,29 @@ function EvidencePanelsInner({ evidence }: { evidence: QaEvidence | null }) {
         ))}
       </Panel>
 
-      <Panel title="🧩 抽出エンティティ（デバッグ）" count={merged.length}>
+      <Panel title="🧩 抽出キーワード（デバッグ）" count={merged.length + themes.length}>
         <div className="flex flex-wrap gap-1.5">
           {merged.map((e) => (
-            <span key={e} className="rounded-full bg-muted px-2.5 py-0.5 text-xs">
+            <span key={e} className="rounded-full bg-muted px-2.5 py-0.5 text-xs" title="低レベル（固有名・search_keys照合）">
               {e}
+            </span>
+          ))}
+          {themes.map((t) => (
+            <span
+              key={t}
+              className="rounded-full bg-[var(--color-brand-from)]/10 px-2.5 py-0.5 text-xs text-primary"
+              title="高レベル（テーマ語・関係キーワード索引照合）"
+            >
+              🏷 {t}
+            </span>
+          ))}
+          {fallbackSeeds.map((s) => (
+            <span
+              key={s}
+              className="rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs text-amber-700"
+              title="フォールバック（質問全文→エンティティ埋め込みで採用した起点）"
+            >
+              ⚓ {s}
             </span>
           ))}
         </div>
