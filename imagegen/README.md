@@ -34,7 +34,13 @@ imagegen/
 │   ├── pipeline.py        ジョブ実行本体（構築→投入→保存）
 │   ├── routes.py          エンドポイント定義
 │   └── state.py           アプリ共有状態
-├── frontend/              素の HTML/CSS/JS（生成タブ・編集タブ・ポーリング）
+├── frontend/              React + Vite + TypeScript + Tailwind（生成/編集タブ・ポーリング）
+│   ├── src/
+│   │   ├── App.tsx            ヘッダ（ComfyUI 疎通表示）+ タブ切替
+│   │   ├── api.ts / types.ts  型付き API クライアント
+│   │   ├── hooks/             ジョブポーリング・ヘルス・モデル一覧
+│   │   └── components/        GenerateTab / EditTab / JobResult / Field
+│   └── dist/                  ビルド成果物（backend が配信。git 管理外）
 ├── tests/                 単体・スモークテスト（ComfyUI 不要）
 ├── requirements.txt
 └── .env.sample
@@ -60,17 +66,32 @@ imagegen/
 ## セットアップ & 起動
 
 ```bash
+# 1) バックエンド依存
 cd imagegen
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.sample .env   # COMFYUI_URL 等を必要に応じて編集
 
-# 起動（ジョブキューがプロセス内のため --workers 1 必須）
+# 2) フロントエンドをビルド（dist/ を backend が配信）
+cd frontend
+npm install
+npm run build
+cd ..
+
+# 3) 起動（ジョブキューがプロセス内のため --workers 1 必須）
+cd ..   # リポジトリルート（imagegen パッケージ解決のため）
 python -m uvicorn imagegen.backend.main:app --host 0.0.0.0 --port 8100
-#   ↑ リポジトリルートから実行（imagegen パッケージ解決のため）
 ```
 
 ブラウザで <http://localhost:8100/> を開く。上部に ComfyUI 接続状態が出る。
+
+### フロントエンド開発（ホットリロード）
+
+```bash
+cd imagegen/frontend
+npm run dev        # Vite dev server (5173)。/generate 等は 8100 のバックエンドへプロキシ
+# 別ターミナルで backend を 8100 で起動しておく（IMAGEGEN_BACKEND で接続先変更可）
+```
 
 ## API（計画書 §8）
 

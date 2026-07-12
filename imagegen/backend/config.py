@@ -35,8 +35,8 @@ class Settings:
     output_dir: Path = _APP_DIR / "outputs"
     upload_dir: Path = _APP_DIR / "uploads"
 
-    # フロントエンド静的配信ディレクトリ
-    frontend_dir: Path = _APP_DIR / "frontend"
+    # フロントエンド静的配信ディレクトリ（Vite のビルド成果物）
+    frontend_dir: Path = _APP_DIR / "frontend" / "dist"
 
     # 開発時 CORS（Vite 等の別オリジンから叩く場合のみ）
     cors_origins: str = ""

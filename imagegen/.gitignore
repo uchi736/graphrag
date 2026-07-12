@@ -5,6 +5,12 @@ uploads/
 __pycache__/
 *.pyc
 
+# フロントエンド（Vite）
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo
+
 # ルート .gitignore の `*.html`(Streamlit用) がフロントの HTML を除外するのを取り消す
 !frontend/*.html
+!frontend/index.html
 
