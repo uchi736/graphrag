@@ -18,7 +18,9 @@ LLM・embedding・リランカー・PDF解析まで**完全オンプレミス構
 - 旧 Streamlit UI（`scripts/app.py`）も移行期間中は併存
 
 ### ドキュメント取り込み・構築
-- **PDF解析**: オンプレOCR（PaddleX）/ Azure Document Intelligence / PyMuPDF を切替可能
+- **PDF解析（構造保持Markdown）**: `PDF_PROCESSOR=doc_parser` で doc-parser サービス（:8770）経由の**表を潰さない**取り込み。エンジンは **docling（既定・IBM製＝非中国系スタックで完結）** / mineru（複雑帳票の結合セル精度優先）を切替。doclingの和文行折返しスペースは決定的正規化で自動補正
+- **図の取り込み**: doclingが切り出した図を **gemma4-vision がキャプション文化**して本文に差し込み（`DOC_PARSER_FIGURE_CAPTIONS=true`）— 図・グラフの内容が検索・KG抽出の対象になる
+- **フォールバック**: doc_parser → オンプレOCR（PaddleX）→ PyMuPDF。Azure DI も選択可
 - **再開機能**: 処理が中断しても続きから再開可能（内容ハッシュのチャンクIDで管理）
 - **増分更新**: 文書改訂時に該当文書スコープだけ差分更新（`scripts/update_doc.py` / API・UI）
 

@@ -126,8 +126,10 @@ class Settings:
     # PaddleX Layout サーバ（レイアウト検出専用、現状はenvのみ登録・呼び出し未実装）
     paddlex_layout_endpoint: str = field(default_factory=lambda: _env("PADDLEX_LAYOUT_ENDPOINT", ""))
     # doc-parser（MinerU pipeline / Docling 同梱、構造保持Markdown変換。PDF_PROCESSOR=doc_parser で使用）
+    # 既定 docling = 非中国系スタック（IBM）で完結。複雑帳票の結合セル精度優先なら mineru
     doc_parser_endpoint: str = field(default_factory=lambda: _env("DOC_PARSER_ENDPOINT", "http://localhost:8770"))
-    doc_parser_engine: str = field(default_factory=lambda: _env("DOC_PARSER_ENGINE", "mineru"))
+    doc_parser_engine: str = field(default_factory=lambda: _env("DOC_PARSER_ENGINE", "docling"))
+    doc_parser_figure_captions: bool = field(default_factory=lambda: _env_bool("DOC_PARSER_FIGURE_CAPTIONS", "true"))
 
     # --- Search / Retrieval ---
     retrieval_top_k: int = field(default_factory=lambda: _env_int("RETRIEVAL_TOP_K", "5"))
