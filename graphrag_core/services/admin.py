@@ -68,6 +68,13 @@ def pdf_processor_status(settings=None) -> Dict[str, Any]:
             info["note"] = "画像解析なし"
         if not info["ok"]:
             info["note"] = "エンドポイント未設定の可能性"
+    elif processor == "doc_parser":
+        info["backend"] = (s.doc_parser_engine or "mineru").lower()
+        info["endpoint"] = s.doc_parser_endpoint
+        info["ok"] = bool(s.doc_parser_endpoint)
+        info["note"] = "構造保持Markdown（表を平文化しない）"
+        if not info["ok"]:
+            info["note"] = "DOC_PARSER_ENDPOINT 未設定"
     elif processor == "azure_di":
         info["ok"] = bool(s.azure_di_endpoint)
         if not info["ok"]:
