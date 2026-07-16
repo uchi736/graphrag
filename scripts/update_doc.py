@@ -72,17 +72,23 @@ def load_chunks_jsonl(path: Path, doc_id: str):
 
 
 def load_file_chunks(path: Path, doc_id: str):
-    """md/txt/pdf を読み込み、build_kg と同じ2段階チャンキングにかける。"""
+    """md/txt/pdf を読み込み、build_kg と同じ2段階チャンキング＋図チャンク展開にかける。"""
     from langchain_core.documents import Document
-    from graphrag_core.text.chunking import create_markdown_chunks
+    from graphrag_core.text.chunking import create_markdown_chunks, expand_figure_chunks
     suffix = path.suffix.lower()
+    figures = []
     if suffix == ".pdf":
-        from graphrag_core.document.pdf import load_pdf_text
-        text = load_pdf_text(str(path))
+        from graphrag_core.document.pdf import load_pdf_with_figures
+        text, figures = load_pdf_with_figures(str(path))
     else:
         text = path.read_text(encoding="utf-8")
     src_doc = Document(page_content=text, metadata={"source": doc_id})
-    return create_markdown_chunks([src_doc], chunk_size=1024, chunk_overlap=100)
+    if figures:
+        src_doc.metadata["figures"] = figures
+    figure_chunks = expand_figure_chunks(src_doc)  # popしてから本文チャンク化
+    chunks = create_markdown_chunks([src_doc], chunk_size=1024, chunk_overlap=100)
+    chunks.extend(figure_chunks)
+    return chunks
 
 
 # ── 抽出関数（build_kg_plant / fujitsu_build_kg と同じ流儀） ─────────

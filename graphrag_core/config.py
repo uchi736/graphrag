@@ -130,6 +130,8 @@ class Settings:
     doc_parser_endpoint: str = field(default_factory=lambda: _env("DOC_PARSER_ENDPOINT", "http://localhost:8770"))
     doc_parser_engine: str = field(default_factory=lambda: _env("DOC_PARSER_ENGINE", "docling"))
     doc_parser_figure_captions: bool = field(default_factory=lambda: _env_bool("DOC_PARSER_FIGURE_CAPTIONS", "true"))
+    # 切り出した図の保存先（/figures で静的配信。output/ はgitignore済み）
+    doc_parser_figures_dir: str = field(default_factory=lambda: _env("DOC_PARSER_FIGURES_DIR", "output/figures"))
 
     # --- Search / Retrieval ---
     retrieval_top_k: int = field(default_factory=lambda: _env_int("RETRIEVAL_TOP_K", "5"))

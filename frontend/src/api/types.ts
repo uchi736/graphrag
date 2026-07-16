@@ -50,6 +50,10 @@ export interface SourceChunk {
   source: string | null
   page: number | null
   text: string
+  /** "figure" = 図チャンク（キャプション本文＋画像）。それ以外/undefinedは通常チャンク */
+  type?: string | null
+  /** 図画像のファイル名（/figures/<image_path> で配信） */
+  image_path?: string | null
 }
 
 export interface Triple {

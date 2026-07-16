@@ -15,24 +15,32 @@ from typing import Dict, List
 
 from langchain_core.documents import Document
 
-from graphrag_core.document.pdf import load_pdf_text
+from graphrag_core.document.pdf import load_pdf_with_figures
 
 
 def load_document_from_bytes(filename: str, data: bytes) -> Document:
-    """1ファイル（pdf/txt/md/その他テキスト）を Document に変換する。"""
+    """1ファイル（pdf/txt/md/その他テキスト）を Document に変換する。
+
+    PDFで図が切り出せた場合は metadata["figures"] に図レコードを載せる
+    （chunking.expand_figure_chunks が図チャンクへ展開して pop する）。
+    """
     suffix = Path(filename).suffix.lower()
+    figures: list = []
     if suffix == ".pdf":
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(data)
             tmp_path = tmp.name
         try:
-            text_content = load_pdf_text(tmp_path)
+            text_content, figures = load_pdf_with_figures(tmp_path)
         finally:
             os.unlink(tmp_path)
     else:
         text_content = data.decode("utf-8", errors="replace")
 
-    return Document(page_content=text_content, metadata={"source": filename})
+    metadata: Dict = {"source": filename}
+    if figures:
+        metadata["figures"] = figures
+    return Document(page_content=text_content, metadata=metadata)
 
 
 def load_documents_from_bytes(files: List[tuple[str, bytes]]) -> List[Document]:

@@ -80,6 +80,7 @@ def caption_figures(figures: List[bytes], *, context: str = "",
                 {"type": "text", "text":
                  "この図（文書内の図表・グラフ・写真）の内容を、検索で見つけられるよう"
                  "2〜3文の日本語で説明してください。数値・傾向・対象物を具体的に。"
+                 "前置き・見出し・記号は不要で、説明文だけを出力すること。"
                  + (f"\n文書の文脈: {context[:200]}" if context else "")},
                 {"type": "image_url",
                  "image_url": {"url": f"data:image/png;base64,{b64}"}},
@@ -92,16 +93,26 @@ def caption_figures(figures: List[bytes], *, context: str = "",
     return captions
 
 
-def extract_pdf_doc_parser(path: str, engine: Optional[str] = None,
-                           endpoint: Optional[str] = None,
-                           timeout: float = 900.0) -> str:
-    """doc-parser で PDF を構造保持 Markdown に変換して返す。"""
+def extract_pdf_with_figures(path: str, engine: Optional[str] = None,
+                             endpoint: Optional[str] = None,
+                             timeout: float = 900.0) -> Tuple[str, List[dict]]:
+    """doc-parser で PDF を構造保持 Markdown に変換し、図も切り出して返す。
+
+    Returns:
+        (markdown, figures) — figures は
+        [{"index": 1始まり, "caption": 説明文, "image_path": 保存ファイル名}]。
+        画像は settings.doc_parser_figures_dir に sha256先頭16桁.png で保存（冪等）。
+        呼び出し側はこれを図チャンク（キャプション検索→画像表示）に使う。
+    """
+    import hashlib
+
     import requests
+
     from graphrag_core.config import get_settings
 
     s = get_settings()
     endpoint = (endpoint or s.doc_parser_endpoint).rstrip("/")
-    engine = (engine or s.doc_parser_engine or "mineru").lower()
+    engine = (engine or s.doc_parser_engine or "docling").lower()
     b64 = base64.b64encode(Path(path).read_bytes()).decode()
     filename = Path(path).name
 
@@ -126,19 +137,39 @@ def extract_pdf_doc_parser(path: str, engine: Optional[str] = None,
     md, figures = extract_embedded_figures(md)
     md = normalize_japanese_spacing(md)
 
-    # 図キャプション（gemma4-vision）。失敗しても本文は成立する
-    if figures and s.doc_parser_figure_captions:
-        try:
-            captions = caption_figures(figures, context=md[:400])
-            for i, cap in enumerate(captions, 1):
-                if cap:
-                    md = md.replace(f"[図{i}]", f"[図{i}: {cap}]")
-            logger.info("doc-parser: %d/%d figures captioned",
-                        sum(1 for c in captions if c), len(figures))
-        except Exception as e:
-            logger.warning("figure captioning skipped: %s", e)
+    records: List[dict] = []
+    if figures:
+        fig_dir = Path(s.doc_parser_figures_dir)
+        fig_dir.mkdir(parents=True, exist_ok=True)
+
+        captions = [""] * len(figures)
+        if s.doc_parser_figure_captions:
+            try:
+                captions = caption_figures(figures, context=md[:400])
+                logger.info("doc-parser: %d/%d figures captioned",
+                            sum(1 for c in captions if c), len(figures))
+            except Exception as e:
+                logger.warning("figure captioning skipped: %s", e)
+
+        for i, (img, cap) in enumerate(zip(figures, captions), 1):
+            name = hashlib.sha256(img).hexdigest()[:16] + ".png"
+            fp = fig_dir / name
+            if not fp.exists():
+                fp.write_bytes(img)
+            if cap:
+                md = md.replace(f"[図{i}]", f"[図{i}: {cap}]")
+            records.append({"index": i, "caption": cap, "image_path": name})
 
     logger.info("doc-parser(%s): %s -> %d chars (raw %d, figures %d, %.1fs)",
                 data.get("engine", engine), filename, len(md), raw_len,
                 len(figures), data.get("elapsed_seconds", -1))
+    return md, records
+
+
+def extract_pdf_doc_parser(path: str, engine: Optional[str] = None,
+                           endpoint: Optional[str] = None,
+                           timeout: float = 900.0) -> str:
+    """後方互換ラッパ: Markdown本文のみ返す（図レコードは捨てる）。"""
+    md, _ = extract_pdf_with_figures(path, engine=engine, endpoint=endpoint,
+                                     timeout=timeout)
     return md

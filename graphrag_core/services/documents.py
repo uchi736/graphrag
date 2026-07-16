@@ -141,6 +141,14 @@ def build_add_chunk_fn(graph, llm) -> Callable:
     )
 
     def add_chunk(chunk):
+        # 図チャンクはKG抽出せず ProcessedChunk 記録のみ（PGVector同期は
+        # incremental.sync_pgvector_document 側で他チャンクと同様に行われる）
+        if chunk.metadata.get("type") == "figure":
+            cid = chunk.metadata["id"]
+            graph.query(
+                "MERGE (c:ProcessedChunk {hash: $h}) SET c.processed_at = datetime()",
+                {"h": cid})
+            return cid
         chunk_docs = transformer.convert_to_graph_documents([chunk])
         for gd in chunk_docs:
             for node in gd.nodes:

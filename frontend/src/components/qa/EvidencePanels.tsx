@@ -65,6 +65,7 @@ function ChunkCard({
   chunk: SourceChunk
   onOpenDoc?: (source: string, chunkId: string | null) => void
 }) {
+  const isFigure = chunk.type === "figure" && chunk.image_path
   return (
     <div className="rounded-md border bg-background p-3">
       <div className="mb-1 flex items-center gap-2">
@@ -72,6 +73,11 @@ function ChunkCard({
           {chunk.source ?? "不明"}
           {chunk.page != null && ` · p.${chunk.page}`}
         </span>
+        {isFigure && (
+          <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+            🖼 図
+          </span>
+        )}
         {chunk.source && onOpenDoc && (
           <button
             onClick={() => onOpenDoc(chunk.source!, chunk.id)}
@@ -83,6 +89,16 @@ function ChunkCard({
           </button>
         )}
       </div>
+      {isFigure && (
+        <a href={`/figures/${chunk.image_path}`} target="_blank" rel="noreferrer" title="クリックで原寸表示">
+          <img
+            src={`/figures/${chunk.image_path}`}
+            alt={chunk.text}
+            loading="lazy"
+            className="mb-2 max-h-64 rounded border bg-white object-contain"
+          />
+        </a>
+      )}
       <p className="max-h-40 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-foreground/85">
         {chunk.text}
       </p>

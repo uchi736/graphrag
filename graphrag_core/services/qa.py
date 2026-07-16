@@ -148,6 +148,9 @@ def _doc_to_dto(d) -> Dict:
         "source": meta.get("source"),
         "page": meta.get("page"),
         "text": getattr(d, "page_content", str(d)),
+        # 図チャンク用（type="figure" のとき image_path を /figures/ で表示）
+        "type": meta.get("type"),
+        "image_path": meta.get("image_path"),
     }
 
 

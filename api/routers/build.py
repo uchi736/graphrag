@@ -116,7 +116,10 @@ async def update_document_incremental(
         progress(ProgressEvent(stage="load", message=f"{filename} を解析中..."))
         doc = load_document_from_bytes(filename, data)
         doc.metadata["source"] = doc_id
+        from graphrag_core.text.chunking import expand_figure_chunks
+        figure_chunks = expand_figure_chunks(doc)  # popしてから本文チャンク化
         chunks = create_markdown_chunks([doc], chunk_size=1024, chunk_overlap=100)
+        chunks.extend(figure_chunks)
         for c in chunks:
             c.metadata["source"] = doc_id
 

@@ -50,25 +50,7 @@ def load_pdf_text(path: str, processor: Optional[str] = None) -> str:
     processor = processor or s.pdf_processor or "onprem"
 
     if processor == "doc_parser":
-        # 構造保持Markdown（MinerU pipeline / Docling @ doc-parser:8770）。
-        # 表が Markdown表として残るため、様式↔条文のような表情報が
-        # チャンク・KG抽出に乗る（従来OCRの平文化問題への対策）
-        try:
-            from graphrag_core.document.doc_parser import extract_pdf_doc_parser
-            text = extract_pdf_doc_parser(path)
-            if text:
-                return text
-            logger.warning("doc-parser が空結果 → onprem にフォールバック")
-        except Exception as e:
-            logger.warning("doc-parser 失敗 → onprem にフォールバック: %s", e)
-        try:
-            from graphrag_core.document.onprem_pdf import extract_pdf_onprem
-            text = extract_pdf_onprem(path)
-            if text:
-                return text
-        except Exception as e:
-            logger.warning("onprem も失敗 → pymupdf にフォールバック: %s", e)
-        return _extract_pymupdf(path)
+        return load_pdf_with_figures(path, processor)[0]
 
     if processor == "onprem":
         try:
@@ -95,3 +77,38 @@ def load_pdf_text(path: str, processor: Optional[str] = None) -> str:
 
     # default: pymupdf
     return _extract_pymupdf(path)
+
+
+def load_pdf_with_figures(path: str, processor: Optional[str] = None) -> tuple[str, list]:
+    """PDFを処理し (テキスト, 図レコード) を返す。
+
+    図レコードが得られるのは doc_parser 経路のみ（他方式は常に空リスト）。
+    doc_parser 失敗時は onprem → pymupdf にフォールバック（その場合も図なし）。
+    """
+    from graphrag_core.config import get_settings
+
+    s = get_settings()
+    processor = processor or s.pdf_processor or "onprem"
+
+    if processor == "doc_parser":
+        # 構造保持Markdown（Docling/MinerU @ doc-parser:8770）。
+        # 表が Markdown表として残るため、様式↔条文のような表情報が
+        # チャンク・KG抽出に乗る（従来OCRの平文化問題への対策）
+        try:
+            from graphrag_core.document.doc_parser import extract_pdf_with_figures
+            text, figures = extract_pdf_with_figures(path)
+            if text:
+                return text, figures
+            logger.warning("doc-parser が空結果 → onprem にフォールバック")
+        except Exception as e:
+            logger.warning("doc-parser 失敗 → onprem にフォールバック: %s", e)
+        try:
+            from graphrag_core.document.onprem_pdf import extract_pdf_onprem
+            text = extract_pdf_onprem(path)
+            if text:
+                return text, []
+        except Exception as e:
+            logger.warning("onprem も失敗 → pymupdf にフォールバック: %s", e)
+        return _extract_pymupdf(path), []
+
+    return load_pdf_text(path, processor), []

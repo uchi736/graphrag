@@ -155,3 +155,26 @@ def format_chunk_source(chunk: Document) -> str:
         parts.append(h3)
 
     return " > ".join(parts) if parts else "Unknown"
+
+
+def expand_figure_chunks(doc: Document) -> List[Document]:
+    """Document.metadata["figures"] を独立した図チャンクへ展開する。
+
+    - 必ず metadata から figures を **pop** する（create_markdown_chunks が
+      doc.metadata を全チャンクへ複製するため、残すと全本文チャンクに
+      figures が伝播してしまう）
+    - 図チャンクは短いキャプション文なので再チャンク・パンくず付与は不要。
+      呼び出し側で create_markdown_chunks の出力に append する
+    - metadata: type="figure" / image_path（ファイル名のみ。/figures/ で配信）
+    """
+    figures = doc.metadata.pop("figures", None) or []
+    source = doc.metadata.get("source", "")
+    out: List[Document] = []
+    for f in figures:
+        caption = (f.get("caption") or "").strip() or "（キャプション生成失敗）"
+        out.append(Document(
+            page_content=f"[図{f.get('index', '?')}] {caption}",
+            metadata={"source": source, "type": "figure",
+                      "image_path": f.get("image_path", "")},
+        ))
+    return out

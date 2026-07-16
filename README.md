@@ -19,7 +19,7 @@ LLM・embedding・リランカー・PDF解析まで**完全オンプレミス構
 
 ### ドキュメント取り込み・構築
 - **PDF解析（構造保持Markdown）**: `PDF_PROCESSOR=doc_parser` で doc-parser サービス（:8770）経由の**表を潰さない**取り込み。エンジンは **docling（既定・IBM製＝非中国系スタックで完結）** / mineru（複雑帳票の結合セル精度優先）を切替。doclingの和文行折返しスペースは決定的正規化で自動補正
-- **図の取り込み**: doclingが切り出した図を **gemma4-vision がキャプション文化**して本文に差し込み（`DOC_PARSER_FIGURE_CAPTIONS=true`）— 図・グラフの内容が検索・KG抽出の対象になる
+- **図の取り込み（図表RAG）**: doclingが切り出した図を **gemma4-vision がキャプション文化**し、①本文への差し込みに加えて②**独立した図チャンク**（`type=figure`）としてPGVector＋BM25に登録（`DOC_PARSER_FIGURE_CAPTIONS=true`）。質問がキャプションにハイブリッド検索で一致すると、**QAの根拠カードに図の画像そのものが表示**される（画像は `output/figures/` 保存・`/figures/` 配信）
 - **フォールバック**: doc_parser → オンプレOCR（PaddleX）→ PyMuPDF。Azure DI も選択可
 - **再開機能**: 処理が中断しても続きから再開可能（内容ハッシュのチャンクIDで管理）
 - **増分更新**: 文書改訂時に該当文書スコープだけ差分更新（`scripts/update_doc.py` / API・UI）

@@ -120,6 +120,15 @@ def create_app() -> FastAPI:
     app.include_router(build_router.router)
     app.include_router(dictionary_router.router)
 
+    # 図画像の静的配信（QA根拠カードの <img src="/figures/..."> 用）。
+    # SPAキャッチオールより先にマウントすること（後だとfallbackに飲まれる）
+    from graphrag_core.config import get_settings as _gs
+    _figures_dir = Path(_gs().doc_parser_figures_dir)
+    if not _figures_dir.is_absolute():
+        _figures_dir = Path(__file__).resolve().parent.parent / _figures_dir
+    _figures_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/figures", StaticFiles(directory=_figures_dir), name="figures")
+
     # React SPA 静的配信（frontend/dist がある場合のみ）。/api/* が優先。
     if _FRONTEND_DIST.exists():
         app.mount("/assets", StaticFiles(directory=_FRONTEND_DIST / "assets"), name="assets")

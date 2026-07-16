@@ -38,8 +38,15 @@ class BuildOptions:
 
 
 def _make_chunks(source_docs: List) -> List:
-    """2段階Markdownチャンキング + 内容ハッシュID採番 + 重複除去。"""
+    """2段階Markdownチャンキング + 図チャンク展開 + 内容ハッシュID採番 + 重複除去。"""
+    from graphrag_core.text.chunking import expand_figure_chunks
+    # 図チャンクを先に展開（内部で metadata["figures"] を pop するため、
+    # create_markdown_chunks より前に呼ぶこと＝本文チャンクへの伝播防止）
+    figure_chunks = []
+    for doc in source_docs:
+        figure_chunks.extend(expand_figure_chunks(doc))
     all_chunks = create_markdown_chunks(source_docs, chunk_size=1024, chunk_overlap=100)
+    all_chunks.extend(figure_chunks)
     deduped, seen = [], set()
     for chunk in all_chunks:
         digest = make_chunk_id(chunk.metadata.get("source", ""), chunk.page_content)
@@ -173,6 +180,15 @@ def build_knowledge_base(
             if should_cancel():
                 stats["cancelled"] = True
                 raise JobCancelled()
+            # 図チャンク（キャプション文）はKG抽出しない。ProcessedChunkだけ
+            # 記録して resume/差分検出の整合を保つ
+            if chunk.metadata.get("type") == "figure":
+                if chunk.metadata.get("id"):
+                    graph.query(
+                        "MERGE (c:ProcessedChunk {hash: $hash}) SET c.processed_at = datetime()",
+                        {"hash": chunk.metadata["id"]})
+                stats["ok"] += 1
+                continue
             try:
                 chunk_docs = transformer.convert_to_graph_documents([chunk])
                 graph.add_graph_documents(chunk_docs, include_source=True)
