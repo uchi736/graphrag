@@ -125,6 +125,9 @@ class Settings:
     paddlex_timeout: int = field(default_factory=lambda: _env_int("PADDLEX_TIMEOUT", "180"))
     # PaddleX Layout サーバ（レイアウト検出専用、現状はenvのみ登録・呼び出し未実装）
     paddlex_layout_endpoint: str = field(default_factory=lambda: _env("PADDLEX_LAYOUT_ENDPOINT", ""))
+    # doc-parser（MinerU pipeline / Docling 同梱、構造保持Markdown変換。PDF_PROCESSOR=doc_parser で使用）
+    doc_parser_endpoint: str = field(default_factory=lambda: _env("DOC_PARSER_ENDPOINT", "http://localhost:8770"))
+    doc_parser_engine: str = field(default_factory=lambda: _env("DOC_PARSER_ENGINE", "mineru"))
 
     # --- Search / Retrieval ---
     retrieval_top_k: int = field(default_factory=lambda: _env_int("RETRIEVAL_TOP_K", "5"))
