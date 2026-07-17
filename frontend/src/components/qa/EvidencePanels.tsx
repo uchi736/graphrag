@@ -66,13 +66,30 @@ function ChunkCard({
   onOpenDoc?: (source: string, chunkId: string | null) => void
 }) {
   const isFigure = chunk.type === "figure" && chunk.image_path
+  // 出典クリック→原本を開く（/originals 配信。pageがあればPDFビューアのページアンカー付き）
+  const originalUrl = chunk.source
+    ? `/originals/${encodeURIComponent(chunk.source)}` +
+      (chunk.page != null ? `#page=${Number(chunk.page) + 1}` : "")
+    : null
   return (
     <div className="rounded-md border bg-background p-3">
       <div className="mb-1 flex items-center gap-2">
-        <span className="inline-block rounded bg-[var(--color-brand-from)]/10 px-2 py-0.5 font-mono text-xs text-primary">
-          {chunk.source ?? "不明"}
-          {chunk.page != null && ` · p.${chunk.page}`}
-        </span>
+        {originalUrl ? (
+          <a
+            href={originalUrl}
+            target="_blank"
+            rel="noreferrer"
+            title="原本ドキュメントを開く"
+            className="inline-block rounded bg-[var(--color-brand-from)]/10 px-2 py-0.5 font-mono text-xs text-primary underline-offset-2 hover:underline"
+          >
+            {chunk.source}
+            {chunk.page != null && ` · p.${chunk.page}`} ↗
+          </a>
+        ) : (
+          <span className="inline-block rounded bg-[var(--color-brand-from)]/10 px-2 py-0.5 font-mono text-xs text-primary">
+            不明
+          </span>
+        )}
         {isFigure && (
           <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
             🖼 図

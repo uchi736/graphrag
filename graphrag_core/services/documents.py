@@ -53,7 +53,9 @@ def list_document_chunks(pg_conn: str, pg_collection: str, source: str,
             cur.execute("""
                 SELECT COALESCE(e.cmetadata->>'id', e.id) AS chunk_id,
                        e.cmetadata->>'page' AS page,
-                       e.document
+                       e.document,
+                       e.cmetadata->>'type' AS type,
+                       e.cmetadata->>'image_path' AS image_path
                 FROM langchain_pg_embedding e
                 JOIN langchain_pg_collection c ON e.collection_id = c.uuid
                 WHERE c.name = %s AND COALESCE(e.cmetadata->>'source','(unknown)') = %s
@@ -65,7 +67,8 @@ def list_document_chunks(pg_conn: str, pg_collection: str, source: str,
         "source": source,
         "total": total,
         "offset": offset,
-        "chunks": [{"id": r[0], "page": r[1], "text": r[2]} for r in rows],
+        "chunks": [{"id": r[0], "page": r[1], "text": r[2],
+                    "type": r[3], "image_path": r[4]} for r in rows],
     }
 
 
@@ -86,7 +89,17 @@ def list_registered_documents(pg_conn: str, pg_collection: str) -> Dict[str, Any
                 ORDER BY chunk_count DESC
             """, (pg_collection,))
             rows = cur.fetchall()
-    documents = [{"source": r[0], "chunk_count": r[1]} for r in rows]
+    # 原本アーカイブ（output/docs）にファイルがあれば original_available=true
+    # （根拠カード・登録ドキュメントの「原本を開く」リンク表示判定用）
+    from pathlib import Path
+    base = Path(get_settings().doc_archive_dir)
+    if not base.is_absolute():
+        base = Path(__file__).resolve().parents[2] / base
+    documents = [{
+        "source": r[0],
+        "chunk_count": r[1],
+        "original_available": (base / Path(r[0]).name).exists(),
+    } for r in rows]
     return {
         "collection": pg_collection,
         "total_chunks": sum(d["chunk_count"] for d in documents),

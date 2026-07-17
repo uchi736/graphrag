@@ -129,6 +129,14 @@ def create_app() -> FastAPI:
     _figures_dir.mkdir(parents=True, exist_ok=True)
     app.mount("/figures", StaticFiles(directory=_figures_dir), name="figures")
 
+    # 取り込み原本の配信（出典クリック→原本PDFをブラウザで開く）。
+    # /docs はFastAPIのSwagger UIと衝突するため /originals を使う
+    _docs_dir = Path(_gs().doc_archive_dir)
+    if not _docs_dir.is_absolute():
+        _docs_dir = Path(__file__).resolve().parent.parent / _docs_dir
+    _docs_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/originals", StaticFiles(directory=_docs_dir), name="originals")
+
     # React SPA 静的配信（frontend/dist がある場合のみ）。/api/* が優先。
     if _FRONTEND_DIST.exists():
         app.mount("/assets", StaticFiles(directory=_FRONTEND_DIST / "assets"), name="assets")

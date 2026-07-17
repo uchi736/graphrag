@@ -185,7 +185,7 @@ export interface CollectionsResponse {
 export interface DocumentsSummary {
   collection: string
   total_chunks: number
-  documents: { source: string; chunk_count: number }[]
+  documents: { source: string; chunk_count: number; original_available?: boolean }[]
 }
 
 // ---- GET /api/documents/chunks ----
@@ -193,5 +193,11 @@ export interface DocumentChunksResponse {
   source: string
   total: number
   offset: number
-  chunks: { id: string; page: string | null; text: string }[]
+  chunks: {
+    id: string
+    page: string | null
+    text: string
+    type?: string | null
+    image_path?: string | null
+  }[]
 }

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { Loader2, RefreshCw, Square, Trash2, Upload } from "lucide-react"
+import { ExternalLink, Loader2, RefreshCw, Square, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { apiSend } from "@/api/client"
@@ -155,6 +155,19 @@ export default function DocumentsPage() {
               >
                 <td className="px-4 py-2 font-mono text-xs text-primary underline-offset-2 hover:underline">
                   {d.source}
+                  {d.original_available && (
+                    <a
+                      href={`/originals/${encodeURIComponent(d.source)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      title="原本ドキュメントを開く"
+                      className="ml-2 inline-flex items-center gap-0.5 text-muted-foreground hover:text-primary"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      原本
+                    </a>
+                  )}
                 </td>
                 <td className="px-4 py-2 text-right font-mono">{d.chunk_count.toLocaleString()}</td>
                 <td className="px-4 py-2 text-right">

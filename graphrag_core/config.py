@@ -132,6 +132,8 @@ class Settings:
     doc_parser_figure_captions: bool = field(default_factory=lambda: _env_bool("DOC_PARSER_FIGURE_CAPTIONS", "true"))
     # 切り出した図の保存先（/figures で静的配信。output/ はgitignore済み）
     doc_parser_figures_dir: str = field(default_factory=lambda: _env("DOC_PARSER_FIGURES_DIR", "output/figures"))
+    # 取り込んだ原本ファイルの保管先（/docs で静的配信。根拠カードの出典→原本ジャンプ用）
+    doc_archive_dir: str = field(default_factory=lambda: _env("DOC_ARCHIVE_DIR", "output/docs"))
 
     # --- Search / Retrieval ---
     retrieval_top_k: int = field(default_factory=lambda: _env_int("RETRIEVAL_TOP_K", "5"))

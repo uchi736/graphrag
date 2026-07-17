@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { ChevronLeft, ChevronRight, RefreshCw, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, ExternalLink, RefreshCw, X } from "lucide-react"
 import { useDocumentChunks } from "@/hooks/useGraphData"
 
 /**
@@ -47,6 +47,15 @@ export function ChunkBrowserModal({
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <a
+              href={`/originals/${encodeURIComponent(source)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-xs hover:bg-muted"
+              title="原本ドキュメントを開く（アーカイブ済みの場合）"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> 原本
+            </a>
             <button
               onClick={() => setOffset(Math.max(0, effOffset - 50))}
               disabled={effOffset === 0}
@@ -90,6 +99,9 @@ export function ChunkBrowserModal({
                   <div className="mb-1.5 flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="rounded bg-muted px-1.5 py-0.5 font-mono">#{effOffset + i + 1}</span>
                     {c.page != null && c.page !== "" && <span>p.{c.page}</span>}
+                    {c.type === "figure" && (
+                      <span className="rounded bg-amber-50 px-1.5 py-0.5 font-medium text-amber-700">🖼 図</span>
+                    )}
                     {isFocus && (
                       <span className="rounded bg-primary/10 px-1.5 py-0.5 font-medium text-primary">
                         回答が参照したチャンク
@@ -97,6 +109,16 @@ export function ChunkBrowserModal({
                     )}
                     <span className="ml-auto font-mono opacity-60">{c.id.slice(0, 12)}…</span>
                   </div>
+                  {c.type === "figure" && c.image_path && (
+                    <a href={`/figures/${c.image_path}`} target="_blank" rel="noreferrer">
+                      <img
+                        src={`/figures/${c.image_path}`}
+                        alt={c.text}
+                        loading="lazy"
+                        className="mb-2 max-h-56 rounded border bg-white object-contain"
+                      />
+                    </a>
+                  )}
                   <p className="whitespace-pre-wrap text-xs leading-relaxed text-foreground/90">{c.text}</p>
                 </div>
               )

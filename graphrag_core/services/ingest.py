@@ -18,12 +18,32 @@ from langchain_core.documents import Document
 from graphrag_core.document.pdf import load_pdf_with_figures
 
 
+def archive_original(filename: str, data: bytes) -> None:
+    """取り込んだ原本を保管する（/docs 配信 → 根拠カードから原本へ飛ぶ用）。
+
+    source名で保存し、再取り込みは上書き（=同一文書の改訂と同義）。
+    保管失敗は取り込み自体を止めない。
+    """
+    from graphrag_core.config import get_settings
+    try:
+        safe = Path(filename).name  # パス区切りを除去
+        base = Path(get_settings().doc_archive_dir)
+        if not base.is_absolute():
+            base = Path(__file__).resolve().parents[2] / base
+        base.mkdir(parents=True, exist_ok=True)
+        (base / safe).write_bytes(data)
+    except Exception as e:  # noqa: BLE001
+        import logging
+        logging.getLogger(__name__).warning("原本アーカイブ失敗（取り込みは継続）: %s", e)
+
+
 def load_document_from_bytes(filename: str, data: bytes) -> Document:
     """1ファイル（pdf/txt/md/その他テキスト）を Document に変換する。
 
     PDFで図が切り出せた場合は metadata["figures"] に図レコードを載せる
     （chunking.expand_figure_chunks が図チャンクへ展開して pop する）。
     """
+    archive_original(filename, data)
     suffix = Path(filename).suffix.lower()
     figures: list = []
     if suffix == ".pdf":
