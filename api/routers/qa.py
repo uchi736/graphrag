@@ -25,7 +25,7 @@ class QAConfig(BaseModel):
     retrieval_top_k: Optional[int] = Field(None, ge=1, le=20)
     enable_rerank: Optional[bool] = None
     enable_japanese_search: Optional[bool] = None
-    search_mode: Optional[Literal["hybrid", "vector", "keyword"]] = None
+    search_mode: Optional[Literal["hybrid", "vector", "keyword", "none"]] = None
     enable_knowledge_graph: Optional[bool] = None
     include_kg_source_chunks: Optional[bool] = None
     graph_hop_count: Optional[int] = Field(None, ge=1, le=3)

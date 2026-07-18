@@ -27,7 +27,7 @@ export interface QaDefaults {
   retrieval_top_k: number
   enable_rerank: boolean
   enable_japanese_search: boolean
-  search_mode: "hybrid" | "vector" | "keyword"
+  search_mode: "hybrid" | "vector" | "keyword" | "none"
   enable_knowledge_graph: boolean
   include_kg_source_chunks: boolean
   graph_hop_count: number

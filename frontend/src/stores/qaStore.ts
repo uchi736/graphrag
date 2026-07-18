@@ -29,6 +29,6 @@ export const useQaStore = create<QaStore>()(
 )
 
 export function summarizeConfig(c: QaDefaults): string {
-  const mode = { hybrid: "ハイブリッド", vector: "ベクトル", keyword: "キーワード" }[c.search_mode]
+  const mode = { hybrid: "ハイブリッド", vector: "ベクトル", keyword: "キーワード", none: "グラフのみ" }[c.search_mode]
   return `${mode} · top_k=${c.retrieval_top_k} · KG ${c.enable_knowledge_graph ? "ON" : "OFF"} · リランク ${c.enable_rerank ? "ON" : "OFF"}`
 }

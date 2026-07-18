@@ -775,6 +775,10 @@ def retriever_and_merge(
     # ── Phase 1: エンティティ抽出 + ドキュメント検索を並列実行 ──
     def _search_documents():
         """ドキュメント検索（+ オプションのLLMリランク）"""
+        # search_mode="none" = 文書検索なし（グラフのみモード）。
+        # コンテキストはKGソースチャンク＋グラフ関係だけで構成される
+        if _cfg(config, 'search_mode') == 'none':
+            return []
         if _cfg(config, 'enable_japanese_search') and SUDACHI_AVAILABLE:
             try:
                 hybrid_retriever = HybridRetriever.get_instance(pg_conn, collection_name=pg_collection)
@@ -1028,7 +1032,9 @@ def retriever_and_merge(
         graph_lines = ["(グラフデータなし)"]
 
     # graph_lines を context から除外するモード (KG はエンティティ抽出経由で利用、テキストは出さない)
-    if not _cfg(config, "include_graph_lines"):
+    # ただし search_mode="none"（グラフのみモード）では文書検索が無いため、
+    # 関係トリプル行を含めないとLLMがグラフを見られない → 強制的に含める
+    if not _cfg(config, "include_graph_lines") and _cfg(config, "search_mode") != "none":
         graph_lines = []
 
     # 4.5 条件起点ルーティング（規程・基準系・既定OFF）。
